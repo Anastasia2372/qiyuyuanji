@@ -1,0 +1,248 @@
+:root {
+  --bg-deep: #050510;
+  --bg-mid: #0a0a18;
+  --bg-card: #0f0f1c;
+  --gold: #d4af37;
+  --gold-light: #f0d878;
+  --gold-dark: #8a7320;
+  --blue-light: #a8d8ff;
+  --blue-glow: #4488dd;
+  --text-primary: #e8e0c8;
+  --text-dim: #9a8e78;
+  --text-muted: #6b6258;
+  --border-glow: rgba(212, 175, 55, 0.3);
+  --glass-bg: rgba(15, 15, 28, 0.65);
+  --glass-blur: 20px;
+  --shadow-deep: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 30px rgba(212, 175, 55, 0.15);
+  --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'ZCOOL XiaoWei', 'KaiTi', 'STKaiti', 'Microsoft YaHei', serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+#qiyu-container {
+  position: relative;
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+.qiyu-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse at top left, rgba(68, 136, 221, 0.12) 0%, transparent 45%),
+    radial-gradient(ellipse at bottom right, rgba(212, 175, 55, 0.10) 0%, transparent 50%),
+    radial-gradient(ellipse at center, rgba(15, 15, 30, 0.5) 0%, transparent 70%),
+    linear-gradient(135deg, #050510 0%, #0a0a18 50%, #080814 100%);
+  animation: qiyu-bg-drift 20s ease-in-out infinite alternate;
+}
+
+@keyframes qiyu-bg-drift {
+  0% { background-position: 0% 50%, 100% 50%, 50% 50%, 0% 0%; }
+  100% { background-position: 100% 50%, 0% 50%, 50% 50%, 0% 0%; }
+}
+
+.qiyu-particles {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.qiyu-particles .p {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--gold);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--gold-light), 0 0 16px rgba(212, 175, 55, 0.4);
+  opacity: 0.6;
+  animation: qiyu-float 12s ease-in-out infinite;
+}
+
+.qiyu-particles .p:nth-child(1) { top: 10%; left: 15%; animation-delay: 0s; }
+.qiyu-particles .p:nth-child(2) { top: 25%; left: 75%; animation-delay: 1.5s; background: var(--blue-light); box-shadow: 0 0 8px var(--blue-light), 0 0 16px rgba(168, 216, 255, 0.4); }
+.qiyu-particles .p:nth-child(3) { top: 60%; left: 40%; animation-delay: 3s; }
+.qiyu-particles .p:nth-child(4) { top: 80%; left: 85%; animation-delay: 4.5s; background: var(--blue-light); box-shadow: 0 0 8px var(--blue-light), 0 0 16px rgba(168, 216, 255, 0.4); }
+.qiyu-particles .p:nth-child(5) { top: 40%; left: 10%; animation-delay: 6s; }
+.qiyu-particles .p:nth-child(6) { top: 70%; left: 25%; animation-delay: 7.5s; }
+.qiyu-particles .p:nth-child(7) { top: 15%; left: 55%; animation-delay: 9s; background: var(--blue-light); box-shadow: 0 0 8px var(--blue-light), 0 0 16px rgba(168, 216, 255, 0.4); }
+.qiyu-particles .p:nth-child(8) { top: 50%; left: 90%; animation-delay: 10.5s; }
+
+@keyframes qiyu-float {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+  25% { opacity: 0.8; }
+  50% { transform: translateY(-40px) translateX(20px); opacity: 0.6; }
+  75% { opacity: 0.4; }
+}
+
+#qiyu-main {
+  padding: clamp(20px, 5vw, 60px);
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.qiyu-loading {
+  text-align: center;
+  padding: clamp(60px, 15vh, 140px) 20px;
+  animation: qiyu-fade-in 1.2s ease-out;
+}
+
+@keyframes qiyu-fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.qiyu-title {
+  font-family: 'Ma Shan Zheng', 'KaiTi', 'STKaiti', cursive;
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: normal;
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, var(--blue-light) 70%, var(--gold) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.15em;
+  margin-bottom: 1.5rem;
+  animation: qiyu-shimmer 4s linear infinite, qiyu-glow 3s ease-in-out infinite;
+}
+
+@keyframes qiyu-shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes qiyu-glow {
+  0%, 100% { filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.4)); }
+  50% { filter: drop-shadow(0 0 30px rgba(212, 175, 55, 0.7)); }
+}
+
+.qiyu-subtitle {
+  color: var(--blue-light);
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 12px rgba(168, 216, 255, 0.3);
+}
+
+.qiyu-hint {
+  color: var(--text-muted);
+  font-size: clamp(0.85rem, 1.3vw, 1rem);
+  letter-spacing: 0.05em;
+}
+
+.qiyu-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+  border: 2px solid var(--gold-light);
+  cursor: pointer;
+  box-shadow:
+    0 4px 20px rgba(212, 175, 55, 0.5),
+    0 0 40px rgba(212, 175, 55, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: all var(--transition-smooth);
+  z-index: 100;
+  outline: none;
+  user-select: none;
+}
+
+.qiyu-fab:hover {
+  transform: scale(1.1) rotate(45deg);
+  box-shadow:
+    0 6px 28px rgba(212, 175, 55, 0.7),
+    0 0 60px rgba(212, 175, 55, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.qiyu-fab-inner {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.3);
+  animation: qiyu-fab-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes qiyu-fab-pulse {
+  0%, 100% { box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(212, 175, 55, 0.6); }
+  50% { box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.3), 0 0 0 8px rgba(212, 175, 55, 0); }
+}
+
+.qiyu-menu {
+  position: fixed;
+  bottom: 100px;
+  right: 24px;
+  width: 240px;
+  max-height: 70vh;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  border: 1px solid var(--border-glow);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: var(--shadow-deep), var(--shadow-glow);
+  z-index: 99;
+  transition: opacity var(--transition-smooth), transform var(--transition-smooth);
+  transform-origin: bottom right;
+}
+
+.qiyu-menu.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.85) translateY(8px);
+}
+
+.qiyu-menu ul {
+  list-style: none;
+  overflow-y: auto;
+  max-height: calc(70vh - 16px);
+}
+
+.qiyu-menu ul::-webkit-scrollbar { width: 4px; }
+.qiyu-menu ul::-webkit-scrollbar-track { background: transparent; }
+.qiyu-menu ul::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 2px; }
+
+.qiyu-menu li {
+  padding: 11px 16px;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s, padding-left 0.2s;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  border-left: 2px solid transparent;
+}
+
+.qiyu-menu li:hover {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.18) 0%, rgba(212, 175, 55, 0.05) 100%);
+  color: var(--gold-light);
+  padding-left: 20px;
+  border-left-color: var(--gold);
+}
+
+@media (max-width: 600px) {
+  .qiyu-fab { bottom: 16px; right: 16px; width: 52px; height: 52px; }
+  .qiyu-menu { bottom: 80px; right: 16px; width: calc(100vw - 32px); max-width: 280px; }
+}
