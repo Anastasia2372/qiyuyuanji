@@ -1,67 +1,53 @@
 (function() {
   'use strict';
 
-  // ===== 关键: 使用 top.document 接管 SillyTavern 主页面 =====
-  function getRootWin() {
-    try { return window.top || window; } catch(_) { return window; }
-  }
-  function getRootDoc() {
-    try { return getRootWin().document || document; } catch(_) { return document; }
-  }
-  function getRootBody() {
-    return getRootDoc().body || document.body;
-  }
-  function getRootHead() {
-    return getRootDoc().head || document.head;
-  }
-  function findInRoot(selector) {
-    const docs = [getRootDoc(), document];
-    for (const doc of docs) {
-      try {
-        const el = doc.querySelector(selector);
-        if (el) return el;
-      } catch(_) {}
-    }
-    return null;
+  // 关键: 酒馆助手用 same-origin srcdoc iframe 渲染消息
+  // main.js 跑在 iframe 内, 必须用 window.parent.document 操作 SillyTavern 主页面 body
+  let P, PDOC, PBODY, PHEAD;
+  try {
+    P = window.parent || window;
+    PDOC = P.document;
+    PBODY = PDOC.body;
+    PHEAD = PDOC.head;
+    if (!PBODY) throw new Error('parent body null');
+  } catch (e) {
+    console.error('[七域] parent 不可访问，退化到本地 document:', e);
+    P = window; PDOC = document; PBODY = document.body; PHEAD = document.head;
   }
 
-  if (getRootWin().__qiyu_loaded) return;
-  getRootWin().__qiyu_loaded = true;
+  if (P.__qiyu_loaded) {
+    console.log('[七域] 已加载，跳过');
+    return;
+  }
+  P.__qiyu_loaded = true;
 
   const log = (...a) => console.log('[七域]', ...a);
+  log('启动 parent.body children:', PBODY?.children?.length, 'window===parent:', window === P);
 
   function injectCSS() {
-    const head = getRootHead();
-    if (head.querySelector('#qiyu-style-link')) return;
-    const link = getRootDoc().createElement('link');
+    if (PHEAD.querySelector('#qiyu-style-link')) return;
+    const link = PDOC.createElement('link');
     link.id = 'qiyu-style-link';
     link.rel = 'stylesheet';
     link.href = 'https://cdn.jsdelivr.net/gh/Anastasia2372/qiyuyuanji@main/style.css';
-    head.appendChild(link);
+    PHEAD.appendChild(link);
   }
 
   function getCtx() {
-    try { return getRootWin().SillyTavern?.getContext?.(); } catch(_) {}
-    try { return window.SillyTavern?.getContext?.(); } catch(_) {}
-    return null;
+    try { return P.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.(); } catch(_) { return null; }
   }
 
   function getStatData() {
     try {
-      const win = getRootWin();
-      if (typeof win.getAllVariables === 'function') {
-        return win.getAllVariables()?.stat_data || {};
-      }
-      if (typeof getAllVariables === 'function') {
-        return getAllVariables()?.stat_data || {};
-      }
+      if (typeof P.getAllVariables === 'function') return P.getAllVariables()?.stat_data || {};
+      if (typeof getAllVariables === 'function') return getAllVariables()?.stat_data || {};
     } catch(_) {}
     const ctx = getCtx();
     return ctx?.variables?.global?.stat_data || ctx?.chatMetadata?.variables?.stat_data || {};
   }
 
   function getChat() {
-    return getCtx()?.chat || getRootWin().chat || window.chat || [];
+    return getCtx()?.chat || P.chat || window.chat || [];
   }
 
   function extractGametxt(text) {
@@ -92,7 +78,7 @@
   ];
 
   function buildOverlay() {
-    const overlay = getRootDoc().createElement('div');
+    const overlay = PDOC.createElement('div');
     overlay.id = 'qiyu-overlay';
     overlay.innerHTML = `
       <header id="qiyu-status-bar">
@@ -130,9 +116,8 @@
   }
 
   function setupFab() {
-    const root = getRootDoc();
-    const fab = root.getElementById('qiyu-fab');
-    const menu = root.getElementById('qiyu-menu');
+    const fab = PDOC.getElementById('qiyu-fab');
+    const menu = PDOC.getElementById('qiyu-menu');
     if (!fab || !menu) return;
     let isDragging = false, didMove = false, startX, startY, fabX, fabY;
 
@@ -154,17 +139,18 @@
       e.preventDefault();
     });
 
-    const moveHandler = (e) => {
+    PDOC.addEventListener('pointermove', (e) => {
       if (!isDragging) return;
       const dx = e.clientX - startX, dy = e.clientY - startY;
       if (Math.abs(dx) > 4 || Math.abs(dy) > 4) didMove = true;
       if (didMove) {
-        const newX = Math.max(0, Math.min(getRootWin().innerWidth - fab.offsetWidth, fabX + dx));
-        const newY = Math.max(0, Math.min(getRootWin().innerHeight - fab.offsetHeight, fabY + dy));
+        const newX = Math.max(0, Math.min(P.innerWidth - fab.offsetWidth, fabX + dx));
+        const newY = Math.max(0, Math.min(P.innerHeight - fab.offsetHeight, fabY + dy));
         fab.style.transform = `translate3d(${newX - fabX}px, ${newY - fabY}px, 0)`;
       }
-    };
-    const upHandler = (e) => {
+    });
+
+    PDOC.addEventListener('pointerup', (e) => {
       if (!isDragging) return;
       isDragging = false;
       fab.classList.remove('dragging');
@@ -181,22 +167,18 @@
         fab.style.transform = '';
         try { localStorage.setItem('qiyu_fab_pos', JSON.stringify({x: rect.left, y: rect.top})); } catch(_) {}
       }
-    };
-
-    root.addEventListener('pointermove', moveHandler);
-    root.addEventListener('pointerup', upHandler);
-    root.addEventListener('pointercancel', upHandler);
+    });
 
     function positionMenu() {
       const r = fab.getBoundingClientRect();
-      const w = 240, hMax = getRootWin().innerHeight * 0.7;
+      const w = 240, hMax = P.innerHeight * 0.7;
       let left = r.right - w; if (left < 16) left = 16;
       let top = r.top - hMax - 12; if (top < 16) top = r.bottom + 12;
       menu.style.left = left + 'px'; menu.style.top = top + 'px';
       menu.style.right = 'auto'; menu.style.bottom = 'auto';
     }
 
-    root.addEventListener('click', (e) => {
+    PDOC.addEventListener('click', (e) => {
       if (!menu.contains(e.target) && e.target !== fab && !fab.contains(e.target)
           && !e.target.closest('.qiyu-panel')) {
         menu.classList.add('hidden');
@@ -211,15 +193,14 @@
       });
     });
 
-    root.querySelectorAll('.qiyu-panel-close').forEach(btn => {
+    PDOC.querySelectorAll('.qiyu-panel-close').forEach(btn => {
       btn.addEventListener('click', () => btn.closest('.qiyu-panel').classList.add('hidden'));
     });
   }
 
   function showPanel(id) {
-    const root = getRootDoc();
-    root.querySelectorAll('.qiyu-panel').forEach(p => p.classList.add('hidden'));
-    const panel = root.querySelector(`.qiyu-panel[data-panel-id="${id}"]`);
+    PDOC.querySelectorAll('.qiyu-panel').forEach(p => p.classList.add('hidden'));
+    const panel = PDOC.querySelector(`.qiyu-panel[data-panel-id="${id}"]`);
     if (!panel) return;
     panel.classList.remove('hidden');
     const body = panel.querySelector('.qiyu-panel-body');
@@ -355,7 +336,7 @@
   function refreshState() {
     const stat = getStatData();
     const m = stat.主角 || {}, t = m.天元 || {};
-    const set = (id, v) => { const e = getRootDoc().getElementById(id); if (e) e.textContent = v ?? '未定'; };
+    const set = (id, v) => { const e = PDOC.getElementById(id); if (e) e.textContent = v ?? '未定'; };
     set('qiyu-stat-name', m.姓名 || '未定');
     set('qiyu-stat-level', m.当前阶级 || '凡人');
     set('qiyu-stat-faction', m.当前势力 || '未定');
@@ -366,7 +347,7 @@
     set('qiyu-stat-difficulty', stat.难度模式 || '星衡');
     set('qiyu-stat-tianyuan', `石${t.石质天元 ?? 0}/玉${t.玉质天元 ?? 0}/晶${t.晶质天元 ?? 0}/源${t.源质天元 ?? 0}`);
 
-    const openPanel = getRootDoc().querySelector('.qiyu-panel:not(.hidden)');
+    const openPanel = PDOC.querySelector('.qiyu-panel:not(.hidden)');
     if (openPanel) {
       const id = openPanel.dataset.panelId;
       const body = openPanel.querySelector('.qiyu-panel-body');
@@ -376,7 +357,7 @@
 
   let lastChatLen = -1;
   function refreshMessages() {
-    const el = getRootDoc().getElementById('qiyu-messages');
+    const el = PDOC.getElementById('qiyu-messages');
     if (!el) return;
     const chat = getChat();
     if (chat.length === lastChatLen && el.children.length === chat.length) return;
@@ -391,24 +372,25 @@
   }
 
   function setupInput() {
-    const root = getRootDoc();
-    const input = root.getElementById('qiyu-input');
-    const sendBtn = root.getElementById('qiyu-send');
-    const tutorBtn = root.getElementById('qiyu-tutor');
+    const input = PDOC.getElementById('qiyu-input');
+    const sendBtn = PDOC.getElementById('qiyu-send');
+    const tutorBtn = PDOC.getElementById('qiyu-tutor');
     if (!input || !sendBtn) return;
 
     function findSTInput() {
       const sels = ['#send_textarea', 'textarea#send_textarea', '#prompt-input',
-                    'textarea[name="send_textarea"]', '[id*="send_textarea"]',
-                    'textarea[placeholder*="message" i]', 'textarea[placeholder*="消息"]'];
-      for (const s of sels) { const el = findInRoot(s); if (el) return el; }
+                    '[id*="send_textarea"]', 'textarea[placeholder*="message" i]', 'textarea[placeholder*="消息"]'];
+      for (const s of sels) {
+        try { const el = PDOC.querySelector(s); if (el) return el; } catch(_) {}
+      }
       return null;
     }
     function findSTSend() {
-      const sels = ['#send_but', 'button#send_but', '[id*="send_but"]',
-                    '#send-button', 'button[onclick*="Generate"]',
+      const sels = ['#send_but', 'button#send_but', '[id*="send_but"]', '#send-button',
                     'div[id="send_but"]', 'button.send_but'];
-      for (const s of sels) { const el = findInRoot(s); if (el) return el; }
+      for (const s of sels) {
+        try { const el = PDOC.querySelector(s); if (el) return el; } catch(_) {}
+      }
       return null;
     }
 
@@ -425,16 +407,11 @@
         input.value = '';
         return;
       }
-      // 兜底: 用 ST API
       try {
         const ctx = getCtx();
-        if (ctx?.executeSlashCommands) {
-          ctx.executeSlashCommands(`/send ${text}`);
-          input.value = '';
-          return;
-        }
-      } catch(e) { log('ctx send failed:', e); }
-      alert('找不到 SillyTavern 输入框（已尝试多种方式）。\n按 ESC 退出后用默认界面发送。');
+        if (ctx?.executeSlashCommands) { ctx.executeSlashCommands(`/send ${text}`); input.value = ''; return; }
+      } catch(_) {}
+      alert('找不到 SillyTavern 输入框。按 ESC 退出后用默认界面发送。');
     }
 
     sendBtn.addEventListener('click', () => send(input.value));
@@ -451,8 +428,8 @@
   function setupESC() {
     const handler = (e) => {
       if (e.key === 'Escape') {
-        getRootBody().classList.toggle('qiyu-overlay-hidden');
-        const hint = getRootDoc().getElementById('qiyu-esc-hint');
+        PBODY.classList.toggle('qiyu-overlay-hidden');
+        const hint = PDOC.getElementById('qiyu-esc-hint');
         if (hint) {
           hint.classList.add('show');
           clearTimeout(hint._timer);
@@ -460,23 +437,21 @@
         }
       }
     };
-    getRootDoc().addEventListener('keydown', handler);
+    PDOC.addEventListener('keydown', handler);
     document.addEventListener('keydown', handler);
   }
 
   function setupSTEvents() {
     function tryListen(ev, h) {
       try {
-        const win = getRootWin();
-        if (typeof win.eventOn === 'function') { win.eventOn(ev, h); return true; }
+        if (typeof P.eventOn === 'function') { P.eventOn(ev, h); return true; }
         if (typeof eventOn === 'function') { eventOn(ev, h); return true; }
         const ctx = getCtx();
         if (ctx?.eventSource?.on) { ctx.eventSource.on(ev, h); return true; }
       } catch(_) {}
       return false;
     }
-    const win = getRootWin();
-    if (win.Mvu?.events) tryListen(win.Mvu.events.VARIABLE_UPDATE_ENDED || 'mag_variable_update_ended', refreshState);
+    if (P.Mvu?.events) tryListen(P.Mvu.events.VARIABLE_UPDATE_ENDED || 'mag_variable_update_ended', refreshState);
     tryListen('MESSAGE_RECEIVED', () => { refreshMessages(); refreshState(); });
     tryListen('MESSAGE_SENT', () => refreshMessages());
     tryListen('CHAT_CHANGED', () => { refreshMessages(); refreshState(); });
@@ -485,26 +460,24 @@
   }
 
   function init() {
-    if (getRootDoc().getElementById('qiyu-overlay')) {
-      log('overlay 已存在'); return;
+    if (PDOC.getElementById('qiyu-overlay')) {
+      log('overlay 已存在 in parent');
+      return;
     }
     injectCSS();
-    const overlay = buildOverlay();
-    getRootBody().appendChild(overlay);
-    getRootBody().classList.add('qiyu-active');
-    // double-add to local body too as fallback
-    if (document.body !== getRootBody()) document.body.classList.add('qiyu-active');
+    PBODY.appendChild(buildOverlay());
+    PBODY.classList.add('qiyu-active');
     setupFab();
     setupInput();
     setupESC();
     refreshState();
     refreshMessages();
     setupSTEvents();
-    log('伪零层 UI 加载完成（top.body 接管）');
+    log('伪零层 UI 加载完成（接管 parent.body）');
   }
 
-  if (getRootDoc().readyState === 'loading') {
-    getRootDoc().addEventListener('DOMContentLoaded', init);
+  if (PDOC.readyState === 'loading') {
+    PDOC.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
