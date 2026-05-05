@@ -1,30 +1,59 @@
 (function() {
   'use strict';
 
-  if (window.__qiyu_loaded) return;
-  window.__qiyu_loaded = true;
+  // ===== 关键: 使用 top.document 接管 SillyTavern 主页面 =====
+  function getRootWin() {
+    try { return window.top || window; } catch(_) { return window; }
+  }
+  function getRootDoc() {
+    try { return getRootWin().document || document; } catch(_) { return document; }
+  }
+  function getRootBody() {
+    return getRootDoc().body || document.body;
+  }
+  function getRootHead() {
+    return getRootDoc().head || document.head;
+  }
+  function findInRoot(selector) {
+    const docs = [getRootDoc(), document];
+    for (const doc of docs) {
+      try {
+        const el = doc.querySelector(selector);
+        if (el) return el;
+      } catch(_) {}
+    }
+    return null;
+  }
+
+  if (getRootWin().__qiyu_loaded) return;
+  getRootWin().__qiyu_loaded = true;
 
   const log = (...a) => console.log('[七域]', ...a);
 
-  // ===== utils =====
   function injectCSS() {
-    if (document.getElementById('qiyu-style-link')) return;
-    const link = document.createElement('link');
+    const head = getRootHead();
+    if (head.querySelector('#qiyu-style-link')) return;
+    const link = getRootDoc().createElement('link');
     link.id = 'qiyu-style-link';
     link.rel = 'stylesheet';
     link.href = 'https://cdn.jsdelivr.net/gh/Anastasia2372/qiyuyuanji@main/style.css';
-    document.head.appendChild(link);
+    head.appendChild(link);
   }
 
   function getCtx() {
-    try { return window.SillyTavern?.getContext?.(); } catch(_) { return null; }
+    try { return getRootWin().SillyTavern?.getContext?.(); } catch(_) {}
+    try { return window.SillyTavern?.getContext?.(); } catch(_) {}
+    return null;
   }
 
   function getStatData() {
     try {
+      const win = getRootWin();
+      if (typeof win.getAllVariables === 'function') {
+        return win.getAllVariables()?.stat_data || {};
+      }
       if (typeof getAllVariables === 'function') {
-        const vars = getAllVariables();
-        return vars?.stat_data || {};
+        return getAllVariables()?.stat_data || {};
       }
     } catch(_) {}
     const ctx = getCtx();
@@ -32,7 +61,7 @@
   }
 
   function getChat() {
-    return getCtx()?.chat || window.chat || [];
+    return getCtx()?.chat || getRootWin().chat || window.chat || [];
   }
 
   function extractGametxt(text) {
@@ -41,15 +70,12 @@
     if (m) return m[1].trim();
     return text.replace(/<UpdateVariable>[\s\S]*?<\/UpdateVariable>/g, '').trim();
   }
-
   function isTutorReply(text) {
     return !text.includes('<gametxt>') && !text.includes('<UpdateVariable>');
   }
-
   function escHTML(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
-
   function fmtMd(text) {
     return escHTML(text)
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -57,7 +83,6 @@
       .replace(/\n/g, '<br>');
   }
 
-  // ===== DOM 构建 =====
   const PANEL_LIST = [
     ['player', '玩家面板'], ['companions', '同伴面板'], ['island', '空岛面板'],
     ['subjob', '副职面板'], ['fishing', '钓鱼'], ['farming', '种地'],
@@ -67,7 +92,7 @@
   ];
 
   function buildOverlay() {
-    const overlay = document.createElement('div');
+    const overlay = getRootDoc().createElement('div');
     overlay.id = 'qiyu-overlay';
     overlay.innerHTML = `
       <header id="qiyu-status-bar">
@@ -104,10 +129,11 @@
     return overlay;
   }
 
-  // ===== 悬浮球 =====
   function setupFab() {
-    const fab = document.getElementById('qiyu-fab');
-    const menu = document.getElementById('qiyu-menu');
+    const root = getRootDoc();
+    const fab = root.getElementById('qiyu-fab');
+    const menu = root.getElementById('qiyu-menu');
+    if (!fab || !menu) return;
     let isDragging = false, didMove = false, startX, startY, fabX, fabY;
 
     try {
@@ -128,18 +154,17 @@
       e.preventDefault();
     });
 
-    document.addEventListener('pointermove', (e) => {
+    const moveHandler = (e) => {
       if (!isDragging) return;
       const dx = e.clientX - startX, dy = e.clientY - startY;
       if (Math.abs(dx) > 4 || Math.abs(dy) > 4) didMove = true;
       if (didMove) {
-        const newX = Math.max(0, Math.min(window.innerWidth - fab.offsetWidth, fabX + dx));
-        const newY = Math.max(0, Math.min(window.innerHeight - fab.offsetHeight, fabY + dy));
+        const newX = Math.max(0, Math.min(getRootWin().innerWidth - fab.offsetWidth, fabX + dx));
+        const newY = Math.max(0, Math.min(getRootWin().innerHeight - fab.offsetHeight, fabY + dy));
         fab.style.transform = `translate3d(${newX - fabX}px, ${newY - fabY}px, 0)`;
       }
-    });
-
-    document.addEventListener('pointerup', (e) => {
+    };
+    const upHandler = (e) => {
       if (!isDragging) return;
       isDragging = false;
       fab.classList.remove('dragging');
@@ -156,18 +181,22 @@
         fab.style.transform = '';
         try { localStorage.setItem('qiyu_fab_pos', JSON.stringify({x: rect.left, y: rect.top})); } catch(_) {}
       }
-    });
+    };
+
+    root.addEventListener('pointermove', moveHandler);
+    root.addEventListener('pointerup', upHandler);
+    root.addEventListener('pointercancel', upHandler);
 
     function positionMenu() {
       const r = fab.getBoundingClientRect();
-      const w = 240, hMax = window.innerHeight * 0.7;
+      const w = 240, hMax = getRootWin().innerHeight * 0.7;
       let left = r.right - w; if (left < 16) left = 16;
       let top = r.top - hMax - 12; if (top < 16) top = r.bottom + 12;
       menu.style.left = left + 'px'; menu.style.top = top + 'px';
       menu.style.right = 'auto'; menu.style.bottom = 'auto';
     }
 
-    document.addEventListener('click', (e) => {
+    root.addEventListener('click', (e) => {
       if (!menu.contains(e.target) && e.target !== fab && !fab.contains(e.target)
           && !e.target.closest('.qiyu-panel')) {
         menu.classList.add('hidden');
@@ -182,20 +211,19 @@
       });
     });
 
-    document.querySelectorAll('.qiyu-panel-close').forEach(btn => {
+    root.querySelectorAll('.qiyu-panel-close').forEach(btn => {
       btn.addEventListener('click', () => btn.closest('.qiyu-panel').classList.add('hidden'));
     });
   }
 
-  // ===== 面板渲染 =====
   function showPanel(id) {
-    document.querySelectorAll('.qiyu-panel').forEach(p => p.classList.add('hidden'));
-    const panel = document.querySelector(`.qiyu-panel[data-panel-id="${id}"]`);
+    const root = getRootDoc();
+    root.querySelectorAll('.qiyu-panel').forEach(p => p.classList.add('hidden'));
+    const panel = root.querySelector(`.qiyu-panel[data-panel-id="${id}"]`);
     if (!panel) return;
     panel.classList.remove('hidden');
     const body = panel.querySelector('.qiyu-panel-body');
-    const stat = getStatData();
-    body.innerHTML = renderPanelContent(id, stat);
+    body.innerHTML = renderPanelContent(id, getStatData());
   }
 
   function dr(k, v) { return `<div class="qiyu-data-row"><span class="key">${escHTML(k)}</span><span class="val">${escHTML(v ?? '-')}</span></div>`; }
@@ -222,7 +250,6 @@
           + dr('羁绊度', `${c.羁绊度 ?? 0} (${c.羁绊阶段 || '陌生'})`)
           + dr('心情', c.心情 || '平静') + dr('忠诚', c.忠诚 || '中立')
           + dr('契约状态', c.契约状态 || '正常')
-          + (c.个人委托?.类型 ? dr(`委托·${c.个人委托.类型}`, c.个人委托.阶段 || '未触发') : '')
         ).join('');
       },
       island: () => {
@@ -251,10 +278,7 @@
         return dr('地面熟练度', `${f.地面熟练度 ?? 0}/100`)
           + dr('空岛熟练度', `${f.空岛熟练度 ?? 0}/100`)
           + dh('装备') + dr('鱼竿', eq.鱼竿 || '入门级')
-          + dh('饵料') + Object.entries(bait).map(([k,v]) => dr(k,v)).join('')
-          + dh('稀有钓获史')
-          + ((f.稀有钓获史 || []).length === 0 ? empty('还没钓到稀有鱼。')
-              : f.稀有钓获史.map(r => dr(r.鱼种 || '?', `${r.地点 || ''} · ${r.日期 || ''}`)).join(''));
+          + dh('饵料') + Object.entries(bait).map(([k,v]) => dr(k,v)).join('');
       },
       farming: () => {
         const f = s.种地 || {}, fields = f.田地 || [], stock = f.作物库存 || {};
@@ -314,9 +338,7 @@
                       ['星弃','全世界对 user 充满恶意，最虐'],['星裁','严苛真实逻辑审查，硬核']];
         return `<div class="qiyu-difficulty-grid">${diffs.map(([n,d]) =>
           `<div class="qiyu-difficulty-card ${cur===n?'active':''}" data-diff="${n}">
-            <h3>${n}</h3><p>${d}</p></div>`).join('')}</div>
-          <div style="margin-top:16px;color:#9a8e78;font-size:0.85rem;line-height:1.6">
-          点击切换难度需要在 SillyTavern 世界书页手动启用对应"难度·XX"条目，下个版本支持自动切换。</div>`;
+            <h3>${n}</h3><p>${d}</p></div>`).join('')}</div>`;
       },
       tutor: () => `<div class="qiyu-empty" style="text-align:left;line-height:1.8">
           教学助手用法: 在底部输入框旁的 <strong>问机制</strong> 按钮里输入问题，AI 会跳出角色用第一人称答游戏机制。<br><br>
@@ -330,11 +352,10 @@
     return (renders[id] || (() => empty('面板待开发')))();
   }
 
-  // ===== 状态栏数据绑定 =====
   function refreshState() {
     const stat = getStatData();
     const m = stat.主角 || {}, t = m.天元 || {};
-    const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v ?? '未定'; };
+    const set = (id, v) => { const e = getRootDoc().getElementById(id); if (e) e.textContent = v ?? '未定'; };
     set('qiyu-stat-name', m.姓名 || '未定');
     set('qiyu-stat-level', m.当前阶级 || '凡人');
     set('qiyu-stat-faction', m.当前势力 || '未定');
@@ -345,8 +366,7 @@
     set('qiyu-stat-difficulty', stat.难度模式 || '星衡');
     set('qiyu-stat-tianyuan', `石${t.石质天元 ?? 0}/玉${t.玉质天元 ?? 0}/晶${t.晶质天元 ?? 0}/源${t.源质天元 ?? 0}`);
 
-    // 同步刷新打开的面板
-    const openPanel = document.querySelector('.qiyu-panel:not(.hidden)');
+    const openPanel = getRootDoc().querySelector('.qiyu-panel:not(.hidden)');
     if (openPanel) {
       const id = openPanel.dataset.panelId;
       const body = openPanel.querySelector('.qiyu-panel-body');
@@ -354,10 +374,9 @@
     }
   }
 
-  // ===== 对话流渲染 =====
   let lastChatLen = -1;
   function refreshMessages() {
-    const el = document.getElementById('qiyu-messages');
+    const el = getRootDoc().getElementById('qiyu-messages');
     if (!el) return;
     const chat = getChat();
     if (chat.length === lastChatLen && el.children.length === chat.length) return;
@@ -371,28 +390,55 @@
     el.scrollTop = el.scrollHeight;
   }
 
-  // ===== 输入区 =====
   function setupInput() {
-    const input = document.getElementById('qiyu-input');
-    const sendBtn = document.getElementById('qiyu-send');
-    const tutorBtn = document.getElementById('qiyu-tutor');
+    const root = getRootDoc();
+    const input = root.getElementById('qiyu-input');
+    const sendBtn = root.getElementById('qiyu-send');
+    const tutorBtn = root.getElementById('qiyu-tutor');
+    if (!input || !sendBtn) return;
+
+    function findSTInput() {
+      const sels = ['#send_textarea', 'textarea#send_textarea', '#prompt-input',
+                    'textarea[name="send_textarea"]', '[id*="send_textarea"]',
+                    'textarea[placeholder*="message" i]', 'textarea[placeholder*="消息"]'];
+      for (const s of sels) { const el = findInRoot(s); if (el) return el; }
+      return null;
+    }
+    function findSTSend() {
+      const sels = ['#send_but', 'button#send_but', '[id*="send_but"]',
+                    '#send-button', 'button[onclick*="Generate"]',
+                    'div[id="send_but"]', 'button.send_but'];
+      for (const s of sels) { const el = findInRoot(s); if (el) return el; }
+      return null;
+    }
+
     function send(text) {
       text = text.trim();
       if (!text) return;
-      const stInput = document.querySelector('#send_textarea');
-      const stSend = document.querySelector('#send_but');
+      const stInput = findSTInput();
+      const stSend = findSTSend();
+      log('找到 ST input/send:', !!stInput, !!stSend);
       if (stInput && stSend) {
         stInput.value = text;
         stInput.dispatchEvent(new Event('input', { bubbles: true }));
         setTimeout(() => stSend.click(), 50);
-      } else {
-        alert('找不到 SillyTavern 输入框，按 ESC 退出后用默认界面发送');
+        input.value = '';
         return;
       }
-      input.value = '';
+      // 兜底: 用 ST API
+      try {
+        const ctx = getCtx();
+        if (ctx?.executeSlashCommands) {
+          ctx.executeSlashCommands(`/send ${text}`);
+          input.value = '';
+          return;
+        }
+      } catch(e) { log('ctx send failed:', e); }
+      alert('找不到 SillyTavern 输入框（已尝试多种方式）。\n按 ESC 退出后用默认界面发送。');
     }
+
     sendBtn.addEventListener('click', () => send(input.value));
-    tutorBtn.addEventListener('click', () => {
+    if (tutorBtn) tutorBtn.addEventListener('click', () => {
       const t = input.value.trim();
       if (!t) { alert('请先输入要问的机制问题'); return; }
       send('[教学问询] ' + t);
@@ -402,56 +448,63 @@
     });
   }
 
-  // ===== ESC 切换 =====
   function setupESC() {
-    document.addEventListener('keydown', (e) => {
+    const handler = (e) => {
       if (e.key === 'Escape') {
-        document.body.classList.toggle('qiyu-overlay-hidden');
-        const hint = document.getElementById('qiyu-esc-hint');
+        getRootBody().classList.toggle('qiyu-overlay-hidden');
+        const hint = getRootDoc().getElementById('qiyu-esc-hint');
         if (hint) {
           hint.classList.add('show');
           clearTimeout(hint._timer);
           hint._timer = setTimeout(() => hint.classList.remove('show'), 2000);
         }
       }
-    });
+    };
+    getRootDoc().addEventListener('keydown', handler);
+    document.addEventListener('keydown', handler);
   }
 
-  // ===== ST 事件监听 =====
   function setupSTEvents() {
     function tryListen(ev, h) {
       try {
+        const win = getRootWin();
+        if (typeof win.eventOn === 'function') { win.eventOn(ev, h); return true; }
         if (typeof eventOn === 'function') { eventOn(ev, h); return true; }
         const ctx = getCtx();
         if (ctx?.eventSource?.on) { ctx.eventSource.on(ev, h); return true; }
       } catch(_) {}
       return false;
     }
-    if (window.Mvu?.events) tryListen(window.Mvu.events.VARIABLE_UPDATE_ENDED || 'mag_variable_update_ended', refreshState);
+    const win = getRootWin();
+    if (win.Mvu?.events) tryListen(win.Mvu.events.VARIABLE_UPDATE_ENDED || 'mag_variable_update_ended', refreshState);
     tryListen('MESSAGE_RECEIVED', () => { refreshMessages(); refreshState(); });
-    tryListen('MESSAGE_SENT', () => { refreshMessages(); });
+    tryListen('MESSAGE_SENT', () => refreshMessages());
     tryListen('CHAT_CHANGED', () => { refreshMessages(); refreshState(); });
     tryListen('character_message_rendered', () => { refreshMessages(); refreshState(); });
     setInterval(() => { refreshState(); refreshMessages(); }, 2500);
   }
 
-  // ===== 初始化 =====
   function init() {
-    if (document.getElementById('qiyu-overlay')) return;
+    if (getRootDoc().getElementById('qiyu-overlay')) {
+      log('overlay 已存在'); return;
+    }
     injectCSS();
-    document.body.appendChild(buildOverlay());
-    document.body.classList.add('qiyu-active');
+    const overlay = buildOverlay();
+    getRootBody().appendChild(overlay);
+    getRootBody().classList.add('qiyu-active');
+    // double-add to local body too as fallback
+    if (document.body !== getRootBody()) document.body.classList.add('qiyu-active');
     setupFab();
     setupInput();
     setupESC();
     refreshState();
     refreshMessages();
     setupSTEvents();
-    log('伪零层 UI 加载完成');
+    log('伪零层 UI 加载完成（top.body 接管）');
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+  if (getRootDoc().readyState === 'loading') {
+    getRootDoc().addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
