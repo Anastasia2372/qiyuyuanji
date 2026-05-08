@@ -5,30 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>七 域 源 纪</title>
 <style>
-/* ============= 全局 SPA 框架 ============= */
+/* ============= 全局 SPA 框架 - 自然填充楼层 iframe, 不强制全屏 ============= */
 html, body {
   margin: 0; padding: 0;
-  width: 100%; height: 100%;
-  position: fixed; inset: 0;
-  overflow: hidden;
   background: #050510;
 }
 #qy-app {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 2147483646;
-  overflow: hidden;
+  width: 100%;
   background: #050510;
+  position: relative;
 }
 .qy-page {
   display: none;
   width: 100%;
-  height: 100%;
-  position: absolute;
-  inset: 0;
-  overflow: auto;
 }
 .qy-page.active {
   display: block;
