@@ -35,8 +35,9 @@ html, body {
 }
 
 /* 防止按钮文字因 letter-spacing 大而换行 (如"关闭"被挤成"关
-闭") */
-.qy-page button { white-space: nowrap; }
+闭") - !important 覆盖各 page 内 CSS */
+#qy-app button { white-space: nowrap !important; }
+#qy-app .qy-close-btn { white-space: nowrap !important; min-width: 70px; }
 
 /* ============= page-poster (first_mes_海报_v2.html) ============= */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Cinzel+Decorative:wght@500;700&display=swap');
@@ -341,7 +342,7 @@ html, body {
 }
 
 /* ============= 入口卡片（替换原 .qy-guide） ============= */
-.qy-entry {
+.qy-poster-entry {
   grid-area: entry;
   display: flex;
   flex-direction: column;
@@ -4515,7 +4516,7 @@ html, body {
 <!-- ============= page-poster (first_mes_海报_v2.html) ============= -->
 <div class="qy-page" id="page-poster">
 <div class="qy-poster-nebula"></div>
-<div class="qy-poster-stars" id="qy-stars-container"></div>
+<div class="qy-poster-stars" id="qy-poster-stars-container"></div>
 <div class="qy-meteor m1"></div>
 <div class="qy-meteor m2"></div>
 <div class="qy-meteor m3"></div>
@@ -4555,7 +4556,7 @@ html, body {
     <div class="qy-tagline-text"><span>这</span><span>就</span><span>是</span><span>七</span><span>域</span></div>
   </div>
 
-  <div class="qy-entry">
+  <div class="qy-poster-entry">
     <button id="qy-start-btn" class="qy-start-btn" type="button" disabled>源神启动</button>
     <div class="qy-progress" role="status" aria-live="polite">
       <div class="qy-progress-text" id="qy-progress-text">凝视七域...</div>
@@ -4574,7 +4575,7 @@ html, body {
 <!-- ============= page-main (状态栏.html) ============= -->
 <div class="qy-page" id="page-main">
 <div class="qy-status-nebula"></div>
-<div class="qy-status-stars" id="qy-stars-container"></div>
+<div class="qy-status-stars" id="qy-status-stars-container"></div>
 
 <div class="qy-status-app">
 
@@ -5292,7 +5293,7 @@ html, body {
       <h1>钓 鱼</h1>
       <span class="pinyin">FISHING</span>
     </div>
-    <button class="qy-close-btn" title="关闭">×</button>
+    <button class="qy-close-btn" title="关闭">关 闭</button>
   </div>
 
   <!-- 顶部 tab -->
@@ -7292,6 +7293,37 @@ html, body {
   window.qyShowDifficultyUI  = function() { console.log('[qy] 难度切换 TODO'); };
   window.qyShowSettingsUI    = function() { console.log('[qy] 设置 TODO'); };
 
+  // ============= 图鉴 modal 关闭函数 (顶层挂, 不依赖图鉴 init 是否运行成功) =============
+  window.qyModalClose = function() {
+    var modal = document.getElementById('qy-modal');
+    if (modal) modal.classList.remove('active');
+  };
+  window.qyModalCloseIfBackdrop = function(e) {
+    if (e.target.id === 'qy-modal') window.qyModalClose();
+  };
+
+  // 各 page 关闭按钮的双保险 (inline onclick 万一失效时, addEventListener 仍生效)
+  function bindModalCloseFallback() {
+    document.querySelectorAll('.qy-modal-close').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();  // 防止冒泡到 backdrop 触发 backdrop close 逻辑
+        window.qyModalClose();
+      });
+    });
+    var backdrop = document.getElementById('qy-modal');
+    if (backdrop) {
+      backdrop.addEventListener('click', function(e) {
+        if (e.target.id === 'qy-modal') window.qyModalClose();
+      });
+    }
+    // 各玩法 page 的 .qy-close-btn 统一切回状态栏 (钓鱼.html 漏写 onclick, 这里兜底)
+    document.querySelectorAll('.qy-close-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        qyShowPage('main');
+      });
+    });
+  }
+
   // ============= ST 主页面接管 (用 window.parent.document 注入 style 让 #qy-app 盖住一切) =============
   window.qyTakeoverParent = function() {
     try {
@@ -7321,7 +7353,7 @@ html, body {
     try {
 (function() {
   // ============= 星空 =============
-  var container = document.getElementById('qy-stars-container');
+  var container = document.getElementById('qy-poster-stars-container');
   if (container) {
     var count = 100;
     for (var i = 0; i < count; i++) {
@@ -7420,7 +7452,7 @@ html, body {
     try {
 (function() {
   // 散点星
-  var container = document.getElementById('qy-stars-container');
+  var container = document.getElementById('qy-status-stars-container');
   var count = 80;
   for (var i = 0; i < count; i++) {
     var star = document.createElement('div');
@@ -7947,6 +7979,7 @@ html, body {
   function bootstrap() {
     qyShowPage('poster');
     qyTakeoverParent();
+    bindModalCloseFallback();
   }
 
   if (document.readyState === 'loading') {
