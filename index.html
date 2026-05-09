@@ -28,20 +28,19 @@ html, body {
 #qy-app button { white-space: nowrap !important; }
 #qy-app .qy-close-btn { white-space: nowrap !important; min-width: 70px; }
 
+/* 悬浮球 + 菜单默认隐藏 - 创角完成点"踏入七域"后才显示 */
+#qy-app #qy-fab,
+#qy-app #qy-fab-menu { display: none !important; }
+#qy-app.qy-play-started #qy-fab { display: flex !important; }
+#qy-app.qy-play-started #qy-fab-menu.hidden { display: none !important; }
+#qy-app.qy-play-started #qy-fab-menu { display: block !important; }
+
 /* ============= page-poster (first_mes_海报_v2.html) ============= */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Cinzel+Decorative:wght@500;700&display=swap');
 
 * { box-sizing: border-box; }
 
-html, body {
-  margin: 0; padding: 0;
-  width: 100%; min-height: 100vh;
-  font-family: 'Noto Serif SC', 'STSong', 'SimSun', 'STKaiti', serif;
-  color: #e8eaf0;
-  background: linear-gradient(180deg, #050510 0%, #08102a 60%, #0a0e2a 100%);
-  overflow: hidden;
-  position: relative;
-}
+
 
 /* ============= 远景星云 ============= */
 .qy-poster-nebula {
@@ -492,14 +491,7 @@ html, body {
 
 * { box-sizing: border-box; }
 
-html, body {
-  margin: 0; padding: 0;
-  width: 100%; height: 100vh;
-  font-family: 'Noto Serif SC', 'STSong', 'SimSun', 'Microsoft YaHei', serif;
-  color: #e8eaf0;
-  background: linear-gradient(180deg, #050510 0%, #08102a 60%, #0a0e2a 100%);
-  overflow: hidden;
-}
+
 
 /* ========== 背景层 ========== */
 .qy-status-nebula {
@@ -1684,21 +1676,8 @@ html, body {
 }
 
 /* 预览态切换按钮（注入卡时去掉） */
-.qy-state-toggle {
-  position: fixed;
-  bottom: 18px; left: 18px;
-  z-index: 200;
-  padding: 8px 16px;
-  background: rgba(168, 192, 232, 0.12);
-  border: 1px solid rgba(168, 192, 232, 0.4);
-  border-radius: 6px;
-  color: #c8d4e8;
-  font-family: 'Noto Serif SC', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.15em;
-  cursor: pointer;
-}
-.qy-state-toggle:hover { border-color: #fff; background: rgba(168, 192, 232, 0.2); }
+
+
 
 /* ESC 提示 */
 .qy-esc-hint {
@@ -1727,14 +1706,7 @@ html, body {
 
 * { box-sizing: border-box; }
 
-html, body {
-  margin: 0; padding: 0;
-  width: 100%; min-height: 100vh;
-  font-family: 'Noto Serif SC', 'STSong', 'SimSun', 'Microsoft YaHei', serif;
-  color: #d8e8f4;
-  background: linear-gradient(180deg, #021428 0%, #053047 35%, #0a4868 70%, #126a8a 100%);
-  overflow-x: hidden;
-}
+
 
 /* 海洋背景层 */
 .qy-ocean-bg {
@@ -2226,14 +2198,7 @@ html, body {
 
 * { box-sizing: border-box; }
 
-html, body {
-  margin: 0; padding: 0;
-  width: 100%; height: 100vh;
-  font-family: 'Noto Serif SC', 'STSong', 'SimSun', 'Microsoft YaHei', serif;
-  color: #e0eae2;
-  background: linear-gradient(180deg, #06140e 0%, #0d2417 50%, #06140e 100%);
-  overflow: hidden;
-}
+
 
 /* 森林背景层 */
 .qy-forest-bg {
@@ -2806,14 +2771,7 @@ html, body {
 
 * { box-sizing: border-box; }
 
-html, body {
-  margin: 0; padding: 0;
-  width: 100%; height: 100vh;
-  font-family: 'Noto Serif SC', 'STSong', 'SimSun', 'Microsoft YaHei', serif;
-  color: #e8dac8;
-  background: linear-gradient(180deg, #1a0a08 0%, #2a1410 55%, #1a0a08 100%);
-  overflow: hidden;
-}
+
 
 /* 木纹底层 */
 .qy-wood-bg {
@@ -3372,14 +3330,7 @@ html, body {
 
 * { box-sizing: border-box; }
 
-html, body {
-  margin: 0; padding: 0;
-  width: 100%; height: 100vh;
-  font-family: 'Noto Serif SC', 'STSong', 'SimSun', 'Microsoft YaHei', serif;
-  color: #e0e0d8;
-  background: linear-gradient(180deg, #0a0908 0%, #1a1308 50%, #0a0908 100%);
-  overflow: hidden;
-}
+
 
 /* 黑铁底 + 暗紫光晕 */
 .qy-iron-bg {
@@ -3994,14 +3945,7 @@ html, body {
 
 * { box-sizing: border-box; }
 
-html, body {
-  margin: 0; padding: 0;
-  width: 100%; height: 100vh;
-  font-family: 'Noto Serif SC', 'STSong', 'SimSun', 'Microsoft YaHei', serif;
-  color: #2a1a08;
-  background: linear-gradient(180deg, #f0e3c4 0%, #e8d8a8 50%, #d8c898 100%);
-  overflow: hidden;
-}
+
 
 /* 羊皮纸纹理 */
 .qy-paper-bg {
@@ -5254,16 +5198,14 @@ html, body {
     </div>
     <div class="qy-cl-form-actions">
       <button class="qy-cl-btn-secondary" onclick="qyClGoto('create')">返 回 修 改</button>
-      <button class="qy-cl-btn-primary">踏 入 七 域</button>
+      <button class="qy-cl-btn-primary" onclick="qyEnterMainPlay()">踏 入 七 域</button>
     </div>
   </div>
 
 </div>
 
 <!-- 预览态切换按钮（注入卡时去掉） -->
-<button class="qy-state-toggle" id="qy-state-toggle" title="切换查看：开局前 ↔ 已创角">
-  切换查看：当前 = 创角态
-</button>
+
 
 <!-- ESC 提示 -->
 <div class="qy-esc-hint"><kbd>ESC</kbd> 关闭</div>
@@ -7282,6 +7224,14 @@ html, body {
   window.qyShowDifficultyUI  = function() { console.log('[qy] 难度切换 TODO'); };
   window.qyShowSettingsUI    = function() { console.log('[qy] 设置 TODO'); };
 
+  // ============= 创角完成"踏入七域"按钮触发 - 关创角层 + 显示悬浮球 =============
+  window.qyEnterMainPlay = function() {
+    var createLayer = document.getElementById('qy-create-layer');
+    if (createLayer) createLayer.classList.add('hidden');
+    var app = document.getElementById('qy-app');
+    if (app) app.classList.add('qy-play-started');  // CSS .qy-play-started 切换悬浮球显示
+  };
+
   // ============= 图鉴 modal 关闭函数 (顶层挂, 不依赖图鉴 init 是否运行成功) =============
   window.qyModalClose = function() {
     var modal = document.getElementById('qy-modal');
@@ -7407,6 +7357,13 @@ html, body {
   btn.addEventListener('click', function() {
     if (btn.disabled) return;
     btn.disabled = true;
+
+    // 全屏触发 (必须在用户手势同步路径里调用, 不能放 setTimeout)
+    try {
+      var fsTarget = (window.parent && window.parent.document && window.parent.document.documentElement) || document.documentElement;
+      if (fsTarget.requestFullscreen) fsTarget.requestFullscreen();
+      else if (fsTarget.webkitRequestFullscreen) fsTarget.webkitRequestFullscreen();
+    } catch (e) { console.warn('[qy] requestFullscreen 失败:', e); }
 
     var poster = document.getElementById('qy-poster');
     var nebula = document.querySelector('.qy-poster-nebula');
@@ -7581,15 +7538,7 @@ html, body {
   window.qyClClearFate = function() {
     document.getElementById('qy-cl-fate-display').innerHTML = '<div class="empty">— 尚 未 抽 取 —</div>';
   };
-  // 预览切换按钮
-  var stateToggle = document.getElementById('qy-state-toggle');
-  var createLayer = document.getElementById('qy-create-layer');
-  if (stateToggle && createLayer) {
-    stateToggle.addEventListener('click', function() {
-      var isHidden = createLayer.classList.toggle('hidden');
-      stateToggle.textContent = isHidden ? '切换查看：当前 = 已创角态' : '切换查看：当前 = 创角态';
-    });
-  }
+  
 
   // ESC 关闭大 UI（注入卡后：调 window.parent.qyHideUI()；预览模式：仅 console.log）
   document.addEventListener('keydown', function(e) {
