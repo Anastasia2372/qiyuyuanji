@@ -283,29 +283,26 @@ html, body {
   to { transform: rotate(360deg); }
 }
 
-/* ============= 竖排文案（右中下） ============= */
+/* ============= 横排文案（右中下，原竖排会无限拉长改横排） ============= */
 .qy-story-area {
   grid-area: story;
   display: flex;
-  justify-content: flex-end;
+  justify-content: stretch;
   align-items: flex-start;
   padding-top: 10px;
 }
 .qy-story {
-  writing-mode: vertical-rl;
-  -webkit-writing-mode: vertical-rl;
-  text-orientation: upright;
   font-family: 'Noto Serif SC', 'STSong', 'SimSun', serif;
   font-size: 0.95rem;
   font-weight: 400;
-  line-height: 2.2;
-  letter-spacing: 0.15em;
+  line-height: 1.8;
+  letter-spacing: 0.05em;
   color: #d0d8e8;
-  max-height: 50vh;
   text-align: justify;
   opacity: 0.92;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-  padding: 0 4px;
+  padding: 0 8px;
+  width: 100%;
 }
 
 /* ============= 底部大字 ============= */
@@ -479,8 +476,8 @@ html, body {
   .qy-title-line { font-size: 3.2rem; letter-spacing: 0.3em; }
   .qy-moon-area { justify-content: center; }
   .qy-moon-container { width: clamp(180px, 50vw, 240px); }
-  .qy-story-area { justify-content: center; }
-  .qy-story { font-size: 0.85rem; line-height: 2; max-height: 40vh; }
+  .qy-story-area { justify-content: stretch; }
+  .qy-story { font-size: 0.85rem; line-height: 1.7; }
   .qy-tagline-text { font-size: 1.4rem; letter-spacing: 0.3em; }
   .qy-start-btn { padding: 11px 40px; font-size: 0.95rem; letter-spacing: 0.4em; }
   .qy-progress { min-width: 240px; padding: 9px 22px; }
