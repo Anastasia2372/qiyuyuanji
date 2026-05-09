@@ -1675,10 +1675,6 @@ html, body {
   color: #e8eef8; font-weight: 500;
 }
 
-/* 预览态切换按钮（注入卡时去掉） */
-
-
-
 /* ESC 提示 */
 .qy-esc-hint {
   position: fixed;
@@ -5204,9 +5200,6 @@ html, body {
 
 </div>
 
-<!-- 预览态切换按钮（注入卡时去掉） -->
-
-
 <!-- ESC 提示 -->
 <div class="qy-esc-hint"><kbd>ESC</kbd> 关闭</div>
 </div>
@@ -7544,11 +7537,12 @@ html, body {
       menu.classList.add('hidden');
       if (!fn) return;
       try {
-        if (window.parent && typeof window.parent[fn] === 'function') {
-          window.parent[fn]();
-        } else {
-          console.log('[预览] 菜单 ' + action + ' 点击（独立预览模式无 parent.' + fn + '）');
-        }
+        var _resolved = (typeof window[fn] === 'function') ? window[fn] :
+                       (window.parent && typeof window.parent[fn] === 'function') ? window.parent[fn] : null;
+        if (_resolved) {
+          try { _resolved(); } catch (_e) { console.warn('[qy] dispatch ' + fn + ' threw:', _e); }
+        } else if (false) {
+}
       } catch (err) {
         console.warn('[qy] 调菜单函数失败:', err);
       }
@@ -7622,14 +7616,33 @@ html, body {
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
     try {
-      if (window.parent && typeof window.parent.qyHideUI === 'function') {
-        window.parent.qyHideUI();
+      var _fn_qyHideUI = (typeof window.qyHideUI === 'function') ? window.qyHideUI : (window.parent && typeof window.parent.qyHideUI === 'function') ? window.parent.qyHideUI : null; if (_fn_qyHideUI) { _fn_qyHideUI();
         return;
       }
     } catch (_) {}
-    console.log('[预览] ESC 按下（独立预览模式无关闭逻辑）');
+});
+
+  // ============= 发送按钮 → ST 输入框 (cdn 模式) =============
+  document.querySelectorAll('.qy-send-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var ta = document.querySelector('.qy-input');
+      if (!ta) return;
+      var text = ta.value.trim();
+      if (!text) return;
+      try {
+        var pdoc = (window.parent) ? window.parent.document : null;
+        if (!pdoc) { console.warn('[qy] 无 parent document'); return; }
+        var stTa = pdoc.querySelector('#send_textarea');
+        var stBtn = pdoc.querySelector('#send_but');
+        if (!stTa || !stBtn) { console.warn('[qy] 找不到 ST 输入框/发送按钮'); return; }
+        stTa.value = text;
+        stTa.dispatchEvent(new Event('input', { bubbles: true }));
+        stBtn.click();
+        ta.value = '';
+      } catch (e) { console.warn('[qy] 发送失败:', e); }
+    });
   });
-})();
+  })();
     } catch (e) { console.error("[qy-init-main]", e); }
   };
 
@@ -7712,13 +7725,11 @@ html, body {
   // 关闭按钮（注入卡后调 parent.qyHideFarmUI 之类）
   window.qyFarmClose = function() {
     try {
-      if (window.parent && typeof window.parent.qyHideFarmUI === 'function') {
-        window.parent.qyHideFarmUI();
+      var _fn_qyHideFarmUI = (typeof window.qyHideFarmUI === 'function') ? window.qyHideFarmUI : (window.parent && typeof window.parent.qyHideFarmUI === 'function') ? window.parent.qyHideFarmUI : null; if (_fn_qyHideFarmUI) { _fn_qyHideFarmUI();
         return;
       }
     } catch (_) {}
-    console.log('[预览] 关闭按钮（独立预览模式无关闭逻辑）');
-  };
+};
 
   // ESC 关闭
   document.addEventListener('keydown', function(e) {
@@ -7771,13 +7782,11 @@ html, body {
   // 关闭 hook
   window.qyCookClose = function() {
     try {
-      if (window.parent && typeof window.parent.qyHideCookUI === 'function') {
-        window.parent.qyHideCookUI();
+      var _fn_qyHideCookUI = (typeof window.qyHideCookUI === 'function') ? window.qyHideCookUI : (window.parent && typeof window.parent.qyHideCookUI === 'function') ? window.parent.qyHideCookUI : null; if (_fn_qyHideCookUI) { _fn_qyHideCookUI();
         return;
       }
     } catch (_) {}
-    console.log('[预览] 关闭按钮（独立预览模式无关闭逻辑）');
-  };
+};
 
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') window.qyCookClose();
@@ -7841,13 +7850,11 @@ html, body {
   // 关闭 hook
   window.qyCraftClose = function() {
     try {
-      if (window.parent && typeof window.parent.qyHideCraftUI === 'function') {
-        window.parent.qyHideCraftUI();
+      var _fn_qyHideCraftUI = (typeof window.qyHideCraftUI === 'function') ? window.qyHideCraftUI : (window.parent && typeof window.parent.qyHideCraftUI === 'function') ? window.parent.qyHideCraftUI : null; if (_fn_qyHideCraftUI) { _fn_qyHideCraftUI();
         return;
       }
     } catch (_) {}
-    console.log('[预览] 关闭按钮（独立预览模式无关闭逻辑）');
-  };
+};
 
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') window.qyCraftClose();
@@ -7970,13 +7977,11 @@ html, body {
   // 关闭 hook
   window.qyCodexClose = function() {
     try {
-      if (window.parent && typeof window.parent.qyHideCodexUI === 'function') {
-        window.parent.qyHideCodexUI();
+      var _fn_qyHideCodexUI = (typeof window.qyHideCodexUI === 'function') ? window.qyHideCodexUI : (window.parent && typeof window.parent.qyHideCodexUI === 'function') ? window.parent.qyHideCodexUI : null; if (_fn_qyHideCodexUI) { _fn_qyHideCodexUI();
         return;
       }
     } catch (_) {}
-    console.log('[预览] 关闭按钮（独立预览模式无关闭逻辑）');
-  };
+};
 
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
