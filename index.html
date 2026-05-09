@@ -7263,27 +7263,105 @@ html, body {
     });
   }
 
-  // ============= ST 主页面接管 (用 window.parent.document 注入 style 让 #qy-app 盖住一切) =============
-  window.qyTakeoverParent = function() {
+  // ============= ST 主页面接管 (仅在浏览器 fullscreen 时生效, 退出 fullscreen 自动还原) =============
+  // 思路: 浏览器 fullscreen 不会自动让楼层 iframe 撑满, ST 主页面 layout 不变 -> SPA 还是 982px, 周围露 ST 蓝色.
+  // 解法: 沿 SPA 所在 iframe 的父链, 每个 ancestor 加 .qy-fs-keep (撑满父), 兄弟加 .qy-fs-hide (display:none).
+  // 退出 fullscreen 时移除所有 class + 清掉注入的 style, 完全还原.
+  function qyGetParentDoc() {
     try {
-      var pdoc = window.parent && window.parent !== window ? window.parent.document : null;
-      if (!pdoc) return;
-      var existing = pdoc.getElementById('qy-takeover-style');
-      if (existing) return;  // 已经接管过
+      return window.parent && window.parent !== window ? window.parent.document : null;
+    } catch (e) { return null; }
+  }
+
+  window.qyTakeoverParent = function() {
+    var pdoc = qyGetParentDoc();
+    if (!pdoc) return;
+    var myFrame = window.frameElement;
+    if (!myFrame) return;
+
+    // 注入 takeover CSS (只注入一次)
+    if (!pdoc.getElementById('qy-fs-style')) {
       var style = pdoc.createElement('style');
-      style.id = 'qy-takeover-style';
-      style.textContent = `
-        /* 隐藏 ST 主页面所有 body 直接子元素 */
-        body > *:not(.qy-takeover-frame-host) { visibility: hidden !important; pointer-events: none !important; }
-        /* 但保留我们这个 first_mes 楼层的渲染 div + iframe */
-        #chat, #chat .mes, #chat .mes-text, #chat iframe { visibility: visible !important; pointer-events: auto !important; }
-        body { overflow: hidden !important; }
-      `;
+      style.id = 'qy-fs-style';
+      style.textContent = [
+        '.qy-fs-hide { display: none !important; }',
+        'html.qy-fs-takeover, body.qy-fs-takeover {',
+        '  margin: 0 !important; padding: 0 !important;',
+        '  width: 100vw !important; height: 100vh !important;',
+        '  max-width: none !important; max-height: none !important;',
+        '  overflow: hidden !important; background: #000 !important;',
+        '}',
+        '.qy-fs-keep {',
+        '  width: 100% !important; height: 100% !important;',
+        '  max-width: none !important; max-height: none !important;',
+        '  min-width: 0 !important; min-height: 0 !important;',
+        '  margin: 0 !important; padding: 0 !important;',
+        '  border: none !important; flex: 1 1 100% !important;',
+        '  position: relative !important; inset: auto !important;',
+        '  transform: none !important;',
+        '}',
+        '.qy-fs-keep--root {',
+        '  position: fixed !important; inset: 0 !important;',
+        '  width: 100vw !important; height: 100vh !important;',
+        '  z-index: 2147483646 !important;',
+        '  background: #000 !important;',
+        '}'
+      ].join('\n');
       pdoc.head.appendChild(style);
-    } catch (e) {
-      console.warn('[qy] takeover parent 失败:', e);
+    }
+
+    pdoc.documentElement.classList.add('qy-fs-takeover');
+    pdoc.body.classList.add('qy-fs-takeover');
+
+    // 沿父链一路 keep, 兄弟一律 hide
+    var node = myFrame;
+    var lastKeep = null;
+    while (node && node !== pdoc.body && node !== pdoc.documentElement) {
+      var parent = node.parentNode;
+      if (!parent) break;
+      // 当前 node 的所有兄弟加 hide
+      for (var i = 0; i < parent.children.length; i++) {
+        var sib = parent.children[i];
+        if (sib !== node) sib.classList.add('qy-fs-hide');
+      }
+      node.classList.add('qy-fs-keep');
+      lastKeep = node;
+      node = parent;
+    }
+    // body 直接子节点这一层额外加 root class -> position:fixed 撑满 viewport
+    if (lastKeep) lastKeep.classList.add('qy-fs-keep--root');
+  };
+
+  window.qyRestoreParent = function() {
+    var pdoc = qyGetParentDoc();
+    if (!pdoc) return;
+    pdoc.documentElement.classList.remove('qy-fs-takeover');
+    pdoc.body.classList.remove('qy-fs-takeover');
+    var hides = pdoc.querySelectorAll('.qy-fs-hide');
+    for (var i = 0; i < hides.length; i++) hides[i].classList.remove('qy-fs-hide');
+    var keeps = pdoc.querySelectorAll('.qy-fs-keep');
+    for (var j = 0; j < keeps.length; j++) {
+      keeps[j].classList.remove('qy-fs-keep');
+      keeps[j].classList.remove('qy-fs-keep--root');
     }
   };
+
+  function qyBindFullscreenWatcher() {
+    var pdoc = qyGetParentDoc();
+    if (!pdoc) return;
+    function onFsChange() {
+      var fsEl = pdoc.fullscreenElement || pdoc.webkitFullscreenElement || pdoc.mozFullScreenElement || pdoc.msFullscreenElement;
+      if (fsEl) {
+        window.qyTakeoverParent();
+      } else {
+        window.qyRestoreParent();
+      }
+    }
+    pdoc.addEventListener('fullscreenchange', onFsChange);
+    pdoc.addEventListener('webkitfullscreenchange', onFsChange);
+    pdoc.addEventListener('mozfullscreenchange', onFsChange);
+    pdoc.addEventListener('MSFullscreenChange', onFsChange);
+  }
 
   // ============= page-poster (first_mes_海报_v2.html) =============
   window.qyInit_poster = function() {
@@ -7916,8 +7994,8 @@ html, body {
   // ============= 主入口 =============
   function bootstrap() {
     qyShowPage('poster');
-    qyTakeoverParent();
     bindModalCloseFallback();
+    qyBindFullscreenWatcher();  // 只绑事件, 不主动接管 - 进 fullscreen 才接管, 退出 fullscreen 还原
   }
 
   if (document.readyState === 'loading') {
