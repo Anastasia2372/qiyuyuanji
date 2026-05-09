@@ -7631,10 +7631,13 @@ html, body {
 });
 
   // ============= 发送按钮 → ST 输入框 (cdn 模式) =============
-  document.querySelectorAll('.qy-send-btn').forEach(function(btn) {
+  // 注意 selector 用 rename 后的 class (STATUS_RENAMES 里 qy-send-btn → qy-status-send-btn, qy-input → qy-status-input)
+  console.log('[qy] wiring 发送按钮, found:', document.querySelectorAll('.qy-status-send-btn').length);
+  document.querySelectorAll('.qy-status-send-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      var ta = document.querySelector('.qy-input');
-      if (!ta) return;
+      console.log('[qy] 发送按钮 click triggered');
+      var ta = document.querySelector('.qy-status-input');
+      if (!ta) { console.warn('[qy] 找不到 .qy-status-input'); return; }
       var text = ta.value.trim();
       if (!text) return;
       try {
