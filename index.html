@@ -5,23 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>七 域 源 纪</title>
 <style>
-/* ============= 全局 SPA 框架 - 自然填充楼层 iframe, 不强制全屏 ============= */
+/* ============= 全局 SPA 框架 - fit 楼层 iframe 高度 (B 方案: 全链 height:100% 防海报撑大 iframe) ============= */
 html, body {
   margin: 0; padding: 0;
   background: #050510;
+  height: 100%;
 }
 #qy-app {
   width: 100%;
+  height: 100%;
   background: #050510;
   position: relative;
 }
 .qy-page {
   display: none;
   width: 100%;
+  height: 100%;
 }
 .qy-page.active {
   display: block;
 }
+/* 状态栏 page 内容长 (创角 7 段表单) 需要 scroll, 海报/玩法 page 不 scroll (海报有 overflow:hidden 兜底) */
+#qy-app #page-main.active { overflow-y: auto; }
 
 /* 防止按钮文字因 letter-spacing 大而换行 (如"关闭"被挤成"关
 闭") - !important 覆盖各 page 内 CSS */
@@ -104,10 +109,12 @@ html, body {
 
 /* ============= 主容器 ============= */
 .qy-poster {
+  max-height: 100%;
+  overflow: hidden;
   position: relative;
   z-index: 10;
   width: 100%;
-  min-height: 100vh;
+  min-height: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto 1fr auto auto;
@@ -464,6 +471,8 @@ html, body {
 /* ============= 响应式（窄屏单列） ============= */
 @media (max-width: 720px) {
   .qy-poster {
+  max-height: 100%;
+  overflow: hidden;
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto auto auto;
     grid-template-areas:
@@ -7420,6 +7429,14 @@ html, body {
       fill.style.width = '100%';
       btn.disabled = false;
       btn.classList.add('ready');
+      // 进度条满后淡出隐藏 (避免和'源神启动'按钮文字视觉重复)
+      setTimeout(function() {
+        var progress = document.querySelector('.qy-progress');
+        if (!progress) return;
+        progress.style.transition = 'opacity 500ms ease';
+        progress.style.opacity = '0';
+        setTimeout(function() { progress.style.display = 'none'; }, 500);
+      }, 400);
     }
   }
   requestAnimationFrame(tick);
