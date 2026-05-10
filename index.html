@@ -6945,20 +6945,13 @@ html, body {
 
       var transcript = toCompress.map(function(m) {
         return (m.role === 'user' ? '玩家' : 'AI') + ': ' + m.content;
-      }).join('
-
-');
+      }).join('\n\n');
 
       var summaryPrompt =
-        '请把以下 ' + toCompress.length + ' 条对话压缩成 200 字内摘要。
-' +
-        '保留: 玩家关键行动 / 剧情推进 / NPC 关系变化 / 状态变化要点 / 重要选择。
-' +
-        '直接输出摘要文字本身, 不加任何前缀或标签。
-
-' +
-        '对话:
-' + transcript;
+        '请把以下 ' + toCompress.length + ' 条对话压缩成 200 字内摘要。\n' +
+        '保留: 玩家关键行动 / 剧情推进 / NPC 关系变化 / 状态变化要点 / 重要选择。\n' +
+        '直接输出摘要文字本身, 不加任何前缀或标签。\n\n' +
+        '对话:\n' + transcript;
 
       var summaryResult = '';
       if (typeof generateRaw === 'function') {
@@ -7661,8 +7654,7 @@ html, body {
       '- 体现选定的出身地与宿命氛围',
       '- 引出第一个交互节点（让玩家有动力回话）',
       '- 不要罗列状态字段',
-    ].join('
-');
+    ].join('\n');
 
     try {
       if (typeof eventOn === 'function' && typeof iframe_events !== 'undefined') {
