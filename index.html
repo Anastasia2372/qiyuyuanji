@@ -1694,6 +1694,37 @@ html, body {
   color: #b8c8e0;
 }
 
+/* ============= vamp chat 样式 ============= */
+.qy-vamp-user {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 1.4em;
+}
+.qy-vamp-user[hidden] { display: none; }
+.qy-vamp-user-bubble {
+  display: inline-block;
+  max-width: 70%;
+  padding: 0.7em 1.1em;
+  background: linear-gradient(135deg, rgba(168, 216, 255, 0.16), rgba(68, 136, 221, 0.22));
+  border: 1px solid rgba(168, 216, 255, 0.45);
+  border-radius: 16px 16px 4px 16px;
+  color: #e0ecfa;
+  font-size: 0.95em;
+  line-height: 1.6;
+  box-shadow: 0 0 12px rgba(68, 136, 221, 0.35), inset 0 0 8px rgba(168, 216, 255, 0.1);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.qy-vamp-ai p { margin: 0 0 1.4em; }
+.qy-vamp-ai-empty {
+  color: #5a6480;
+  font-style: italic;
+  text-align: center;
+  padding: 2em 0;
+}
+
 /* ============= page-fishing (钓鱼.html) ============= */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Cinzel+Decorative:wght@500;700&display=swap');
 
@@ -4508,14 +4539,15 @@ html, body {
   <main class="qy-status-main">
 
     <!-- 正文 -->
-    <article class="qy-status-story">
-      <p>白晶印记初成的那一夜，掌心契约蛋还在沉睡，蛋壳上的纹路在月光下泛着浅淡的银。我站在<strong>中枢神域</strong>外环的高台上，远处万象裁定局的钟声每隔一刻便会响起一次，沉重得像是在丈量某种我尚未察觉的尺度。</p>
-
-      <p>风从废墟方向来，带着源石的腥气。一千一百年了，这片大陆从灰烬里长出来的秩序仍在颤抖——七大王国互相提防，源鼎是它们共同的命脉，也是共同的伤口。</p>
-
-      <p>"持蛋者，"远处传来一个低沉的声音，"你怎么会站在这里？"</p>
-
-      <p>我转过身，<em>夜白</em>不知何时已经踏出了蛋壳，鳞片上还沾着孵化时的银色微光。它把头微微低下，金色的眼瞳里映着我的轮廓——这是我们之间第一次对视，也是契约真正开始的瞬间。</p>
+        <article class="qy-status-story">
+      <!-- vamp: 玩家最新发言（小气泡, 海洋蓝, 靠右） -->
+      <div class="qy-vamp-user" id="qy-vamp-user" hidden>
+        <span class="qy-vamp-user-bubble"></span>
+      </div>
+      <!-- vamp: AI 最新正文（大头, 占主体） -->
+      <div class="qy-vamp-ai" id="qy-vamp-ai">
+        <p class="qy-vamp-ai-empty">（等待你的命运书写）</p>
+      </div>
     </article>
 
     <!-- 前端状态栏（翻页） -->
@@ -4533,377 +4565,16 @@ html, body {
         <button class="qy-status-tab" data-page="7">动 态</button>
       </div>
 
-      <!-- 翻页内容 -->
+      <!-- 翻页内容 (vamp+mvu 清 sample, 由 qyRenderStatusBar 动态填充) -->
       <div class="qy-status-pages" id="qy-status-pages">
-
-        <!-- 页 0: 主角 -->
-        <div class="qy-status-page active" data-page="0">
-          <div class="qy-status-card">
-            <div class="qy-status-card-title">主 角 <span class="qy-status-card-deco">PROTAGONIST</span></div>
-            <div class="qy-player">
-              <div>
-                <div class="qy-status-data-row"><span class="key">姓名</span><span class="val">林洛</span></div>
-                <div class="qy-status-data-row"><span class="key">性别</span><span class="val">男</span></div>
-                <div class="qy-status-data-row"><span class="key">年龄</span><span class="val">18</span></div>
-                <div class="qy-status-data-row"><span class="key">种族</span><span class="val">人</span></div>
-                <div class="qy-status-data-row"><span class="key">出身地</span><span class="val">中枢神域</span></div>
-              </div>
-              <div>
-                <div class="qy-status-data-row"><span class="key">当前阶级</span><span class="val">白晶印记</span></div>
-                <div class="qy-status-data-row"><span class="key">当前势力</span><span class="val">散修</span></div>
-                <div class="qy-status-data-row"><span class="key">源石阶印记</span><span class="val">未认证</span></div>
-                <div class="qy-status-data-row"><span class="key">契约物品</span><span class="val">无</span></div>
-                <div class="qy-status-data-row"><span class="key">宿命</span><span class="val">蛋孵祭司家</span></div>
-              </div>
-            </div>
-            <div class="qy-status-data-row heading">天 元</div>
-            <div class="qy-currency">
-              <div class="qy-currency-item"><div class="c-key">石质</div><div class="c-val">0</div></div>
-              <div class="qy-currency-item"><div class="c-key">玉质</div><div class="c-val">0</div></div>
-              <div class="qy-currency-item"><div class="c-key">晶质</div><div class="c-val">0</div></div>
-              <div class="qy-currency-item"><div class="c-key">源质</div><div class="c-val">0</div></div>
-              <div class="qy-currency-item"><div class="c-key">渊骨币</div><div class="c-val">0</div></div>
-            </div>
-            <div class="qy-status-data-row heading">装 备</div>
-            <div class="qy-equip">
-              <div class="qy-equip-slot"><div class="slot-key">头</div><div class="slot-val">无</div></div>
-              <div class="qy-equip-slot"><div class="slot-key">胸</div><div class="slot-val">布衣</div></div>
-              <div class="qy-equip-slot"><div class="slot-key">腿</div><div class="slot-val">布裤</div></div>
-              <div class="qy-equip-slot"><div class="slot-key">脚</div><div class="slot-val">草鞋</div></div>
-              <div class="qy-equip-slot"><div class="slot-key">武器</div><div class="slot-val">无</div></div>
-            </div>
-            <div class="qy-status-data-row heading">心 里 话</div>
-            <div class="qy-heart-words">
-              掌中契约蛋的温度比夜风更暖，像是在告诉我什么。我不该相信这种感觉——可它确实让我觉得，我没那么孤独了。
-            </div>
-          </div>
-        </div>
-
-        <!-- 页 1: 背包 -->
-        <div class="qy-status-page" data-page="1">
-          <div class="qy-status-card">
-            <div class="qy-status-card-title">背 包 <span class="qy-status-card-deco">INVENTORY</span></div>
-            <div class="qy-inventory">
-              <div class="qy-item">
-                <div class="qy-item-name">残破的源石碎片</div>
-                <div class="qy-item-meta"><span class="qty">×3</span><span class="rarity rarity-common">凡品</span></div>
-                <div class="qy-item-desc">从废墟里捡的，泛着微弱的源能波动。</div>
-              </div>
-              <div class="qy-item">
-                <div class="qy-item-name">青草丹</div>
-                <div class="qy-item-meta"><span class="qty">×5</span><span class="rarity rarity-common">凡品</span></div>
-                <div class="qy-item-desc">疗伤用的常见丹药，止血定气。</div>
-              </div>
-              <div class="qy-item">
-                <div class="qy-item-name">中枢神域通行牒</div>
-                <div class="qy-item-meta"><span class="qty">×1</span><span class="rarity rarity-rare">珍品</span></div>
-                <div class="qy-item-desc">出生地颁发的身份凭证，可入皇室外环。</div>
-              </div>
-              <div class="qy-item">
-                <div class="qy-item-name">蛋孵祭司家信物</div>
-                <div class="qy-item-meta"><span class="qty">×1</span><span class="rarity rarity-special">宿命</span></div>
-                <div class="qy-item-desc">家族传承之物，刻有古老的孵化纹路。</div>
-              </div>
-              <div class="qy-item-empty">— 共 4 件物品 —</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 页 2: 同伴 -->
-        <div class="qy-status-page" data-page="2">
-          <div class="qy-status-card">
-            <div class="qy-status-card-title">同 伴 <span class="qy-status-card-deco">COMPANIONS</span></div>
-            <div class="qy-three-col">
-              <div class="qy-three-slot">
-                <h4>夜白</h4>
-                <div class="sub">龙 · 契约伙伴</div>
-                <div class="qy-status-data-row"><span class="key">羁绊</span><span class="val">30 / 相识</span></div>
-                <div class="qy-status-data-row"><span class="key">心情</span><span class="val">平静</span></div>
-                <div class="qy-status-data-row"><span class="key">忠诚</span><span class="val">中立</span></div>
-                <div class="qy-status-data-row"><span class="key">契约状态</span><span class="val">正常</span></div>
-                <div class="qy-mini-heart">主人...今夜的星很亮，蛋壳之外的世界比想象中更冷。</div>
-              </div>
-              <div class="qy-three-slot empty">伙伴 2 · 空位</div>
-              <div class="qy-three-slot empty">伙伴 3 · 空位</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 页 3: NPC -->
-        <div class="qy-status-page" data-page="3">
-          <div class="qy-status-card">
-            <div class="qy-status-card-title">N P C <span class="qy-status-card-deco">NPC</span></div>
-            <div class="qy-three-col">
-              <div class="qy-three-slot">
-                <h4>柳青衣</h4>
-                <div class="sub">中枢神域 · 律令法院</div>
-                <div class="info">中枢的年轻律官，对源鼎之外的事物保持距离的好奇。</div>
-                <div class="qy-mini-heart">这个少年身上有什么让我不安的东西......是源鼎的味道吗？</div>
-              </div>
-              <div class="qy-three-slot empty">N P C 2 · 未邂逅</div>
-              <div class="qy-three-slot empty">N P C 3 · 未邂逅</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 页 4: 领地 + 声望 -->
-        <div class="qy-status-page" data-page="4">
-          <div class="qy-row-2">
-            <div class="qy-status-card">
-              <div class="qy-status-card-title">领 地 <span class="qy-status-card-deco">DOMAIN</span></div>
-              <div class="qy-status-data-row"><span class="key">规模</span><span class="val">未购置</span></div>
-              <div class="qy-status-data-row"><span class="key">地脉品质</span><span class="val">未知</span></div>
-              <div class="qy-status-data-row"><span class="key">嵌入元素源石</span><span class="val">无</span></div>
-              <div class="qy-status-data-row"><span class="key">领民总数</span><span class="val">0</span></div>
-              <div class="qy-status-data-row"><span class="key">综合心情</span><span class="val">良好</span></div>
-              <div class="qy-list-empty">尚未购入空岛</div>
-            </div>
-            <div class="qy-status-card">
-              <div class="qy-status-card-title">声 望 <span class="qy-status-card-deco">REPUTATION</span></div>
-              <div class="qy-status-data-row heading">七国王室</div>
-              <div class="qy-status-data-row"><span class="key">中枢神域</span><span class="val">10 (中立)</span></div>
-              <div class="qy-status-data-row heading">特权家族</div>
-              <div class="qy-list-empty">无接触</div>
-              <div class="qy-status-data-row heading">中枢机构</div>
-              <div class="qy-status-data-row"><span class="key">万象裁定局</span><span class="val">0 (中立)</span></div>
-              <div class="qy-status-data-row heading">法外势力</div>
-              <div class="qy-list-empty">无接触</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 页 5: 任务（sub-tab 三栏：未接 / 进行中 / 已完成） -->
-        <div class="qy-status-page" data-page="5">
-          <div class="qy-status-card">
-            <div class="qy-status-card-title">任 务 <span class="qy-status-card-deco">QUESTS</span></div>
-
-            <!-- sub-tab -->
-            <div class="qy-task-subtabs">
-              <button class="qy-task-subtab active" data-pane="0">未 接<span class="qy-task-subtab-num">2</span></button>
-              <button class="qy-task-subtab" data-pane="1">进 行 中<span class="qy-task-subtab-num">3</span></button>
-              <button class="qy-task-subtab" data-pane="2">已 完 成<span class="qy-task-subtab-num">2</span></button>
-            </div>
-
-            <!-- 未接（按接到时间倒序） -->
-            <div class="qy-task-pane active" data-pane="0">
-
-              <div class="qy-task-block diff-yuanjie">
-                <div class="qy-task-head">
-                  <div class="qy-task-line1">
-                    <span class="qy-diff-badge">源 劫</span>
-                    <span class="qy-task-name">清剿暗渊集市余孽</span>
-                  </div>
-                  <div class="qy-task-source">万象裁定局 · 红字告示</div>
-                </div>
-                <div class="qy-task-desc">裁定局贴出红字告示，悬赏清剿西圣城外的暗渊集市余孽。处刑者已抵近，要在他们出手前抢得线索。</div>
-                <div class="qy-task-rewards">
-                  <span class="qy-reward-chip r-currency">晶质 +5</span>
-                  <span class="qy-reward-chip r-item">神迹 · 物品 ×1</span>
-                  <span class="qy-reward-chip r-unlock">解锁 · 万象裁定局门下</span>
-                  <span class="qy-reward-chip r-knowledge">知识 · 处刑者秘录残片</span>
-                </div>
-                <div class="qy-task-actions">
-                  <button class="qy-task-btn primary">接 受</button>
-                </div>
-              </div>
-
-              <div class="qy-task-block diff-yuanqi">
-                <div class="qy-task-head">
-                  <div class="qy-task-line1">
-                    <span class="qy-diff-badge">源 契</span>
-                    <span class="qy-task-name">寻找北苍秘境</span>
-                  </div>
-                  <div class="qy-task-source">柳青衣</div>
-                </div>
-                <div class="qy-task-desc">东苍北苍山脉深处出现源能异常波动，柳青衣听闻此事，请你前往一探究竟。</div>
-                <div class="qy-task-rewards">
-                  <span class="qy-reward-chip r-currency">玉质 +30</span>
-                  <span class="qy-reward-chip r-item">失传 · 北苍秘境地图 ×1</span>
-                  <span class="qy-reward-chip r-skill">钓鱼 +5</span>
-                  <span class="qy-reward-chip r-rep">东苍国声望 +10</span>
-                </div>
-                <div class="qy-task-actions">
-                  <button class="qy-task-btn primary">接 受</button>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- 进行中（按 progress_value 倒序：80 → 50 → 20） -->
-            <div class="qy-task-pane" data-pane="1">
-
-              <div class="qy-task-block diff-yuanji">
-                <div class="qy-task-head">
-                  <div class="qy-task-line1">
-                    <span class="qy-diff-badge">源 迹</span>
-                    <span class="qy-task-name">蛋孵祭司家祭礼</span>
-                  </div>
-                  <div class="qy-task-source">宿命 · 蛋孵祭司家</div>
-                </div>
-                <div class="qy-task-desc">家族传承之礼，每三年一次祭祀古蛋之灵。需备齐三件祭具方可主持。</div>
-                <div class="qy-task-progress">已收齐三件祭具，仅缺最后一根孵化银针</div>
-                <div class="qy-task-rewards">
-                  <span class="qy-reward-chip r-currency">玉质 +20</span>
-                  <span class="qy-reward-chip r-rep">中枢神域 +5</span>
-                  <span class="qy-reward-chip r-knowledge">知识 · 蛋孵古礼一卷</span>
-                </div>
-                <div class="qy-task-actions">
-                  <button class="qy-task-btn">放 弃</button>
-                  <button class="qy-task-btn primary">手 动 标 完 成</button>
-                </div>
-              </div>
-
-              <div class="qy-task-block diff-yuanqi">
-                <div class="qy-task-head">
-                  <div class="qy-task-line1">
-                    <span class="qy-diff-badge">源 契</span>
-                    <span class="qy-task-name">北苍源能样本采集</span>
-                  </div>
-                  <div class="qy-task-source">东苍王室密令</div>
-                </div>
-                <div class="qy-task-desc">东苍王室秘派学者勘察北苍异象，需要五处源能样本。你被点名同行，负责取样。</div>
-                <div class="qy-task-progress">已完成两处采样，剩余三处尚未抵达</div>
-                <div class="qy-task-rewards">
-                  <span class="qy-reward-chip r-currency">玉质 +40</span>
-                  <span class="qy-reward-chip r-item">失传 · 草药样本盒 ×1</span>
-                  <span class="qy-reward-chip r-skill">灵植培育 +8</span>
-                </div>
-                <div class="qy-task-actions">
-                  <button class="qy-task-btn">放 弃</button>
-                  <button class="qy-task-btn primary">手 动 标 完 成</button>
-                </div>
-              </div>
-
-              <div class="qy-task-block diff-yuanjie">
-                <div class="qy-task-head">
-                  <div class="qy-task-line1">
-                    <span class="qy-diff-badge">源 劫</span>
-                    <span class="qy-task-name">追查千岛海国谍报</span>
-                  </div>
-                  <div class="qy-task-source">千岛海国 · 第三皇女</div>
-                </div>
-                <div class="qy-task-desc">千岛海国第三皇女私会南渊巫医的传言四起，皇女本人请你查清谍报来源。</div>
-                <div class="qy-task-progress">仅在码头查到一个化名，线索断在西圣</div>
-                <div class="qy-task-rewards">
-                  <span class="qy-reward-chip r-currency">源质 +1</span>
-                  <span class="qy-reward-chip r-item">神迹 · 物品 ×1</span>
-                  <span class="qy-reward-chip r-unlock">解锁 · 海国密牒室</span>
-                </div>
-                <div class="qy-task-actions">
-                  <button class="qy-task-btn">放 弃</button>
-                  <button class="qy-task-btn primary">手 动 标 完 成</button>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- 已完成（按完成时间倒序） -->
-            <div class="qy-task-pane" data-pane="2">
-
-              <div class="qy-task-block diff-yuanqi completed">
-                <div class="qy-task-head">
-                  <div class="qy-task-line1">
-                    <span class="qy-diff-badge">源 契</span>
-                    <span class="qy-task-name">寻回失窃的契约蛋</span>
-                    <span class="qy-task-complete-time">巳时·初春第七日</span>
-                  </div>
-                  <div class="qy-task-source">散修 · 王老</div>
-                </div>
-                <div class="qy-task-desc">王老的契约蛋被窃，求你寻回。蛋纹已显微弱呼应，循之可寻。</div>
-                <div class="qy-task-rewards">
-                  <span class="qy-reward-chip r-currency">玉质 +25</span>
-                  <span class="qy-reward-chip r-item">失传 · 蛋壳护符 ×1</span>
-                  <span class="qy-reward-chip r-knowledge">知识 · 契约古法</span>
-                </div>
-                <div class="qy-task-actions">
-                  <button class="qy-task-btn disabled" disabled>已 领 奖</button>
-                </div>
-              </div>
-
-              <div class="qy-task-block diff-yuanji completed">
-                <div class="qy-task-head">
-                  <div class="qy-task-line1">
-                    <span class="qy-diff-badge">源 迹</span>
-                    <span class="qy-task-name">护送商旅至东苍</span>
-                    <span class="qy-task-complete-time">辰时·初春第三日</span>
-                  </div>
-                  <div class="qy-task-source">中枢神域 · 驿馆</div>
-                </div>
-                <div class="qy-task-desc">护送一批通行牒贸易至东苍国都。路平人安便算成。</div>
-                <div class="qy-task-rewards">
-                  <span class="qy-reward-chip r-currency">石质 +50</span>
-                  <span class="qy-reward-chip r-rep">中枢神域 +5</span>
-                  <span class="qy-reward-chip r-rep">东苍国 +3</span>
-                </div>
-                <div class="qy-task-actions">
-                  <button class="qy-task-btn disabled" disabled>已 领 奖</button>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-
-        <!-- 页 6: 世界事件（独立详细） -->
-        <div class="qy-status-page" data-page="6">
-          <div class="qy-status-card">
-            <div class="qy-status-card-title">世 界 事 件 <span class="qy-status-card-deco">EVENTS</span></div>
-            <div class="qy-event-block">
-              <div class="qy-event-head">
-                <span class="tag">追踪中</span>
-                <span class="qy-event-name">龙脉觉醒</span>
-                <span class="qy-event-progress">进度 30%</span>
-              </div>
-              <div class="qy-status-data-row"><span class="key">起始时间</span><span class="val">辰时 · 春</span></div>
-              <div class="qy-status-data-row"><span class="key">地点</span><span class="val">东苍国 · 北苍山脉</span></div>
-              <div class="qy-status-data-row"><span class="key">参与势力</span><span class="val">东苍国 / 万象裁定局</span></div>
-              <div class="qy-event-desc">东苍北苍山脉深处的古龙脉出现异常波动，灵植大量提前抽芽，源能浓度上升 3 倍。东苍王室秘派学者前往勘察。</div>
-            </div>
-            <div class="qy-event-block">
-              <div class="qy-event-head">
-                <span class="tag">未触发</span>
-                <span class="qy-event-name">裁定局清剿暗渊</span>
-                <span class="qy-event-progress">- -</span>
-              </div>
-              <div class="qy-status-data-row"><span class="key">预计触发</span><span class="val">玩家声望 ≥ 30 时</span></div>
-              <div class="qy-status-data-row"><span class="key">预计地点</span><span class="val">西圣国 · 暗渊集市</span></div>
-              <div class="qy-event-desc">万象裁定局对暗渊集市的最新动作，处刑者已抵达西圣城外。</div>
-            </div>
-            <div class="qy-event-block">
-              <div class="qy-event-head">
-                <span class="tag">未触发</span>
-                <span class="qy-event-name">北冥血盟仪式</span>
-                <span class="qy-event-progress">- -</span>
-              </div>
-              <div class="qy-status-data-row"><span class="key">预计触发</span><span class="val">冬至前夕</span></div>
-              <div class="qy-status-data-row"><span class="key">预计地点</span><span class="val">北冥国 · 凛冬祭坛</span></div>
-              <div class="qy-event-desc">北冥猎户族每年冬至举行的图腾血盟仪式，会接受外来者参与。</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 页 7: 动态（独立详细） -->
-        <div class="qy-status-page" data-page="7">
-          <div class="qy-status-card">
-            <div class="qy-status-card-title">动 态 <span class="qy-status-card-deco">DYNAMICS</span></div>
-
-            <div class="qy-status-data-row heading">活 跃 事 件</div>
-            <div class="qy-list-item">东苍国边境出现源能异象，灵植抽芽提前 12 日</div>
-            <div class="qy-list-item">中枢神域宣布对源石矿场加征赋税</div>
-
-            <div class="qy-status-data-row heading">酒 馆 传 闻</div>
-            <div class="qy-list-item">· 暗渊集市三日内将移动到西圣城外破庙</div>
-            <div class="qy-list-item">· 北冥猎户高价收购灾前残卷，每片付出半枚源质天元</div>
-            <div class="qy-list-item">· 千岛海国第三皇女与南渊巫医私会的传言再起</div>
-
-            <div class="qy-status-data-row heading">邻 国 动 态</div>
-            <div class="qy-list-item">机械城邦与南渊国关系紧张，机械城邦炼金商队已停止南行</div>
-            <div class="qy-list-item">西圣国大主教召集教廷会议，议题不公开</div>
-            <div class="qy-list-item">东苍国天梯门派今春破例不再收徒</div>
-          </div>
-        </div>
-
+        <div class="qy-status-page active" data-page="0" id="qy-status-page-protagonist"></div>
+        <div class="qy-status-page" data-page="1" id="qy-status-page-inventory"></div>
+        <div class="qy-status-page" data-page="2" id="qy-status-page-companions"></div>
+        <div class="qy-status-page" data-page="3" id="qy-status-page-npc"></div>
+        <div class="qy-status-page" data-page="4" id="qy-status-page-domain"></div>
+        <div class="qy-status-page" data-page="5" id="qy-status-page-quests"></div>
+        <div class="qy-status-page" data-page="6" id="qy-status-page-events"></div>
+        <div class="qy-status-page" data-page="7" id="qy-status-page-dynamics"></div>
       </div>
 
       <!-- 翻页器 -->
@@ -6864,55 +6535,17 @@ html, body {
         <div class="qy-stats-name">钓 鱼 图 鉴</div>
         <div class="qy-stats-divider"></div>
         <div class="qy-stats-numbers">
-          <div class="qy-stats-num"><span class="label">已 发 现</span><span class="val red">5</span></div>
+          <div class="qy-stats-num"><span class="label">已 发 现</span><span class="val red">0</span></div>
           <div class="qy-stats-num"><span class="label">总 数</span><span class="val">12</span></div>
-          <div class="qy-stats-num"><span class="label">完 整 度</span><span class="val">42%</span></div>
+          <div class="qy-stats-num"><span class="label">完 整 度</span><span class="val">0%</span></div>
         </div>
-        <div class="qy-stats-bar"><div class="qy-stats-bar-track"><div class="qy-stats-bar-fill" style="width: 42%"></div></div></div>
+        <div class="qy-stats-bar"><div class="qy-stats-bar-track"><div class="qy-stats-bar-fill" style="width: 0%"></div></div></div>
         <div class="qy-stats-seal">水<br>渊</div>
       </div>
 
       <div class="qy-codex-grid">
-        <!-- 已发现 5 -->
-        <div class="qy-entry" data-cat="fish" data-id="f1" style="--img-c1: #b8d8e8; --img-c2: #5a8aa8;">
-          <span class="qy-entry-seal">已<br>发现</span>
-          <div class="qy-entry-img"><span class="qy-entry-img-text">河 鲤</span></div>
-          <div class="qy-entry-foot">
-            <div class="qy-entry-name">银 鳞 河 鲤</div>
-            <span class="qy-entry-rank">浅</span>
-          </div>
-        </div>
-        <div class="qy-entry" data-cat="fish" data-id="f2" style="--img-c1: #98c8d8; --img-c2: #4a7888;">
-          <span class="qy-entry-seal">已<br>发现</span>
-          <div class="qy-entry-img"><span class="qy-entry-img-text">沧 海 鲈</span></div>
-          <div class="qy-entry-foot">
-            <div class="qy-entry-name">沧 海 鲈</div>
-            <span class="qy-entry-rank">远</span>
-          </div>
-        </div>
-        <div class="qy-entry" data-cat="fish" data-id="f3" style="--img-c1: #c8b8d8; --img-c2: #6a5a78;">
-          <span class="qy-entry-seal">已<br>发现</span>
-          <div class="qy-entry-img"><span class="qy-entry-img-text">深 渊 鳗</span></div>
-          <div class="qy-entry-foot">
-            <div class="qy-entry-name">深 渊 鳗</div>
-            <span class="qy-entry-rank">深</span>
-          </div>
-        </div>
-        <div class="qy-entry" data-cat="fish" data-id="f4" style="--img-c1: #e8c8a8; --img-c2: #a88858;">
-          <span class="qy-entry-seal">已<br>发现</span>
-          <div class="qy-entry-img"><span class="qy-entry-img-text">星 砂 鳞</span></div>
-          <div class="qy-entry-foot">
-            <div class="qy-entry-name">星 砂 鳞 鱼</div>
-            <span class="qy-entry-rank">升</span>
-          </div>
-        </div>
-        <div class="qy-entry" data-cat="fish" data-id="f5" style="--img-c1: #d8d0e8; --img-c2: #8878a0;">
-          <span class="qy-entry-seal">已<br>发现</span>
-          <div class="qy-entry-img"><span class="qy-entry-img-text">月 轨 翼</span></div>
-          <div class="qy-entry-foot">
-            <div class="qy-entry-name">月 轨 翼 鱼</div>
-            <span class="qy-entry-rank">凌</span>
-          </div>
+        <div class="qy-codex-grid-empty" style="grid-column: 1/-1; text-align: center; padding: 40px; color: #6a7888; font-style: italic;">— 等待你的钓竿垂下 —</div>
+      </div>
         </div>
         <!-- 未发现 4 -->
         <div class="qy-entry locked" data-cat="fish" data-id="fx1">
@@ -7180,7 +6813,605 @@ html, body {
   window.qyState = window.qyState || {
     currentPage: 'poster',
     _inited: {},
+    chatHistory: [],   // vamp chat 模式: 玩家+AI 交替消息 [{role:'user'|'assistant', content:'...'}]
   };
+  // 防御: 已有 qyState 但缺 chatHistory 时补上
+  if (!Array.isArray(window.qyState.chatHistory)) window.qyState.chatHistory = [];
+
+  // ============= vamp chat 渲染（顶部正文区: 玩家蓝气泡 + AI 正文）=============
+  function qyEscapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  window.qyRenderChat = function() {
+    var hist = (window.qyState && window.qyState.chatHistory) || [];
+    var lastUser = null;
+    var lastAi = null;
+    for (var i = hist.length - 1; i >= 0; i--) {
+      if (!lastUser && hist[i].role === 'user') lastUser = hist[i];
+      if (!lastAi && hist[i].role === 'assistant') lastAi = hist[i];
+      if (lastUser && lastAi) break;
+    }
+    var userEl = document.getElementById('qy-vamp-user');
+    if (userEl) {
+      var bubbleEl = userEl.querySelector('.qy-vamp-user-bubble');
+      if (lastUser && bubbleEl) {
+        bubbleEl.textContent = lastUser.content;
+        userEl.hidden = false;
+      } else {
+        userEl.hidden = true;
+      }
+    }
+    var aiEl = document.getElementById('qy-vamp-ai');
+    if (aiEl) {
+      if (lastAi && lastAi.content) {
+        // 段落分割: 空行分段, 单换行变 <br>
+        var paragraphs = String(lastAi.content).split(/\n\s*\n/);
+        aiEl.innerHTML = paragraphs.map(function(p) {
+          return '<p>' + qyEscapeHtml(p).replace(/\n/g, '<br>') + '</p>';
+        }).join('');
+      } else if (lastAi) {
+        aiEl.innerHTML = '<p class="qy-vamp-ai-empty">（命运正在书写...）</p>';
+      } else {
+        aiEl.innerHTML = '<p class="qy-vamp-ai-empty">（等待你的命运书写）</p>';
+      }
+    }
+  };
+
+  // ============= mvu 解析 + 写入 helper（vamp 模式用户视角"自动更新"）=============
+  window.qyApplyMvu = async function(aiText) {
+    if (!aiText || typeof aiText !== 'string') return false;
+    if (typeof window.Mvu === 'undefined') {
+      console.log('[qy] window.Mvu 不可用, 跳过变量解析（mvu 框架脚本可能未加载）');
+      return false;
+    }
+    try {
+      var oldData = Mvu.getMvuData({ type: 'chat' });
+      var newData = await Mvu.parseMessage(aiText, oldData);
+      if (newData) {
+        await Mvu.replaceMvuData(newData, { type: 'chat' });
+        if (typeof window.qyRenderStatusBar === 'function') window.qyRenderStatusBar();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.warn('[qy] mvu 解析失败:', e);
+      return false;
+    }
+  };
+
+  // ============= chat history 持久化 + 总结压缩（mvu stat_data.对话历史.{原文,小总结池,大总结}）=============
+  // 用 _ 开头字段名提示 AI 这是系统字段不要 _.set
+  var QY_HIST_RAW_THRESHOLD = 15;  // 原文超过这条数 → 异步压一段进小总结池
+
+  function qyGetHistData() {
+    if (typeof window.Mvu === 'undefined') return null;
+    var data = Mvu.getMvuData({ type: 'chat' }) || {};
+    var stat = data.stat_data || {};
+    stat['对话历史'] = stat['对话历史'] || { '原文': [], '小总结池': [], '大总结': '' };
+    return { data: data, stat: stat, hist: stat['对话历史'] };
+  }
+
+  // 构造发给 AI 的 prompts: 大总结 + 小总结池 + 当前原文
+  window.qyBuildPrompts = function() {
+    var ctx = qyGetHistData();
+    if (!ctx) {
+      // mvu 不可用退化到内存 chatHistory
+      return (qyState.chatHistory || []).filter(function(m) { return m.role === 'user' || m.role === 'assistant'; }).map(function(m) {
+        return { role: m.role, content: m.content };
+      });
+    }
+    var prompts = [];
+    var bigSummary = qySafe(ctx.hist['大总结'], '');
+    if (bigSummary) prompts.push({ role: 'system', content: '【过往剧情大事记】' + bigSummary });
+    var pool = qyUnwrapArr(ctx.hist['小总结池']);
+    pool.forEach(function(s) {
+      if (s) prompts.push({ role: 'system', content: '【近期摘要】' + String(s) });
+    });
+    var raw = qyUnwrapArr(ctx.hist['原文']);
+    raw.forEach(function(m) {
+      if (m && m.role && m.content) prompts.push({ role: m.role, content: m.content });
+    });
+    return prompts;
+  };
+
+  // 把这一轮 user+assistant 写到 mvu 持久化原文
+  window.qyPersistTurn = async function(userText, assistantText) {
+    if (typeof window.Mvu === 'undefined') return;
+    try {
+      var ctx = qyGetHistData();
+      if (!ctx) return;
+      var raw = qyUnwrapArr(ctx.hist['原文']);
+      raw.push({ role: 'user', content: userText });
+      raw.push({ role: 'assistant', content: assistantText });
+      ctx.hist['原文'] = raw;
+      ctx.stat['对话历史'] = ctx.hist;
+      ctx.data.stat_data = ctx.stat;
+      await Mvu.replaceMvuData(ctx.data, { type: 'chat' });
+    } catch (e) { console.warn('[qy] 持久化对话历史失败:', e); }
+  };
+
+  // 检查是否要压缩（异步沉默, 不阻塞玩家继续发送）
+  window.qyMaybeCompressHistory = async function() {
+    if (typeof window.Mvu === 'undefined') return;
+    try {
+      var ctx = qyGetHistData();
+      if (!ctx) return;
+      var raw = qyUnwrapArr(ctx.hist['原文']);
+      if (raw.length < QY_HIST_RAW_THRESHOLD) return;
+
+      var toCompress = raw.slice(0, QY_HIST_RAW_THRESHOLD);
+      var rest = raw.slice(QY_HIST_RAW_THRESHOLD);
+
+      var transcript = toCompress.map(function(m) {
+        return (m.role === 'user' ? '玩家' : 'AI') + ': ' + m.content;
+      }).join('
+
+');
+
+      var summaryPrompt =
+        '请把以下 ' + toCompress.length + ' 条对话压缩成 200 字内摘要。
+' +
+        '保留: 玩家关键行动 / 剧情推进 / NPC 关系变化 / 状态变化要点 / 重要选择。
+' +
+        '直接输出摘要文字本身, 不加任何前缀或标签。
+
+' +
+        '对话:
+' + transcript;
+
+      var summaryResult = '';
+      if (typeof generateRaw === 'function') {
+        summaryResult = await generateRaw({
+          user_input: summaryPrompt,
+          should_silence: true,
+          ordered_prompts: [{ role: 'user', content: summaryPrompt }],
+        });
+      } else if (typeof generate === 'function') {
+        summaryResult = await generate({
+          user_input: summaryPrompt,
+          should_silence: true,
+          overrides: { chat_history: { prompts: [] } },
+        });
+      }
+      if (typeof summaryResult !== 'string' || !summaryResult.trim()) {
+        console.warn('[qy] 小总结结果空, 跳过本轮压缩');
+        return;
+      }
+
+      // 重新读 mvu 写回 (期间可能已变)
+      var ctx2 = qyGetHistData();
+      if (!ctx2) return;
+      var pool = qyUnwrapArr(ctx2.hist['小总结池']);
+      pool.push(summaryResult.trim());
+      ctx2.hist['小总结池'] = pool;
+      // 注意: 此时 ctx2.hist.原文 可能比 ctx.hist.原文 多了新条目, 只删前 N 条
+      var rawNow = qyUnwrapArr(ctx2.hist['原文']);
+      ctx2.hist['原文'] = rawNow.slice(QY_HIST_RAW_THRESHOLD);
+      ctx2.stat['对话历史'] = ctx2.hist;
+      ctx2.data.stat_data = ctx2.stat;
+      await Mvu.replaceMvuData(ctx2.data, { type: 'chat' });
+      console.log('[qy] 小总结生成完成, 池子大小:', pool.length);
+    } catch (e) { console.warn('[qy] qyMaybeCompressHistory 失败:', e); }
+  };
+
+  // bootstrap 时从 mvu 恢复 qyState.chatHistory 内存快照（用于 qyRenderChat 等仅读用途）
+  window.qyRestoreChatHistory = function() {
+    var ctx = qyGetHistData();
+    if (!ctx) return;
+    var raw = qyUnwrapArr(ctx.hist['原文']);
+    qyState.chatHistory = raw.slice();
+    qyRenderChat();
+  };
+
+  // ============= 触发一次完整 generate（玩家发送 + "重新生成正文" 共用入口）=============
+  window.qyTriggerGenerate = async function(text) {
+    if (!text || !String(text).trim()) return;
+    text = String(text).trim();
+
+    // 1. push 玩家消息 (内存仅 UI 用) + 渲染气泡
+    qyState.chatHistory.push({ role: 'user', content: text });
+    qyRenderChat();
+
+    // 2. 占位 AI 消息 (流式覆盖目标)
+    var aiIdx = qyState.chatHistory.length;
+    qyState.chatHistory.push({ role: 'assistant', content: '' });
+    qyRenderChat();
+
+    // 3. 流式 listener
+    var streamHandle = null;
+    var onToken = function(fullText) {
+      qyState.chatHistory[aiIdx].content = fullText;
+      qyRenderChat();
+    };
+
+    var finalText = '';
+    try {
+      if (typeof eventOn === 'function' && typeof iframe_events !== 'undefined') {
+        streamHandle = eventOn(iframe_events.STREAM_TOKEN_RECEIVED_FULLY, onToken);
+      }
+
+      // prompts 来自 mvu 持久化历史 (大总结 + 小总结池 + 当前原文), 不含本轮 user
+      var prompts = window.qyBuildPrompts();
+
+      var result = await generate({
+        user_input: text,
+        should_stream: true,
+        should_silence: true,
+        overrides: { chat_history: { prompts: prompts } },
+      });
+
+      finalText = (typeof result === 'string') ? result : (result && result.content) || '';
+      qyState.chatHistory[aiIdx].content = finalText;
+      qyRenderChat();
+
+      // 4. 持久化本轮到 mvu 原文 (user + assistant)
+      await window.qyPersistTurn(text, finalText);
+
+      // 5. generate 完成 → 自动调 mvu 解析 AI 输出里的 _.set 命令 (A 类字段)
+      await window.qyApplyMvu(finalText);
+
+      // 6. 异步触发压缩检查 (不 await, 不阻塞下一轮发送)
+      window.qyMaybeCompressHistory().catch(function(e) { console.warn('[qy] 压缩异步失败:', e); });
+    } catch (e) {
+      console.warn('[qy] generate 失败:', e);
+      qyState.chatHistory[aiIdx].content = '[生成失败] ' + ((e && e.message) || e);
+      qyRenderChat();
+    } finally {
+      if (streamHandle && typeof streamHandle.stop === 'function') {
+        try { streamHandle.stop(); } catch (_) {}
+      }
+    }
+  };
+
+  // ============= mvu 状态栏渲染（8 sub-tab + 玩法字段 显示层）=============
+  // SafeGet helper: mvu 文档建议（数组形式 [实际值, "条件描述"] 取 [0]）
+  function qySafe(value, defaultValue) {
+    if (defaultValue === undefined) defaultValue = '';
+    if (value === undefined || value === null) return defaultValue;
+    if (Array.isArray(value)) return value.length !== 0 ? value[0] : defaultValue;
+    return value;
+  }
+  // InitVar 数组形式 [实际数组, "条件描述"] 解包成纯数组
+  function qyUnwrapArr(value) {
+    if (Array.isArray(value) && value.length === 2 && typeof value[1] === 'string' && Array.isArray(value[0])) {
+      return value[0];
+    }
+    return Array.isArray(value) ? value : [];
+  }
+  function qyRow(key, val) {
+    return '<div class="qy-status-data-row"><span class="key">' + qyEscapeHtml(key) + '</span><span class="val">' + qyEscapeHtml(val) + '</span></div>';
+  }
+  function qyHeading(text) {
+    return '<div class="qy-status-data-row heading">' + qyEscapeHtml(text) + '</div>';
+  }
+
+  window.qyRenderStatusBar = function() {
+    if (typeof window.Mvu === 'undefined') {
+      console.log('[qy] Mvu 不可用, 跳过状态栏渲染');
+      return;
+    }
+    try {
+      var data = Mvu.getMvuData({ type: 'chat' });
+      var stat = (data && data.stat_data) || {};
+      qyRenderProtagonist(stat);
+      qyRenderInventory(stat);
+      qyRenderCompanions(stat);
+      qyRenderNpcs(stat);
+      qyRenderDomainRep(stat);
+      qyRenderQuests(stat);
+      qyRenderEvents(stat);
+      qyRenderDynamics(stat);
+    } catch (e) {
+      console.warn('[qy] qyRenderStatusBar 失败:', e);
+    }
+  };
+
+  function qyRenderProtagonist(stat) {
+    var el = document.getElementById('qy-status-page-protagonist');
+    if (!el) return;
+    var p = stat['主角'] || {};
+    var ty = p['天元'] || {};
+    var eq = p['装备'] || {};
+    var fate = p['宿命'] || {};
+    var fateName = (fate && (fate['名字'] || fate['name'])) || qySafe(fate, '—');
+
+    el.innerHTML = '<div class="qy-status-card">' +
+      '<div class="qy-status-card-title">主 角 <span class="qy-status-card-deco">PROTAGONIST</span></div>' +
+      '<div class="qy-player">' +
+        '<div>' +
+          qyRow('姓名', qySafe(p['姓名'], '—')) +
+          qyRow('性别', qySafe(p['性别'], '—')) +
+          qyRow('年龄', qySafe(p['年龄'], '—')) +
+          qyRow('种族', qySafe(p['种族'], '—')) +
+          qyRow('出身地', qySafe(p['出身地'], '—')) +
+        '</div>' +
+        '<div>' +
+          qyRow('当前阶级', qySafe(p['当前阶级'], '—')) +
+          qyRow('当前势力', qySafe(p['当前势力'], '—')) +
+          qyRow('源石阶印记', qySafe(p['源石阶印记'], '—')) +
+          qyRow('契约物品', qySafe(p['契约物品'], '—')) +
+          qyRow('宿命', fateName) +
+        '</div>' +
+      '</div>' +
+      qyHeading('天 元') +
+      '<div class="qy-currency">' +
+        '<div class="qy-currency-item"><div class="c-key">石质</div><div class="c-val">' + qyEscapeHtml(qySafe(ty['石质天元'], 0)) + '</div></div>' +
+        '<div class="qy-currency-item"><div class="c-key">玉质</div><div class="c-val">' + qyEscapeHtml(qySafe(ty['玉质天元'], 0)) + '</div></div>' +
+        '<div class="qy-currency-item"><div class="c-key">晶质</div><div class="c-val">' + qyEscapeHtml(qySafe(ty['晶质天元'], 0)) + '</div></div>' +
+        '<div class="qy-currency-item"><div class="c-key">源质</div><div class="c-val">' + qyEscapeHtml(qySafe(ty['源质天元'], 0)) + '</div></div>' +
+        '<div class="qy-currency-item"><div class="c-key">渊骨币</div><div class="c-val">' + qyEscapeHtml(qySafe(ty['渊骨币'], 0)) + '</div></div>' +
+      '</div>' +
+      qyHeading('装 备') +
+      '<div class="qy-equip">' +
+        '<div class="qy-equip-slot"><div class="slot-key">头</div><div class="slot-val">' + qyEscapeHtml(qySafe(eq['头部'], '无')) + '</div></div>' +
+        '<div class="qy-equip-slot"><div class="slot-key">胸</div><div class="slot-val">' + qyEscapeHtml(qySafe(eq['胸部'], '无')) + '</div></div>' +
+        '<div class="qy-equip-slot"><div class="slot-key">腿</div><div class="slot-val">' + qyEscapeHtml(qySafe(eq['腿部'], '无')) + '</div></div>' +
+        '<div class="qy-equip-slot"><div class="slot-key">脚</div><div class="slot-val">' + qyEscapeHtml(qySafe(eq['脚部'], '无')) + '</div></div>' +
+        '<div class="qy-equip-slot"><div class="slot-key">武器</div><div class="slot-val">' + qyEscapeHtml(qySafe(eq['武器'], '无')) + '</div></div>' +
+      '</div>' +
+      qyHeading('心 里 话') +
+      '<div class="qy-heart-words">' + qyEscapeHtml(qySafe(p['心里话'], '（暂无心绪）')) + '</div>' +
+    '</div>';
+  }
+
+  function qyRenderInventory(stat) {
+    var el = document.getElementById('qy-status-page-inventory');
+    if (!el) return;
+    var inv = qyUnwrapArr((stat['主角'] && stat['主角']['背包物品']));
+    var items = inv.map(function(item) {
+      if (!item) return '';
+      var name = qySafe(item['名字'], '—');
+      var qty = qySafe(item['数量'], 1);
+      var rarity = qySafe(item['品级'], '凡品');
+      var desc = qySafe(item['描述'], '');
+      return '<div class="qy-item">' +
+        '<div class="qy-item-name">' + qyEscapeHtml(name) + '</div>' +
+        '<div class="qy-item-meta"><span class="qty">×' + qyEscapeHtml(qty) + '</span><span class="rarity">' + qyEscapeHtml(rarity) + '</span></div>' +
+        '<div class="qy-item-desc">' + qyEscapeHtml(desc) + '</div>' +
+      '</div>';
+    }).join('');
+    el.innerHTML = '<div class="qy-status-card">' +
+      '<div class="qy-status-card-title">背 包 <span class="qy-status-card-deco">INVENTORY</span></div>' +
+      '<div class="qy-inventory">' +
+        (inv.length === 0 ? '<div class="qy-item-empty">— 背包空空如也 —</div>' : items + '<div class="qy-item-empty">— 共 ' + inv.length + ' 件物品 —</div>') +
+      '</div>' +
+    '</div>';
+  }
+
+  function qyRenderCompanions(stat) {
+    var el = document.getElementById('qy-status-page-companions');
+    if (!el) return;
+    var comps = stat['同伴'] || {};
+    function slotHTML(c, idx) {
+      var name = qySafe(c && c['名字'], '空位');
+      if (!c || name === '空位' || !name) return '<div class="qy-three-slot empty">伙伴 ' + idx + ' · 空位</div>';
+      return '<div class="qy-three-slot">' +
+        '<h4>' + qyEscapeHtml(name) + '</h4>' +
+        '<div class="sub">' + qyEscapeHtml(qySafe(c['种族'], '—')) + ' · ' + qyEscapeHtml(qySafe(c['关系'], '—')) + '</div>' +
+        qyRow('羁绊', qySafe(c['羁绊度'], 0) + ' / ' + qySafe(c['羁绊阶段'], '—')) +
+        qyRow('心情', qySafe(c['心情'], '—')) +
+        qyRow('忠诚', qySafe(c['忠诚'], '—')) +
+        qyRow('契约状态', qySafe(c['契约状态'], '—')) +
+        '<div class="qy-mini-heart">' + qyEscapeHtml(qySafe(c['心里话'], '（暂无心绪）')) + '</div>' +
+      '</div>';
+    }
+    el.innerHTML = '<div class="qy-status-card">' +
+      '<div class="qy-status-card-title">同 伴 <span class="qy-status-card-deco">COMPANIONS</span></div>' +
+      '<div class="qy-three-col">' +
+        slotHTML(comps['伙伴1'], 1) +
+        slotHTML(comps['伙伴2'], 2) +
+        slotHTML(comps['伙伴3'], 3) +
+      '</div>' +
+    '</div>';
+  }
+
+  function qyRenderNpcs(stat) {
+    var el = document.getElementById('qy-status-page-npc');
+    if (!el) return;
+    function slotHTML(n, idx) {
+      var name = qySafe(n && n['姓名'], '未知');
+      if (!n || name === '未知' || !name) return '<div class="qy-three-slot empty">N P C ' + idx + ' · 未邂逅</div>';
+      return '<div class="qy-three-slot">' +
+        '<h4>' + qyEscapeHtml(name) + '</h4>' +
+        '<div class="sub">' + qyEscapeHtml(qySafe(n['所属势力'], '—')) + '</div>' +
+        '<div class="info">' + qyEscapeHtml(qySafe(n['大致信息'], '—')) + '</div>' +
+        '<div class="qy-mini-heart">' + qyEscapeHtml(qySafe(n['心里话'], '（暂无心绪）')) + '</div>' +
+      '</div>';
+    }
+    el.innerHTML = '<div class="qy-status-card">' +
+      '<div class="qy-status-card-title">N P C <span class="qy-status-card-deco">NPC</span></div>' +
+      '<div class="qy-three-col">' +
+        slotHTML(stat['NPC1'], 1) +
+        slotHTML(stat['NPC2'], 2) +
+        slotHTML(stat['NPC3'], 3) +
+      '</div>' +
+    '</div>';
+  }
+
+  function qyRenderDomainRep(stat) {
+    var el = document.getElementById('qy-status-page-domain');
+    if (!el) return;
+    var d = stat['空岛领地'] || {};
+    var rep = stat['声望阵营'] || {};
+    function repBlock(title, group) {
+      if (!group || typeof group !== 'object') return qyHeading(title) + '<div class="qy-list-empty">无接触</div>';
+      var keys = Object.keys(group);
+      if (keys.length === 0) return qyHeading(title) + '<div class="qy-list-empty">无接触</div>';
+      var rows = keys.map(function(k) {
+        var raw = qySafe(group[k], 0);
+        var n = parseInt(raw, 10);
+        var stage = '';
+        if (!isNaN(n)) {
+          if (n <= -50) stage = '死敌';
+          else if (n <= -10) stage = '敌对';
+          else if (n < 30) stage = '中立';
+          else if (n < 70) stage = '友好';
+          else stage = '盟友';
+        }
+        return qyRow(k, raw + (stage ? ' (' + stage + ')' : ''));
+      }).join('');
+      return qyHeading(title) + rows;
+    }
+    el.innerHTML = '<div class="qy-row-2">' +
+      '<div class="qy-status-card">' +
+        '<div class="qy-status-card-title">领 地 <span class="qy-status-card-deco">DOMAIN</span></div>' +
+        qyRow('规模', qySafe(d['规模'], '未购置')) +
+        qyRow('地脉品质', qySafe(d['地脉品质'], '未知')) +
+        qyRow('嵌入元素源石', qySafe(d['嵌入元素源石'], '无')) +
+        qyRow('领民总数', qySafe(d['领民总数'], 0)) +
+        qyRow('综合心情', qySafe(d['综合心情'], '良好')) +
+      '</div>' +
+      '<div class="qy-status-card">' +
+        '<div class="qy-status-card-title">声 望 <span class="qy-status-card-deco">REPUTATION</span></div>' +
+        repBlock('七国王室', rep['七国王室']) +
+        repBlock('特权家族', rep['特权家族']) +
+        repBlock('中枢机构', rep['中枢机构']) +
+        repBlock('法外势力', rep['法外势力']) +
+      '</div>' +
+    '</div>';
+  }
+
+  function qyRenderQuests(stat) {
+    var el = document.getElementById('qy-status-page-quests');
+    if (!el) return;
+    var quests = stat['任务'] || {};
+    var unaccepted = qyUnwrapArr(quests['未接']);
+    var inProgress = qyUnwrapArr(quests['进行中']);
+    var completed = qyUnwrapArr(quests['已完成']);
+
+    function difficultyClass(diff) {
+      var d = String(diff || '').replace(/\s/g, '');
+      if (d === '源迹') return 'diff-yuanji';
+      if (d === '源契') return 'diff-yuanqi';
+      if (d === '源劫') return 'diff-yuanjie';
+      return 'diff-yuanji';
+    }
+    function rewardChips(rewards) {
+      if (!Array.isArray(rewards)) return '';
+      return rewards.map(function(r) { return '<span class="qy-reward-chip">' + qyEscapeHtml(r) + '</span>'; }).join('');
+    }
+    function questCard(q, kind) {
+      var diff = qySafe(q['难度'], '源迹');
+      var name = qySafe(q['名字'], '—');
+      var safeName = String(name).replace(/'/g, "&#39;");
+      var source = qySafe(q['来源'], '');
+      var desc = qySafe(q['描述'], '');
+      var progress = qySafe(q['进度描述'], '');
+      var rewards = q['奖励'] || [];
+      var actionsHTML = '';
+      if (kind === 'unaccepted') {
+        actionsHTML = '<div class="qy-task-actions"><button class="qy-task-btn primary" data-quest-action="accept" data-quest-name="' + qyEscapeHtml(name) + '">接 受</button></div>';
+      } else if (kind === 'inprogress') {
+        actionsHTML = '<div class="qy-task-actions">' +
+          '<button class="qy-task-btn" data-quest-action="abandon" data-quest-name="' + qyEscapeHtml(name) + '">放 弃</button>' +
+          '<button class="qy-task-btn primary" data-quest-action="complete" data-quest-name="' + qyEscapeHtml(name) + '">手 动 标 完 成</button>' +
+        '</div>';
+      } else if (kind === 'completed') {
+        actionsHTML = '<div class="qy-task-actions"><button class="qy-task-btn disabled" disabled>已 领 奖</button></div>';
+      }
+      return '<div class="qy-task-block ' + difficultyClass(diff) + (kind === 'completed' ? ' completed' : '') + '">' +
+        '<div class="qy-task-head">' +
+          '<div class="qy-task-line1">' +
+            '<span class="qy-diff-badge">' + qyEscapeHtml(diff) + '</span>' +
+            '<span class="qy-task-name">' + qyEscapeHtml(name) + '</span>' +
+          '</div>' +
+          (source ? '<div class="qy-task-source">' + qyEscapeHtml(source) + '</div>' : '') +
+        '</div>' +
+        '<div class="qy-task-desc">' + qyEscapeHtml(desc) + '</div>' +
+        (progress ? '<div class="qy-task-progress">' + qyEscapeHtml(progress) + '</div>' : '') +
+        '<div class="qy-task-rewards">' + rewardChips(rewards) + '</div>' +
+        actionsHTML +
+      '</div>';
+    }
+    el.innerHTML = '<div class="qy-status-card">' +
+      '<div class="qy-status-card-title">任 务 <span class="qy-status-card-deco">QUESTS</span></div>' +
+      '<div class="qy-task-subtabs">' +
+        '<button class="qy-task-subtab active" data-pane="0">未 接<span class="qy-task-subtab-num">' + unaccepted.length + '</span></button>' +
+        '<button class="qy-task-subtab" data-pane="1">进 行 中<span class="qy-task-subtab-num">' + inProgress.length + '</span></button>' +
+        '<button class="qy-task-subtab" data-pane="2">已 完 成<span class="qy-task-subtab-num">' + completed.length + '</span></button>' +
+      '</div>' +
+      '<div class="qy-task-pane active" data-pane="0">' + (unaccepted.length === 0 ? '<div class="qy-list-empty">尚无可接任务</div>' : unaccepted.map(function(q) { return questCard(q, 'unaccepted'); }).join('')) + '</div>' +
+      '<div class="qy-task-pane" data-pane="1">' + (inProgress.length === 0 ? '<div class="qy-list-empty">尚无进行中任务</div>' : inProgress.map(function(q) { return questCard(q, 'inprogress'); }).join('')) + '</div>' +
+      '<div class="qy-task-pane" data-pane="2">' + (completed.length === 0 ? '<div class="qy-list-empty">尚未完成任何任务</div>' : completed.map(function(q) { return questCard(q, 'completed'); }).join('')) + '</div>' +
+    '</div>';
+
+    // 任务 sub-tab 切换 (重渲染后绑定)
+    var taskSubtabs = el.querySelectorAll('.qy-task-subtab');
+    var taskPanes = el.querySelectorAll('.qy-task-pane');
+    taskSubtabs.forEach(function(t, i) {
+      t.addEventListener('click', function() {
+        taskSubtabs.forEach(function(b) { b.classList.remove('active'); });
+        taskPanes.forEach(function(p) { p.classList.remove('active'); });
+        t.classList.add('active');
+        if (taskPanes[i]) taskPanes[i].classList.add('active');
+      });
+    });
+    // 任务卡按钮 (B 类: SPA 写 mvu)
+    el.querySelectorAll('[data-quest-action]').forEach(function(btn) {
+      btn.addEventListener('click', async function() {
+        var action = btn.getAttribute('data-quest-action');
+        var qname = btn.getAttribute('data-quest-name');
+        if (typeof window.qyQuestAction === 'function') {
+          await window.qyQuestAction(action, qname);
+        }
+      });
+    });
+  }
+
+  function qyRenderEvents(stat) {
+    var el = document.getElementById('qy-status-page-events');
+    if (!el) return;
+    var events = stat['世界事件'] || {};
+    var keys = (events && typeof events === 'object') ? Object.keys(events) : [];
+    function eventBlock(name, e) {
+      e = e || {};
+      var status = qySafe(e['状态'], '—');
+      var progress = e['进度'];
+      var hasProg = (progress !== undefined && progress !== null && progress !== '');
+      var progressText = hasProg ? ('进度 ' + progress + (typeof progress === 'number' ? '%' : '')) : '- -';
+      var rows = '';
+      ['起始时间', '地点', '参与势力', '预计触发', '预计地点'].forEach(function(k) {
+        if (e[k]) rows += qyRow(k, qySafe(e[k], '—'));
+      });
+      return '<div class="qy-event-block">' +
+        '<div class="qy-event-head">' +
+          '<span class="tag">' + qyEscapeHtml(status) + '</span>' +
+          '<span class="qy-event-name">' + qyEscapeHtml(name) + '</span>' +
+          '<span class="qy-event-progress">' + qyEscapeHtml(progressText) + '</span>' +
+        '</div>' +
+        rows +
+        '<div class="qy-event-desc">' + qyEscapeHtml(qySafe(e['描述'], '')) + '</div>' +
+      '</div>';
+    }
+    var blocks = keys.length === 0 ? '<div class="qy-list-empty">尚无世界事件</div>' :
+      keys.map(function(k) { return eventBlock(k, events[k]); }).join('');
+    el.innerHTML = '<div class="qy-status-card">' +
+      '<div class="qy-status-card-title">世 界 事 件 <span class="qy-status-card-deco">EVENTS</span></div>' +
+      blocks +
+    '</div>';
+  }
+
+  function qyRenderDynamics(stat) {
+    var el = document.getElementById('qy-status-page-dynamics');
+    if (!el) return;
+    var d = stat['当前世界动态'] || {};
+    var active = qyUnwrapArr(d['活跃事件']);
+    var rumor = qyUnwrapArr(d['酒馆传闻']);
+    var neighbor = qyUnwrapArr(d['邻国动态']);
+    function listItems(arr, prefix) {
+      if (arr.length === 0) return '<div class="qy-list-empty">— 暂无 —</div>';
+      return arr.map(function(t) {
+        return '<div class="qy-list-item">' + (prefix || '') + qyEscapeHtml(t) + '</div>';
+      }).join('');
+    }
+    el.innerHTML = '<div class="qy-status-card">' +
+      '<div class="qy-status-card-title">动 态 <span class="qy-status-card-deco">DYNAMICS</span></div>' +
+      qyHeading('活 跃 事 件') + listItems(active, '') +
+      qyHeading('酒 馆 传 闻') + listItems(rumor, '· ') +
+      qyHeading('邻 国 动 态') + listItems(neighbor, '') +
+    '</div>';
+  }
 
   // ============= page 切换 =============
   window.qyShowPage = function(name) {
@@ -7214,12 +7445,296 @@ html, body {
   window.qyShowDifficultyUI  = function() { console.log('[qy] 难度切换 TODO'); };
   window.qyShowSettingsUI    = function() { console.log('[qy] 设置 TODO'); };
 
-  // ============= 创角完成"踏入七域"按钮触发 - 关创角层 + 显示悬浮球 =============
-  window.qyEnterMainPlay = function() {
+  // ============= 任务 B 类操作（玩家点 接受/放弃/手动标完成 → SPA 写 mvu）=============
+  window.qyQuestAction = async function(action, questName) {
+    if (typeof window.Mvu === 'undefined') {
+      console.log('[qy] window.Mvu 不可用, qyQuestAction 跳过');
+      return;
+    }
+    if (!action || !questName) return;
+    try {
+      var data = Mvu.getMvuData({ type: 'chat' }) || {};
+      var stat = data.stat_data || {};
+      stat['任务'] = stat['任务'] || {};
+      var unaccepted = qyUnwrapArr(stat['任务']['未接']);
+      var inProgress = qyUnwrapArr(stat['任务']['进行中']);
+      var completed = qyUnwrapArr(stat['任务']['已完成']);
+
+      function findIdxByName(arr, name) {
+        for (var i = 0; i < arr.length; i++) {
+          if (arr[i] && arr[i]['名字'] === name) return i;
+        }
+        return -1;
+      }
+      var timeStamp = (stat['时辰'] || '辰时') + '·' + (stat['季节'] || '初春');
+
+      if (action === 'accept') {
+        var i = findIdxByName(unaccepted, questName);
+        if (i < 0) { console.log('[qy] 未接任务里找不到:', questName); return; }
+        var q = unaccepted.splice(i, 1)[0];
+        q['接受时间'] = timeStamp;
+        inProgress.unshift(q);
+      } else if (action === 'abandon') {
+        var i = findIdxByName(inProgress, questName);
+        if (i < 0) { console.log('[qy] 进行中任务里找不到:', questName); return; }
+        inProgress.splice(i, 1);
+      } else if (action === 'complete') {
+        var i = findIdxByName(inProgress, questName);
+        if (i < 0) { console.log('[qy] 进行中任务里找不到:', questName); return; }
+        var q = inProgress.splice(i, 1)[0];
+        q['完成时间'] = timeStamp;
+        completed.unshift(q);
+      } else {
+        console.warn('[qy] 未知任务操作:', action);
+        return;
+      }
+
+      stat['任务']['未接'] = unaccepted;
+      stat['任务']['进行中'] = inProgress;
+      stat['任务']['已完成'] = completed;
+      data.stat_data = stat;
+      await Mvu.replaceMvuData(data, { type: 'chat' });
+      qyRenderStatusBar();
+    } catch (e) { console.warn('[qy] qyQuestAction 失败:', e); }
+  };
+
+  // ============= 难度世界书条目切换（创角时启用对应一条, 禁用其他三条）=============
+  // 朔铁律: 仅 OK 修改现有条目 enabled, 禁创建/删除条目
+  window.qyApplyDifficulty = async function(difficulty) {
+    if (!difficulty) return;
+    var targetName = '难度·' + difficulty;
+    if (typeof getCharWorldbookNames !== 'function' || typeof updateWorldbookWith !== 'function') {
+      console.log('[qy] 世界书 API (getCharWorldbookNames / updateWorldbookWith) 不可用, 跳过难度切换');
+      return;
+    }
+    try {
+      var charWBs = getCharWorldbookNames('current');
+      var primaryWB = charWBs && charWBs.primary;
+      if (!primaryWB) {
+        console.log('[qy] 当前卡无 primary worldbook, 跳过难度切换');
+        return;
+      }
+      await updateWorldbookWith(primaryWB, function(entries) {
+        return entries.filter(function(e) {
+          return e.name && e.name.indexOf('难度·') === 0;
+        }).map(function(e) {
+          return { uid: e.uid, enabled: e.name === targetName };
+        });
+      });
+      console.log('[qy] 难度切换完成: 启用 ' + targetName + ', 禁用其他难度条目');
+    } catch (e) { console.warn('[qy] qyApplyDifficulty 失败:', e); }
+  };
+
+  // ============= 创角层字段收集（DOM → 结构化数据）=============
+  window.qyCollectCreation = function() {
+    var layer = document.getElementById('qy-create-layer');
+    if (!layer) return null;
+    var createScreen = layer.querySelector('[data-cl-screen="create"]');
+    if (!createScreen) return null;
+    var sections = createScreen.querySelectorAll('.qy-cl-section');
+
+    function activePreset(scope) {
+      if (!scope) return '';
+      var b = scope.querySelector('.qy-cl-preset-btn.active');
+      return b ? b.textContent.trim().replace(/\s+/g, '') : '';
+    }
+    function inputs(section) { return section ? section.querySelectorAll('.qy-cl-input, .qy-cl-textarea') : []; }
+
+    var p = {};
+    if (sections[0]) {
+      var ins0 = inputs(sections[0]);
+      p['姓名'] = (ins0[0] && ins0[0].value || '').trim();
+      p['性别'] = activePreset(sections[0]) || '男';
+      p['年龄'] = parseInt(ins0[1] && ins0[1].value, 10) || 18;
+      p['外貌'] = (ins0[2] && ins0[2].value || '').trim();
+    }
+    if (sections[1]) {
+      var customRace = inputs(sections[1])[0];
+      var raceCustom = (customRace && customRace.value.trim()) || '';
+      p['种族'] = raceCustom || activePreset(sections[1]) || '人';
+    }
+    if (sections[2]) {
+      var customLoc = inputs(sections[2])[0];
+      var locCustom = (customLoc && customLoc.value.trim()) || '';
+      p['出身地'] = locCustom || activePreset(sections[2]) || '中枢神域';
+    }
+    if (sections[3]) {
+      p['当前阶级'] = activePreset(sections[3]) || '白晶印记·一阶';
+    }
+
+    var hasCompanion = false;
+    var companionData = null;
+    var compToggle = document.getElementById('qy-cl-companion-toggle');
+    var compFields = document.getElementById('qy-cl-companion-fields');
+    if (compToggle && compToggle.classList.contains('on') && compFields) {
+      hasCompanion = true;
+      var compInputs = compFields.querySelectorAll('.qy-cl-input, .qy-cl-textarea');
+      var compRows = compFields.querySelectorAll('.qy-cl-preset-row');
+      var compName = (compInputs[0] && compInputs[0].value || '').trim();
+      var compRaceCustom = (compInputs[1] && compInputs[1].value || '').trim();
+      var compRacePreset = activePreset(compRows[0]);
+      var compRace = compRaceCustom || compRacePreset || '巨兽';
+      var compAppearance = (compInputs[2] && compInputs[2].value || '').trim();
+      var compRelation = activePreset(compRows[1]) || '契约伙伴';
+      var compOrigin = (compInputs[3] && compInputs[3].value || '').trim();
+      companionData = {
+        '名字': compName || '空位',
+        '种族': compRace,
+        '外貌': compAppearance,
+        '关系': compRelation,
+        '渊源': compOrigin,
+        '羁绊度': 30,
+        '羁绊阶段': '相识',
+        '心情': '平静',
+        '忠诚': '中立',
+        '契约状态': '正常',
+        '心里话': '',
+      };
+    }
+
+    var fateData = { '名字': '', '描述': '', '类型': '' };
+    var fateDisplay = document.getElementById('qy-cl-fate-display');
+    if (fateDisplay && !fateDisplay.querySelector('.empty')) {
+      var nameEl = fateDisplay.querySelector('.name');
+      var descEl = fateDisplay.querySelector('.desc');
+      fateData['名字'] = (nameEl && nameEl.textContent || '').trim();
+      fateData['描述'] = (descEl && descEl.textContent || '').trim();
+      fateData['类型'] = (fateDisplay.dataset && fateDisplay.dataset.fateType) || '正常';
+    }
+    if (sections[5]) {
+      var customFateInputs = inputs(sections[5]);
+      var customFateName = (customFateInputs[0] && customFateInputs[0].value || '').trim();
+      var customFateDesc = (customFateInputs[1] && customFateInputs[1].value || '').trim();
+      if (customFateName) {
+        fateData['名字'] = customFateName;
+        fateData['描述'] = customFateDesc;
+        fateData['类型'] = '自定义';
+      }
+    }
+    p['宿命'] = fateData;
+
+    var difficulty = '星衡';
+    if (sections[6]) difficulty = activePreset(sections[6]) || '星衡';
+    var entryDifficulty = '';
+    var entryDiffActive = layer.querySelector('[data-cl-screen="entry"] .qy-cl-difficulty-card.active');
+    if (entryDiffActive) entryDifficulty = (entryDiffActive.dataset && entryDiffActive.dataset.diff) || '';
+    var finalDifficulty = entryDifficulty || difficulty;
+
+    var eroToggle = document.getElementById('qy-cl-ero-toggle');
+    p['涩涩开启'] = !!(eroToggle && eroToggle.classList.contains('on'));
+    p['心里话'] = '';
+
+    return { protagonist: p, companion: companionData, difficulty: finalDifficulty };
+  };
+
+  // ============= 踏入七域: 写 mvu 创角字段 + 流式开场叙事（不显示玩家气泡）=============
+  window.qyTriggerOpening = async function(creation) {
+    if (!creation || !creation.protagonist) return;
+
+    // 占位 AI 消息（流式覆盖目标）
+    var aiIdx = qyState.chatHistory.length;
+    qyState.chatHistory.push({ role: 'assistant', content: '' });
+    qyRenderChat();
+
+    var streamHandle = null;
+    var onToken = function(fullText) {
+      qyState.chatHistory[aiIdx].content = fullText;
+      qyRenderChat();
+    };
+
+    // 创角信息作为 system inject 给 AI 看（而不是当玩家消息显示在气泡）
+    var p = creation.protagonist;
+    var c = creation.companion;
+    var injectLines = [
+      '【创角设定】',
+      '姓名: ' + p['姓名'],
+      '性别: ' + p['性别'] + ' / 年龄: ' + p['年龄'],
+      '种族: ' + p['种族'] + ' / 出身地: ' + p['出身地'],
+      '当前阶级: ' + p['当前阶级'],
+      '宿命: ' + (p['宿命']['名字'] || '无') + (p['宿命']['描述'] ? ' - ' + p['宿命']['描述'] : ''),
+      '难度: ' + creation.difficulty,
+      '外貌: ' + (p['外貌'] || '（未描述）'),
+      c ? '契约同伴: ' + c['名字'] + ' (' + c['种族'] + '), 关系: ' + c['关系'] + ', 渊源: ' + (c['渊源'] || '（未描述）') : '契约同伴: 无（剧情中再缔结）',
+      '',
+      '请根据以上设定生成第一段开场叙事（300-500 字）。要求:',
+      '- 第二人称"你"叙述',
+      '- 体现选定的出身地与宿命氛围',
+      '- 引出第一个交互节点（让玩家有动力回话）',
+      '- 不要罗列状态字段',
+    ].join('
+');
+
+    try {
+      if (typeof eventOn === 'function' && typeof iframe_events !== 'undefined') {
+        streamHandle = eventOn(iframe_events.STREAM_TOKEN_RECEIVED_FULLY, onToken);
+      }
+      var result = await generate({
+        user_input: '（踏入七域，故事开始）',
+        should_stream: true,
+        should_silence: true,
+        injects: [{ role: 'system', content: injectLines, position: 'in_chat', depth: 0, should_scan: true }],
+        overrides: { chat_history: { prompts: [] } },
+      });
+      var finalText = (typeof result === 'string') ? result : (result && result.content) || '';
+      qyState.chatHistory[aiIdx].content = finalText;
+      qyRenderChat();
+      await window.qyApplyMvu(finalText);
+    } catch (e) {
+      console.warn('[qy] 开场叙事 generate 失败:', e);
+      qyState.chatHistory[aiIdx].content = '[开场生成失败] ' + ((e && e.message) || e);
+      qyRenderChat();
+    } finally {
+      if (streamHandle && typeof streamHandle.stop === 'function') {
+        try { streamHandle.stop(); } catch (_) {}
+      }
+    }
+  };
+
+  // ============= 踏入七域按钮触发: 关创角层 + 显示悬浮球 + 写 mvu + 流式开场 =============
+  window.qyEnterMainPlay = async function() {
+    var collected = window.qyCollectCreation();
+    if (!collected || !collected.protagonist['姓名']) {
+      try { alert('请先填写姓名'); } catch (_) {}
+      return;
+    }
+
     var createLayer = document.getElementById('qy-create-layer');
     if (createLayer) createLayer.classList.add('hidden');
     var app = document.getElementById('qy-app');
-    if (app) app.classList.add('qy-play-started');  // CSS .qy-play-started 切换悬浮球显示
+    if (app) app.classList.add('qy-play-started');
+
+    // 写 mvu 创角字段（B 类: SPA 直接写, 确定数据不让 AI 翻译）
+    if (typeof window.Mvu !== 'undefined') {
+      try {
+        var mvuData = Mvu.getMvuData({ type: 'chat' }) || {};
+        var stat = mvuData.stat_data || {};
+        stat['主角'] = stat['主角'] || {};
+        // 主角主字段（保留 mvu 已有的天元/装备/背包等子结构）
+        ['姓名','性别','年龄','外貌','种族','出身地','当前阶级','宿命','涩涩开启','心里话'].forEach(function(k) {
+          if (collected.protagonist[k] !== undefined) stat['主角'][k] = collected.protagonist[k];
+        });
+        // 同伴.伙伴1 (如果开启契约)
+        if (collected.companion) {
+          stat['同伴'] = stat['同伴'] || {};
+          stat['同伴']['伙伴1'] = Object.assign({}, stat['同伴']['伙伴1'] || {}, collected.companion);
+        }
+        // 顶层难度
+        stat['难度模式'] = collected.difficulty;
+        mvuData.stat_data = stat;
+        await Mvu.replaceMvuData(mvuData, { type: 'chat' });
+        qyRenderStatusBar();
+      } catch (e) {
+        console.warn('[qy] 创角写 mvu 失败:', e);
+      }
+    } else {
+      console.log('[qy] Mvu 不可用, 创角字段未持久化');
+    }
+
+    // 切换难度世界书条目: 启用玩家选的那条, 禁用其他 3 条
+    await window.qyApplyDifficulty(collected.difficulty);
+
+    // 调开场 generate (流式渲染到 AI 正文区, 玩家无气泡)
+    await window.qyTriggerOpening(collected);
   };
 
   // ============= 图鉴 modal 关闭函数 (顶层挂, 不依赖图鉴 init 是否运行成功) =============
@@ -7345,12 +7860,36 @@ html, body {
         window.qyTakeoverParent();
       } else {
         window.qyRestoreParent();
+        // 退全屏自动回海报（仅已创角后, chatHistory + mvu 都保留）
+        var app = document.getElementById('qy-app');
+        if (app && app.classList.contains('qy-play-started')) {
+          window.qyShowPage('poster');
+        }
       }
     }
     pdoc.addEventListener('fullscreenchange', onFsChange);
     pdoc.addEventListener('webkitfullscreenchange', onFsChange);
     pdoc.addEventListener('mozfullscreenchange', onFsChange);
     pdoc.addEventListener('MSFullscreenChange', onFsChange);
+
+    // 海报 page 上按 ESC: 已创角 + 不在 fullscreen → 触发 fullscreen + 切回聊天（朔: "里边的东西不能丢"）
+    function onKeyDown(e) {
+      if (e.key !== 'Escape' && e.keyCode !== 27) return;
+      if (qyState.currentPage !== 'poster') return;
+      var fsEl = pdoc.fullscreenElement || pdoc.webkitFullscreenElement;
+      if (fsEl) return; // 在 fullscreen 时浏览器默认 ESC 退出, 不抢
+      var app = document.getElementById('qy-app');
+      if (!app || !app.classList.contains('qy-play-started')) return; // 未创角不响应
+      try {
+        var fsTarget = (window.parent && window.parent.document && window.parent.document.documentElement) || document.documentElement;
+        if (fsTarget.requestFullscreen) fsTarget.requestFullscreen();
+        else if (fsTarget.webkitRequestFullscreen) fsTarget.webkitRequestFullscreen();
+      } catch (err) { console.warn('[qy] ESC 进全屏失败:', err); }
+      window.qyShowPage('main');
+      e.preventDefault();
+    }
+    document.addEventListener('keydown', onKeyDown);
+    try { pdoc.addEventListener('keydown', onKeyDown); } catch (_) {} // 双重绑保险
   }
 
   // ============= page-poster (first_mes_海报_v2.html) =============
@@ -7440,6 +7979,16 @@ html, body {
       if (fsTarget.requestFullscreen) fsTarget.requestFullscreen();
       else if (fsTarget.webkitRequestFullscreen) fsTarget.webkitRequestFullscreen();
     } catch (e) { console.warn('[qy] requestFullscreen 失败:', e); }
+
+    // 已创角 → 跳仪式直接切聊天 (从海报快速回聊天, 状态全保留)
+    var qyAppEl = document.getElementById('qy-app');
+    if (qyAppEl && qyAppEl.classList.contains('qy-play-started') && typeof window.qyShowPage === 'function') {
+      setTimeout(function() {
+        window.qyShowPage('main');
+        btn.disabled = false;
+      }, 200);
+      return;
+    }
 
     var poster = document.getElementById('qy-poster');
     var nebula = document.querySelector('.qy-poster-nebula');
@@ -7627,28 +8176,62 @@ html, body {
     } catch (_) {}
 });
 
-  // ============= 发送按钮 → ST 输入框 (cdn 模式) =============
-  // 注意 selector 用 rename 后的 class (STATUS_RENAMES 里 qy-send-btn → qy-status-send-btn, qy-input → qy-status-input)
-  console.log('[qy] wiring 发送按钮, found:', document.querySelectorAll('.qy-status-send-btn').length);
+  // ============= vamp chat: 发送按钮 + 工具按钮 =============
+  console.log('[qy] wiring vamp 按钮: send=' + document.querySelectorAll('.qy-status-send-btn').length + ', tool=' + document.querySelectorAll('.qy-status-tool-btn').length);
+
+  // 发送按钮 → 调 qyTriggerGenerate helper
   document.querySelectorAll('.qy-status-send-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      console.log('[qy] 发送按钮 click triggered');
+    btn.addEventListener('click', async function() {
+      if (btn.disabled) return;
       var ta = document.querySelector('.qy-status-input');
       if (!ta) { console.warn('[qy] 找不到 .qy-status-input'); return; }
       var text = ta.value.trim();
       if (!text) return;
-      try {
-        var pdoc = (window.parent) ? window.parent.document : null;
-        if (!pdoc) { console.warn('[qy] 无 parent document'); return; }
-        var stTa = pdoc.querySelector('#send_textarea');
-        var stBtn = pdoc.querySelector('#send_but');
-        if (!stTa || !stBtn) { console.warn('[qy] 找不到 ST 输入框/发送按钮'); return; }
-        stTa.value = text;
-        stTa.dispatchEvent(new Event('input', { bubbles: true }));
-        stBtn.click();
-        ta.value = '';
-      } catch (e) { console.warn('[qy] 发送失败:', e); }
+      btn.disabled = true;
+      ta.value = '';
+      try { await window.qyTriggerGenerate(text); }
+      catch (e) { console.warn('[qy] 发送失败:', e); }
+      finally { btn.disabled = false; }
     });
+  });
+
+  // 工具按钮: 重新处理变量 / 重新生成正文（按 textContent 区分, 共用 .qy-status-tool-btn）
+  document.querySelectorAll('.qy-status-tool-btn').forEach(function(tbtn) {
+    var label = (tbtn.textContent || '').trim();
+    if (label === '重新处理变量') {
+      tbtn.addEventListener('click', async function() {
+        if (tbtn.disabled) return;
+        var hist = qyState.chatHistory || [];
+        var lastAi = null;
+        for (var i = hist.length - 1; i >= 0; i--) {
+          if (hist[i].role === 'assistant' && hist[i].content) { lastAi = hist[i]; break; }
+        }
+        if (!lastAi) { console.log('[qy] 没有 AI 回复可重新处理变量'); return; }
+        tbtn.disabled = true;
+        try { await window.qyApplyMvu(lastAi.content); }
+        catch (e) { console.warn('[qy] 重新处理变量失败:', e); }
+        finally { tbtn.disabled = false; }
+      });
+    } else if (label === '重新生成正文') {
+      tbtn.addEventListener('click', async function() {
+        if (tbtn.disabled) return;
+        var hist = qyState.chatHistory || [];
+        // 找最后一条 user 作为重 roll 的 user_input
+        var lastUserIdx = -1;
+        for (var i = hist.length - 1; i >= 0; i--) {
+          if (hist[i].role === 'user') { lastUserIdx = i; break; }
+        }
+        if (lastUserIdx < 0) { console.log('[qy] 没有玩家消息可重新生成正文'); return; }
+        var userMsg = hist[lastUserIdx];
+        // 弹掉这条 user + 之后所有（qyTriggerGenerate 会重新 push user 和占位 assistant）
+        qyState.chatHistory = hist.slice(0, lastUserIdx);
+        qyRenderChat();
+        tbtn.disabled = true;
+        try { await window.qyTriggerGenerate(userMsg.content); }
+        catch (e) { console.warn('[qy] 重新生成正文失败:', e); }
+        finally { tbtn.disabled = false; }
+      });
+    }
   });
   })();
     } catch (e) { console.error("[qy-init-main]", e); }
@@ -8009,6 +8592,20 @@ html, body {
     qyShowPage('poster');
     bindModalCloseFallback();
     qyBindFullscreenWatcher();  // 只绑事件, 不主动接管 - 进 fullscreen 才接管, 退出 fullscreen 还原
+
+    // 恢复 mvu 持久化 chat history + 渲染状态栏（mvu 异步初始化, waitGlobalInitialized 等就绪）
+    function tryRestoreFromMvu() {
+      try { if (typeof window.qyRestoreChatHistory === 'function') window.qyRestoreChatHistory(); } catch (e) { console.warn('[qy] qyRestoreChatHistory:', e); }
+      try { if (typeof window.qyRenderStatusBar === 'function') window.qyRenderStatusBar(); } catch (e) { console.warn('[qy] qyRenderStatusBar:', e); }
+    }
+    if (typeof waitGlobalInitialized === 'function') {
+      waitGlobalInitialized('Mvu').then(tryRestoreFromMvu).catch(function(e) {
+        console.log('[qy] 等 Mvu 超时, 直接尝试:', e);
+        tryRestoreFromMvu();
+      });
+    } else {
+      tryRestoreFromMvu();
+    }
   }
 
   if (document.readyState === 'loading') {
