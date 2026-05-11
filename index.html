@@ -7117,7 +7117,7 @@ html, body {
     var ty = p['天元'] || {};
     var eq = p['装备'] || {};
     var fate = p['宿命'] || {};
-    var fateName = (fate && (fate['名字'] || fate['name'])) || qySafe(fate, '—');
+    var fateName = (fate && (fate['名字'] || fate['name'])) || '-';
 
     el.innerHTML = '<div class="qy-status-card">' +
       '<div class="qy-status-card-title">主 角 <span class="qy-status-card-deco">PROTAGONIST</span></div>' +
@@ -9516,7 +9516,7 @@ html, body {
           var stat = (data && data.stat_data) || {};
           var p = stat['主角'] || {};
           var name = Array.isArray(p['姓名']) ? p['姓名'][0] : p['姓名'];
-          if (name && String(name).trim()) {
+          if (name && String(name).trim() && String(name).trim() !== '-') {
             var app = document.getElementById('qy-app');
             if (app) app.classList.add('qy-play-started');
             var createLayer = document.getElementById('qy-create-layer');
