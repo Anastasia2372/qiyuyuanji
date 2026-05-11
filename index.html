@@ -107,7 +107,7 @@ html, body {
   position: relative;
   z-index: 10;
   width: 100%;
-  min-height: 100vh;
+  min-height: auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto 1fr auto auto;
@@ -519,7 +519,7 @@ html, body {
 .qy-status-app {
   position: relative;
   z-index: 10;
-  width: 100%; height: 100vh;
+  width: 100%; height: auto;
   display: flex;
   flex-direction: column;
 }
@@ -1774,6 +1774,22 @@ html, body {
   border-radius: 3px;
 }
 
+/* ============= 场景铭牌 (AI 输出 ```xxx``` markdown 三反引号渲染) ============= */
+.qy-scene-tag {
+  display: block;
+  text-align: center;
+  padding: 0.45em 1.2em;
+  margin: 0.9em auto;
+  max-width: 85%;
+  background: rgba(168, 216, 255, 0.06);
+  border: 1px solid rgba(168, 216, 255, 0.22);
+  border-radius: 5px;
+  color: #a8b8d0;
+  font-size: 0.86em;
+  letter-spacing: 0.15em;
+  font-family: 'ZCOOL XiaoWei', 'KaiTi', 'STKaiti', serif;
+}
+
 /* ============= page-fishing (钓鱼.html) ============= */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Cinzel+Decorative:wght@500;700&display=swap');
 
@@ -1813,7 +1829,7 @@ html, body {
   position: relative;
   z-index: 10;
   width: 100%;
-  min-height: 100vh;
+  min-height: auto;
   padding: 30px clamp(20px, 5vw, 80px);
   max-width: 1100px;
   margin: 0 auto;
@@ -2326,7 +2342,7 @@ html, body {
 .qy-farm-app {
   position: relative;
   z-index: 10;
-  width: 100%; height: 100vh;
+  width: 100%; height: auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2884,7 +2900,7 @@ html, body {
 .qy-cook-app {
   position: relative;
   z-index: 10;
-  width: 100%; height: 100vh;
+  width: 100%; height: auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -3443,7 +3459,7 @@ html, body {
 .qy-craft-app {
   position: relative;
   z-index: 10;
-  width: 100%; height: 100vh;
+  width: 100%; height: auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -4047,7 +4063,7 @@ html, body {
 .qy-codex-app {
   position: relative;
   z-index: 10;
-  width: 100%; height: 100vh;
+  width: 100%; height: auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -6873,16 +6889,38 @@ html, body {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  // 拆 AI 输出: 分离思维链 (Basic_confirmation 块) + 正文 + 砍 <content> 标签 / HTML 注释
+  // 拆 AI 输出: 分离思维链 (Basic_confirmation 块) + 正文
+  // 砍掉: <UpdateVariable>...</UpdateVariable> mvu 协议块 (vamp 模式不走 ST regex, SPA 自己 strip)
+  //       <content>/</content> 标签
+  //       HTML 注释 <!-- -->
   function qyExtractThinking(text) {
     if (!text) return { thinking: '', body: '' };
     var t = String(text);
     var m = t.match(/Basic_confirmation[\s\S]*?<\/基础确认>/);
     var thinking = m ? m[0] : '';
     var body = m ? t.replace(m[0], '') : t;
+    body = body.replace(/<UpdateVariable>[\s\S]*?<\/UpdateVariable>/g, '');
     body = body.replace(/<\/?content>/gi, '');
     body = body.replace(/<!--[\s\S]*?-->/g, '');
     return { thinking: thinking.trim(), body: body.trim() };
+  }
+  // 渲染 AI body: 识别 ```xxx``` 单行场景铭牌渲染成灰盒, 其他文本按段落 escape
+  function qyRenderBody(body) {
+    if (!body) return '';
+    var sceneTags = [];
+    var marked = body.replace(/```([^\n`]+)```/g, function(_, inner) {
+      sceneTags.push(inner.trim());
+      return '\u0000QYSCENE' + (sceneTags.length - 1) + '\u0000';
+    });
+    var paragraphs = marked.split(/\n\s*\n/);
+    return paragraphs.map(function(p) {
+      var escaped = qyEscapeHtml(p).replace(/\n/g, '<br>');
+      escaped = escaped.replace(/\u0000QYSCENE(\d+)\u0000/g, function(_, i) {
+        var tag = sceneTags[parseInt(i, 10)] || '';
+        return '<div class="qy-scene-tag">' + qyEscapeHtml(tag) + '</div>';
+      });
+      return '<p>' + escaped + '</p>';
+    }).join('');
   }
 
   window.qyRenderChat = function() {
@@ -6914,10 +6952,7 @@ html, body {
                   '<div class="qy-thinking-content">' + qyEscapeHtml(extracted.thinking) + '</div></details>';
         }
         if (extracted.body) {
-          var paragraphs = extracted.body.split(/\n\s*\n/);
-          html += paragraphs.map(function(p) {
-            return '<p>' + qyEscapeHtml(p).replace(/\n/g, '<br>') + '</p>';
-          }).join('');
+          html += qyRenderBody(extracted.body);
         } else if (extracted.thinking) {
           // 只有思维链没正文 (AI 还在写)
           html += '<p class="qy-vamp-ai-empty">（命运正在书写...）</p>';
@@ -7021,9 +7056,15 @@ html, body {
       }).join('\n\n');
 
       var summaryPrompt =
-        '请把以下 ' + toCompress.length + ' 条对话压缩成 200 字内摘要。\n' +
-        '保留: 玩家关键行动 / 剧情推进 / NPC 关系变化 / 状态变化要点 / 重要选择。\n' +
-        '直接输出摘要文字本身, 不加任何前缀或标签。\n\n' +
+        '你的工作是对以下 ' + toCompress.length + ' 条对话做剧情无损信息压缩 (小总结).\n' +
+        '目标: 保留高信息密度, 大幅压缩, 但绝不遗漏会影响后续理解与展开的关键信息.\n\n' +
+        '强制规则:\n' +
+        '1) 不得编造/推断; 不确定写"未知/未提及".\n' +
+        '2) 必须保留: 专名 / 数值时间 / 规则禁忌 / 因果 / 承诺交易誓言告白 / 所有条件句(如果/就/否则/只要/除非) / 所有未决事项.\n' +
+        '3) 任何"低频但高影响"的一句话 (承诺/求婚/结盟/背叛/印记进阶/宿命兑现/势力变化) 必须独立列出, 附 ≤25 字证据原句.\n' +
+        '4) 玩家关键行动 / NPC 关系变化 / 状态推进 / 重要选择 都要保留.\n\n' +
+        '输出格式: 直接输出 200 字内的紧凑摘要文字, 不加任何前缀/标签/markdown 包裹.\n' +
+        '段落结构: 时间地点 → 关键事件链 → 关系/状态变化 → 未决事项. 关键句用书名号《...》框住引用.\n\n' +
         '对话:\n' + transcript;
 
       var summaryResult = '';
@@ -7145,6 +7186,24 @@ html, body {
     }
     return Array.isArray(value) ? value : [];
   }
+  // 递归解包整个 stat_data 树, 把 mvu InitVar [值, "描述"] 二元组全部还原成纯值
+  // (修复 mvu 嵌套字段没自动解包导致 UI 渲染露出 "[A类] xxx" 描述文字 bug)
+  function qyDeepUnwrap(obj) {
+    if (Array.isArray(obj) && obj.length === 2 && typeof obj[1] === 'string') {
+      return qyDeepUnwrap(obj[0]);
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(qyDeepUnwrap);
+    }
+    if (obj && typeof obj === 'object') {
+      var out = {};
+      Object.keys(obj).forEach(function(k) {
+        out[k] = qyDeepUnwrap(obj[k]);
+      });
+      return out;
+    }
+    return obj;
+  }
   function qyRow(key, val) {
     return '<div class="qy-status-data-row"><span class="key">' + qyEscapeHtml(key) + '</span><span class="val">' + qyEscapeHtml(val) + '</span></div>';
   }
@@ -7159,7 +7218,8 @@ html, body {
     }
     try {
       var data = Mvu.getMvuData({ type: 'chat' });
-      var stat = (data && data.stat_data) || {};
+      // 递归解包整个 stat_data 把 [值, "描述"] 二元组全部还原成纯值, 避免 UI 露出描述文字
+      var stat = qyDeepUnwrap((data && data.stat_data) || {});
       qyRenderProtagonist(stat);
       qyRenderInventory(stat);
       qyRenderCompanions(stat);
@@ -7465,14 +7525,43 @@ html, body {
     var active = qyUnwrapArr(d['活跃事件']);
     var rumor = qyUnwrapArr(d['酒馆传闻']);
     var neighbor = qyUnwrapArr(d['邻国动态']);
+    var nodes = qyUnwrapArr(stat['故事节点']);  // 顶层字段, 最高优先级保留的故事节点表
     function listItems(arr, prefix) {
       if (arr.length === 0) return '<div class="qy-list-empty">— 暂无 —</div>';
       return arr.map(function(t) {
         return '<div class="qy-list-item">' + (prefix || '') + qyEscapeHtml(t) + '</div>';
       }).join('');
     }
+    // 故事节点 = 数组 of 对象 {time, sides, content, impact, evidence, type}
+    function nodeBlocks(arr) {
+      if (!arr || arr.length === 0) return '<div class="qy-list-empty">— 尚无故事节点 —</div>';
+      // 按时间倒序展示, 最新在上
+      var reversed = arr.slice().reverse();
+      return reversed.map(function(n) {
+        if (!n || typeof n !== 'object') return '<div class="qy-list-item">' + qyEscapeHtml(String(n)) + '</div>';
+        var t = qySafe(n['time'] || n['时间'], '—');
+        var sides = qySafe(n['sides'] || n['涉及方'], '');
+        var content = qySafe(n['content'] || n['内容'], '');
+        var impact = qySafe(n['impact'] || n['影响'], '');
+        var evidence = qySafe(n['evidence'] || n['证据原句'] || n['证据'], '');
+        var type = qySafe(n['type'] || n['类型'], '');
+        var meta = [];
+        if (t) meta.push('<span style="color:#d4af37;">' + qyEscapeHtml(t) + '</span>');
+        if (type) meta.push('<span style="color:#a8d8ff;">[' + qyEscapeHtml(type) + ']</span>');
+        if (sides) meta.push('<span style="color:#8090a0;">' + qyEscapeHtml(sides) + '</span>');
+        return '<div class="qy-story-node" style="padding:0.55em 0.8em;margin:0.4em 0;border-left:2px solid rgba(212,175,55,0.45);background:rgba(212,175,55,0.04);">' +
+          '<div style="font-size:0.82em;margin-bottom:0.3em;letter-spacing:0.05em;">' + meta.join(' · ') + '</div>' +
+          '<div style="color:#e8e0c8;line-height:1.6;">' + qyEscapeHtml(content) + '</div>' +
+          (impact ? '<div style="font-size:0.82em;color:#a8b8d0;margin-top:0.25em;">影响: ' + qyEscapeHtml(impact) + '</div>' : '') +
+          (evidence ? '<div style="font-size:0.78em;color:#7a8090;font-style:italic;margin-top:0.2em;">证据原句: ' + qyEscapeHtml(evidence) + '</div>' : '') +
+        '</div>';
+      }).join('');
+    }
     el.innerHTML = '<div class="qy-status-card">' +
       '<div class="qy-status-card-title">动 态 <span class="qy-status-card-deco">DYNAMICS</span></div>' +
+      qyHeading('故 事 节 点') +
+      '<div style="font-size:0.78em;color:#7a8090;margin-bottom:0.6em;font-style:italic;">承诺 / 誓言 / 告白 / 交易 / 印记进阶 / 宿命兑现 / 势力变化 / 玩家关键选择 等不可丢的剧情转折点</div>' +
+      nodeBlocks(nodes) +
       qyHeading('活 跃 事 件') + listItems(active, '') +
       qyHeading('酒 馆 传 闻') + listItems(rumor, '· ') +
       qyHeading('邻 国 动 态') + listItems(neighbor, '') +
@@ -7508,8 +7597,104 @@ html, body {
   window.qyHideCraftUI       = function() { qyShowPage('main'); };
   window.qyShowCodexUI       = function() { qyShowPage('codex'); };
   window.qyHideCodexUI       = function() { qyShowPage('main'); };
-  window.qyShowDifficultyUI  = function() { console.log('[qy] 难度切换 TODO'); };
-  window.qyShowSettingsUI    = function() { console.log('[qy] 设置 TODO'); };
+  // ============= 通用 modal 弹层 helpers =============
+  function qyOpenModal(title, contentHtml) {
+    var modalId = 'qy-popup-modal';
+    var modal = document.getElementById(modalId);
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = modalId;
+      modal.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(5,5,16,0.75);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);font-family:ZCOOL XiaoWei,KaiTi,STKaiti,serif;';
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) window.qyCloseModal();
+      });
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = '<div style="background:linear-gradient(180deg,#050510,#0a0a1a);border:1px solid rgba(212,175,55,0.4);border-radius:8px;padding:1.5em 2em;max-width:560px;width:90%;color:#e8e0c8;box-shadow:0 0 40px rgba(212,175,55,0.15);" onclick="event.stopPropagation()">' +
+      '<h3 style="margin:0 0 0.9em;color:#d4af37;font-size:1.15em;letter-spacing:0.2em;text-align:center;">' + (title || '') + '</h3>' +
+      '<div>' + contentHtml + '</div>' +
+      '<div style="text-align:right;margin-top:1.4em;"><button onclick="qyCloseModal()" style="background:rgba(168,216,255,0.1);border:1px solid rgba(168,216,255,0.4);color:#a8d8ff;padding:0.5em 1.5em;border-radius:4px;cursor:pointer;letter-spacing:0.15em;font-family:inherit;">关 闭</button></div>' +
+    '</div>';
+    modal.style.display = 'flex';
+  }
+  window.qyCloseModal = function() {
+    var modal = document.getElementById('qy-popup-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
+  // ============= 难度切换 modal (悬浮球菜单点"难度切换") =============
+  window.qyShowDifficultyUI = function() {
+    var current = '星衡';
+    if (typeof window.Mvu !== 'undefined') {
+      try {
+        var d = Mvu.getMvuData({ type: 'chat' });
+        var s = (d && d.stat_data) || {};
+        var dm = s['难度模式'];
+        if (Array.isArray(dm)) dm = dm[0];
+        if (dm && dm !== '-') current = String(dm);
+      } catch (_) {}
+    }
+    var DIFFS = [
+      { name: '星眷', desc: '七国福地, NPC 多带善意, 资源易得, 危险事件几率低' },
+      { name: '星衡', desc: '世俗常态, 各国按部就班, 风险与机遇均衡' },
+      { name: '星弃', desc: '麻烦缠身, NPC 多带敌意, 路上事件偏险' },
+      { name: '星裁', desc: '九死一生, 几乎每条路都通向考验, 仅留少数生路' },
+    ];
+    var html = '<div style="font-size:0.9em;color:#a8b8d0;margin-bottom:1em;text-align:center;">当前: <span style="color:#d4af37;letter-spacing:0.2em;">' + current + '</span></div>' +
+      '<div style="display:flex;flex-direction:column;gap:0.6em;">';
+    DIFFS.forEach(function(d) {
+      var active = d.name === current;
+      html += '<button data-diff="' + d.name + '" onclick="qySetDifficulty(this.dataset.diff)" style="text-align:left;background:' + (active ? 'rgba(212,175,55,0.18)' : 'rgba(168,216,255,0.05)') + ';border:1px solid ' + (active ? 'rgba(212,175,55,0.55)' : 'rgba(168,216,255,0.2)') + ';color:#e8e0c8;padding:0.7em 1em;border-radius:5px;cursor:pointer;font-family:inherit;">' +
+        '<div style="color:' + (active ? '#d4af37' : '#a8d8ff') + ';font-size:1.05em;letter-spacing:0.25em;margin-bottom:0.3em;">' + d.name + (active ? '  ·  当前' : '') + '</div>' +
+        '<div style="color:#8090a0;font-size:0.82em;line-height:1.5;">' + d.desc + '</div>' +
+        '</button>';
+    });
+    html += '</div>';
+    qyOpenModal('难 度 切 换', html);
+  };
+  window.qySetDifficulty = async function(name) {
+    if (typeof window.Mvu !== 'undefined') {
+      try {
+        var data = Mvu.getMvuData({ type: 'chat' }) || {};
+        var stat = data.stat_data || {};
+        stat['难度模式'] = name;
+        data.stat_data = stat;
+        await Mvu.replaceMvuData(data, { type: 'chat' });
+      } catch (e) { console.warn('[qy] 切换难度 mvu 失败:', e); }
+    }
+    try { if (typeof window.qyApplyDifficulty === 'function') await window.qyApplyDifficulty(name); }
+    catch (e) { console.warn('[qy] qyApplyDifficulty 失败:', e); }
+    window.qyCloseModal();
+    if (typeof window.qyRenderStatusBar === 'function') window.qyRenderStatusBar();
+  };
+
+  // ============= 设置 modal (悬浮球菜单点"设置") =============
+  window.qyShowSettingsUI = function() {
+    var ero = false;
+    if (typeof window.Mvu !== 'undefined') {
+      try {
+        var d = Mvu.getMvuData({ type: 'chat' });
+        var s = (d && d.stat_data) || {};
+        var m = s['主角'] || {};
+        var e = m['涩涩开启'];
+        if (Array.isArray(e)) e = e[0];
+        ero = !!e;
+      } catch (_) {}
+    }
+    var html = '<div style="font-size:0.9em;color:#a8b8d0;line-height:2;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5em 0;border-bottom:1px solid rgba(212,175,55,0.15);">' +
+        '<span>SPA 版本</span><span style="color:#d4af37;letter-spacing:0.1em;">2026-05-11 完整版 v2</span>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5em 0;border-bottom:1px solid rgba(212,175,55,0.15);">' +
+        '<span>cdn</span><span style="color:#a8d8ff;font-size:0.8em;">anastasia2372.github.io/qiyuyuanji/</span>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5em 0;border-bottom:1px solid rgba(212,175,55,0.15);">' +
+        '<span>涩涩内容</span><span style="color:' + (ero ? '#ff6b9d' : '#7a8090') + ';letter-spacing:0.1em;">' + (ero ? '已开启' : '已关闭') + '</span>' +
+      '</div>' +
+      '<div style="margin-top:1.2em;color:#7a8090;font-style:italic;text-align:center;font-size:0.85em;">更多设置持续完善中 ...</div>' +
+    '</div>';
+    qyOpenModal('设 置', html);
+  };
 
   // ============= 任务 B 类操作（玩家点 接受/放弃/手动标完成 → SPA 写 mvu）=============
   window.qyQuestAction = async function(action, questName) {
