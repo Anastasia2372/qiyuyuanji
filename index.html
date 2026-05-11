@@ -1725,6 +1725,55 @@ html, body {
   padding: 2em 0;
 }
 
+/* ============= 思维链折叠（七域 UI 配色, 金边深底, 默认折叠）============= */
+.qy-thinking-block {
+  margin: 0 0 1.2em;
+  background: rgba(5, 5, 16, 0.55);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.qy-thinking-block summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.6em 1em;
+  color: #d4af37;
+  font-size: 0.92em;
+  letter-spacing: 0.18em;
+  user-select: none;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.08), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.qy-thinking-block summary::-webkit-details-marker { display: none; }
+.qy-thinking-block summary::marker { content: ''; }
+.qy-thinking-block summary::after {
+  content: '展 开';
+  font-size: 0.78em;
+  opacity: 0.65;
+  letter-spacing: 0.1em;
+}
+.qy-thinking-block[open] summary::after { content: '折 叠'; opacity: 0.85; }
+.qy-thinking-block[open] summary {
+  border-bottom: 1px solid rgba(212, 175, 55, 0.22);
+}
+.qy-thinking-content {
+  padding: 0.9em 1.2em 1em;
+  color: #a8b8d0;
+  font-size: 0.85em;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 460px;
+  overflow-y: auto;
+}
+.qy-thinking-content::-webkit-scrollbar { width: 6px; }
+.qy-thinking-content::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 3px;
+}
+
 /* ============= page-fishing (钓鱼.html) ============= */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Cinzel+Decorative:wght@500;700&display=swap');
 
@@ -6823,6 +6872,19 @@ html, body {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
+
+  // 拆 AI 输出: 分离思维链 (Basic_confirmation 块) + 正文 + 砍 <content> 标签 / HTML 注释
+  function qyExtractThinking(text) {
+    if (!text) return { thinking: '', body: '' };
+    var t = String(text);
+    var m = t.match(/Basic_confirmation[\s\S]*?<\/基础确认>/);
+    var thinking = m ? m[0] : '';
+    var body = m ? t.replace(m[0], '') : t;
+    body = body.replace(/<\/?content>/gi, '');
+    body = body.replace(/<!--[\s\S]*?-->/g, '');
+    return { thinking: thinking.trim(), body: body.trim() };
+  }
+
   window.qyRenderChat = function() {
     var hist = (window.qyState && window.qyState.chatHistory) || [];
     var lastUser = null;
@@ -6845,11 +6907,22 @@ html, body {
     var aiEl = document.getElementById('qy-vamp-ai');
     if (aiEl) {
       if (lastAi && lastAi.content) {
-        // 段落分割: 空行分段, 单换行变 <br>
-        var paragraphs = String(lastAi.content).split(/\n\s*\n/);
-        aiEl.innerHTML = paragraphs.map(function(p) {
-          return '<p>' + qyEscapeHtml(p).replace(/\n/g, '<br>') + '</p>';
-        }).join('');
+        var extracted = qyExtractThinking(lastAi.content);
+        var html = '';
+        if (extracted.thinking) {
+          html += '<details class="qy-thinking-block"><summary><span>思 维 链</span></summary>' +
+                  '<div class="qy-thinking-content">' + qyEscapeHtml(extracted.thinking) + '</div></details>';
+        }
+        if (extracted.body) {
+          var paragraphs = extracted.body.split(/\n\s*\n/);
+          html += paragraphs.map(function(p) {
+            return '<p>' + qyEscapeHtml(p).replace(/\n/g, '<br>') + '</p>';
+          }).join('');
+        } else if (extracted.thinking) {
+          // 只有思维链没正文 (AI 还在写)
+          html += '<p class="qy-vamp-ai-empty">（命运正在书写...）</p>';
+        }
+        aiEl.innerHTML = html;
       } else if (lastAi) {
         aiEl.innerHTML = '<p class="qy-vamp-ai-empty">（命运正在书写...）</p>';
       } else {
@@ -7682,6 +7755,112 @@ html, body {
     }
   };
 
+  // ============= 5 玩法 page 按钮通用触发: 切回状态栏 + AI 叙事 + mvu 自动更新 =============
+  var QY_PAGE_NAMES = {
+    fishing: '钓 鱼',
+    farming: '种 地',
+    cooking: '做 菜',
+    craft: '副 职',
+  };
+
+  window.qyTriggerPlayAction = async function(pageId, actionLabel, extraContext) {
+    if (!actionLabel) return;
+    var pageName = QY_PAGE_NAMES[pageId] || pageId;
+
+    // 切回状态栏 page 玩家看 AI 叙事
+    if (typeof window.qyShowPage === 'function') window.qyShowPage('main');
+
+    // 占位 AI 消息
+    var aiIdx = qyState.chatHistory.length;
+    qyState.chatHistory.push({ role: 'assistant', content: '' });
+    qyRenderChat();
+
+    var streamHandle = null;
+    var onToken = function(fullText) {
+      qyState.chatHistory[aiIdx].content = fullText;
+      qyRenderChat();
+    };
+
+    var injectLines = [
+      '【玩家玩法操作】',
+      '面板: 「' + pageName + '」',
+      '操作: 「' + actionLabel + '」',
+    ];
+    if (extraContext) injectLines.push('上下文: ' + extraContext);
+    injectLines.push('');
+    injectLines.push('请按以下要求叙事:');
+    injectLines.push('- 100-200 字描述操作过程与结果 (沉浸式, 第二人称"你")');
+    injectLines.push('- 自然推进时间 / 触发偶发事件');
+    injectLines.push('- 按 mvu 协议在结尾输出 <UpdateVariable> 块, 更新对应玩法 stat_data 字段');
+    injectLines.push('  (钓鱼: 钓鱼.地面熟练度/空岛熟练度; 种地: 种地.种地熟练度/田地/作物库存; 做菜: 做菜.做菜熟练度/食材库存; 副职: 副职.X熟练度)');
+    injectLines.push('- 物品收获 / 装备变化 走玩家背包: 在叙事中描述, 由前端 UI 决定是否真写入 (你只做叙事 + 熟练度变化)');
+    var injectMsg = injectLines.join('\n');
+
+    try {
+      if (typeof eventOn === 'function' && typeof iframe_events !== 'undefined') {
+        streamHandle = eventOn(iframe_events.STREAM_TOKEN_RECEIVED_FULLY, onToken);
+      }
+      var prompts = (typeof window.qyBuildPrompts === 'function') ? window.qyBuildPrompts() : [];
+      var result = await generate({
+        user_input: '（玩家操作: ' + actionLabel + '）',
+        should_stream: true,
+        should_silence: true,
+        injects: [{ role: 'system', content: injectMsg, position: 'in_chat', depth: 0, should_scan: true }],
+        overrides: { chat_history: { prompts: prompts } },
+      });
+      var finalText = (typeof result === 'string') ? result : (result && result.content) || '';
+      qyState.chatHistory[aiIdx].content = finalText;
+      qyRenderChat();
+      await window.qyPersistTurn('（玩家操作: ' + pageName + ' / ' + actionLabel + '）', finalText);
+      await window.qyApplyMvu(finalText);
+      window.qyMaybeCompressHistory().catch(function(e) { console.warn('[qy] 压缩失败:', e); });
+    } catch (e) {
+      console.warn('[qy] 玩法操作 generate 失败:', e);
+      qyState.chatHistory[aiIdx].content = '[玩法操作生成失败] ' + ((e && e.message) || e);
+      qyRenderChat();
+    } finally {
+      if (streamHandle && typeof streamHandle.stop === 'function') {
+        try { streamHandle.stop(); } catch (_) {}
+      }
+    }
+  };
+
+  // 5 玩法 page 按钮绑定 (按 page id + class selector)
+  function qyBindPlayButtons() {
+    var BINDINGS = [
+      { pageId: 'fishing', selector: '#page-fishing .qy-action-btn' },
+      { pageId: 'farming', selector: '#page-farming .qy-field-btn' },
+      { pageId: 'cooking', selector: '#page-cooking .qy-recipe-btn, #page-cooking .qy-ai-cook-btn' },
+      { pageId: 'craft',   selector: '#page-craft .qy-recipe-btn, #page-craft .qy-ai-cook-btn' },
+    ];
+    BINDINGS.forEach(function(bind) {
+      document.querySelectorAll(bind.selector).forEach(function(btn) {
+        if (btn.dataset.qyBound) return;
+        if (btn.disabled || btn.classList.contains('disabled')) return; // 跳过 disabled
+        btn.dataset.qyBound = '1';
+        btn.addEventListener('click', async function(e) {
+          if (btn.disabled) return;
+          var label = (btn.textContent || '').trim();
+          if (!label) return;
+          // 上下文: 当前 active sub-tab (副职的 l1 trade)
+          var extra = '';
+          if (bind.pageId === 'craft') {
+            var l1Active = document.querySelector('#page-craft .qy-craft-tab-l1.active');
+            if (l1Active) extra = '副职类型: ' + (l1Active.textContent || '').trim();
+          }
+          btn.disabled = true;
+          try {
+            await window.qyTriggerPlayAction(bind.pageId, label, extra);
+          } catch (err) {
+            console.warn('[qy] 玩法按钮失败:', err);
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+    });
+  }
+
   // ============= 踏入七域按钮触发: 关创角层 + 显示悬浮球 + 写 mvu + 流式开场 =============
   window.qyEnterMainPlay = async function() {
     var collected = window.qyCollectCreation();
@@ -8142,19 +8321,660 @@ html, body {
       clCompFields.classList.toggle('show', clCompToggle.classList.contains('on'));
     });
   }
-  // 创角宿命 sample（治本时换真实 90 条）
+  // 创角宿命池 90 条 (正常 20 / 涩涩 25 / 恶趣味 25 / 隐藏 20 - 隐藏 4 子组各 5)
   var fatePool = [
-    { name: '蛋孵祭司家', desc: '出生于古老蛋孵祭司家族，自幼通晓孵化古礼。' },
-    { name: '裁定官私生子', desc: '父亲是万象裁定局的某位裁决官，但你从未被承认。' },
-    { name: '星陨弃儿', desc: '出生那夜星陨坠地，被亲族遗弃在废墟边缘。' }
-  ];
+  {
+    "name": "源鼎之子",
+    "type": "正常",
+    "desc": "传说每三百年，源鼎会主动选中一个新生儿——只孕一只蛋，但蛋中诞生的同伴是寻常孩子十年都遇不到的稀有种。这事三百年也未必碰上一次，碰上了会被记入裁定局秘档。",
+    "mechanic": "开局获得一只稀有契约同伴（七国常规渠道无法获得的种类）。"
+  },
+  {
+    "name": "废墟血脉",
+    "type": "正常",
+    "desc": "你的血脉里残存着灾前文明的源能波纹。这种血脉百年一遇，源能学者愿用半个金库换你一管血。",
+    "mechanic": "源能修炼速度+30%；偶尔会被源能学者私下追踪。"
+  },
+  {
+    "name": "裁定官私生子",
+    "type": "正常",
+    "desc": "某位身居高位的裁定官年轻时的一夜风流——你母亲带着你隐姓埋名长大。生父虽不知你存在，他的影响力却仍在你血脉里。",
+    "mechanic": "与裁定局成员对话有暗加成；部分罪状会被神秘抹除。"
+  },
+  {
+    "name": "星陨弃儿",
+    "type": "正常",
+    "desc": "出生那夜，七国上空有一颗星陨落。占星师说这是\"灾兆\"，把你扔到了北冥极夜里——但你活下来了，皮肤上至今有一道星形烧痕。",
+    "mechanic": "极寒地带不受寒；夜间感知与战斗强化。"
+  },
+  {
+    "name": "源石矿之嗣",
+    "type": "正常",
+    "desc": "父辈是西圣最大的源石矿主，一场矿难让他们全死了，矿权空悬至今。你拿着家里那块铁牌，可以去争。",
+    "mechanic": "开局拥有一份矿权凭证（待激活）；西圣国部分 NPC 优先示好。"
+  },
+  {
+    "name": "七国通译",
+    "type": "正常",
+    "desc": "天生通晓七国所有方言，连灵兽叫声里的情绪都能听懂。这种能力裁定局求之不得，但你不是他们的人。",
+    "mechanic": "所有方言/同伴/兽类对话开启完整翻译。"
+  },
+  {
+    "name": "契约亲和",
+    "type": "正常",
+    "desc": "你与契约同伴的羁绊比常人深得多——能力可双向共享，伤痛也能分担。代价是同伴死了你也半死。",
+    "mechanic": "与同伴的能力共享强化；同伴战力+50%。"
+  },
+  {
+    "name": "边境第三世",
+    "type": "正常",
+    "desc": "七国边境流民的第三代。你从小在六国交界跑商，地形地貌烂熟于心。",
+    "mechanic": "跨国行走效率翻倍；边境地图自动展开。"
+  },
+  {
+    "name": "匠门嫡传",
+    "type": "正常",
+    "desc": "西圣某锻造大师的独子，从小看父亲打铁。家传图谱里有几张你看不懂的，但你能照着做。",
+    "mechanic": "开局解锁锻造副职 1 阶；西圣武装店主多有照应。"
+  },
+  {
+    "name": "东苍灵植世家",
+    "type": "正常",
+    "desc": "东苍国某药园之后，从小辨百草。你能从一根落地的叶子认出十里方圆的植物分布。",
+    "mechanic": "开局解锁炼丹/种植副职 1 �阶；东苍国境内灵植采集翻倍。"
+  },
+  {
+    "name": "北冥猎户长子",
+    "type": "正常",
+    "desc": "在北冥极夜里长大，狩猎是你儿时的玩具。你的弓在十丈外能精准点中飞鹰的眼。",
+    "mechanic": "远程武器命中+20%；动物友好/敌意识别精准。"
+  },
+  {
+    "name": "南渊巫医后裔",
+    "type": "正常",
+    "desc": "南渊巫族某支后代，从小会辨毒草和制蛊医。家里有一本巫族秘册，你只看懂三分之一。",
+    "mechanic": "开局解锁医术/制毒副职 1 阶；南渊国境内蛊术部分免疫。"
+  },
+  {
+    "name": "机械城邦工坊学徒",
+    "type": "正常",
+    "desc": "在机械城邦某地下工坊混过两年，会修小型机械。你的手能拆开任何七国常见的机关。",
+    "mechanic": "开局解锁机械组装副职 1 阶；机械城邦地下情报网开启。"
+  },
+  {
+    "name": "千岛海国船工",
+    "type": "正常",
+    "desc": "出身海国船工世家，看一眼云就知道明日海势。你画过的海图能卖给走私贩，他们会给你打折。",
+    "mechanic": "所有海路相关任务效率翻倍；海国境内船只租借大幅折扣。"
+  },
+  {
+    "name": "裁定局退役处刑者",
+    "type": "正常",
+    "desc": "你曾是裁定局编制内的处刑者，因身体伤患退役。老熟人遍布七国分局，他们偶尔会偷偷帮你。",
+    "mechanic": "与裁定局成员对话有\"老兵\"加成；获取通缉令变更情报。"
+  },
+  {
+    "name": "暗渊集市熟客",
+    "type": "正常",
+    "desc": "你在七国地下黑市混过几年，黑话和门路都熟。给暗渊集市一个小恩，能换出意想不到的情报。",
+    "mechanic": "暗渊集市信任度开局即满；黑市采购效率翻倍。"
+  },
+  {
+    "name": "中枢神域学徒",
+    "type": "正常",
+    "desc": "你曾在中枢神域学过律令法术，但因故肄业。法典背得滚瓜烂熟，可惜没拿到资格证。",
+    "mechanic": "法典/律令相关对话有压制力；中枢神域分局可申请破例办事。"
+  },
+  {
+    "name": "七域信差",
+    "type": "正常",
+    "desc": "你跑过七国邮路，每条岔道都熟。退役那天信差行会送了你一面铜牌——出门时带着，路上的同行都会照应。",
+    "mechanic": "跨七国移动效率显著提升；陌生地图自动获取部分路径。"
+  },
+  {
+    "name": "蛋孵祭司家",
+    "type": "正常",
+    "desc": "你出身专司孵蛋的祭司家族。从小看母亲为别人孵蛋，自己的蛋反而是最后一个孵的。",
+    "mechanic": "所有契约同伴破壳概率/品级提升；可主持他人的孵蛋仪式赚钱。"
+  },
+  {
+    "name": "源能学者之徒",
+    "type": "正常",
+    "desc": "你跟过一位隐居山林的老源能学者两年，学了点皮毛。他没正经收你为徒，但临走时把笔记送给了你。",
+    "mechanic": "源能理论强化（部分功法学习时间减半）；笔记里偶尔会冒出新的修炼建议。"
+  },
+  {
+    "name": "源能炉鼎之体",
+    "type": "涩涩",
+    "desc": "你的身体能将男女媾合的精元高效转化为源能。一夜春风胜过一年苦修——但代价是必须长期有伴。",
+    "mechanic": "双修可大幅提升源能修炼；需要保持稳定的双修对象。"
+  },
+  {
+    "name": "裁定官的禁忌情人",
+    "type": "涩涩",
+    "desc": "某位身居高位的裁定官在审你时一时心动，把你藏了起来。你成了他/她私人后宅里的\"案牍秘书\"。",
+    "mechanic": "与该裁定官 NPC 高好感开局；获取裁定局机密的便利。"
+  },
+  {
+    "name": "极乐宫秘传",
+    "type": "涩涩",
+    "desc": "你年少时被极乐宫一位高人收为关门弟子，学了一手让人欲罢不能的功夫。师门覆灭，只剩你一人。",
+    "mechanic": "可对 NPC 使用魅惑技；情报获取效率翻倍。"
+  },
+  {
+    "name": "双修同伴",
+    "type": "涩涩",
+    "desc": "你的契约同伴恰好是异性，且与你的源能频率天然契合。两人一起修炼比独自修快得多——但同伴会很黏你。",
+    "mechanic": "与契约同伴双修能力解锁；同伴亲密度上限提升。"
+  },
+  {
+    "name": "东苍药浴秘传",
+    "type": "涩涩",
+    "desc": "你家传一种东苍药浴秘方，需要双人在浴中互相涂抹特殊药膏。修源能时极有效，对外却羞于启齿。",
+    "mechanic": "双修可显著加速源能修炼；需消耗稀有药材。"
+  },
+  {
+    "name": "源能感应敏化",
+    "type": "涩涩",
+    "desc": "你的身体过分敏感，连源能的流动都能化作快感传递。修炼时痛苦与愉悦同源——但太容易在战斗中失神。",
+    "mechanic": "源能感知精度大幅提升；情绪起伏会反向影响实力发挥。"
+  },
+  {
+    "name": "北冥血盟伴侣",
+    "type": "涩涩",
+    "desc": "按北冥习俗，你和某人立过血盟——彼此可以分享体温、源能、甚至生命。盟约不可解除。",
+    "mechanic": "与血盟对象共享部分属性；血盟对象死亡，自身重伤。"
+  },
+  {
+    "name": "南渊蛊伴",
+    "type": "涩涩",
+    "desc": "南渊巫族秘术——你体内养着一种\"情蛊\"，被它选中的对象会对你产生强烈依恋。蛊不能取出。",
+    "mechanic": "可与一名 NPC 建立情蛊连接（高好感强迫）；蛊母只能选一次。"
+  },
+  {
+    "name": "千岛海国海妖血",
+    "type": "涩涩",
+    "desc": "传说你的祖先与海妖通婚，血脉里残留一丝海妖的勾魂之能。你的歌声能让人短暂沉醉。",
+    "mechanic": "可对 NPC 使用魅惑歌；战场上能扰乱敌人专注。"
+  },
+  {
+    "name": "机械城邦改造爱好",
+    "type": "涩涩",
+    "desc": "你在机械城邦的某次改造中加装了一套\"敏感反馈装置\"。设计者以为你不会知道，但你早就发现了。",
+    "mechanic": "使用机械装备时获得感知加成；与机械城邦特定 NPC 有秘密话题。"
+  },
+  {
+    "name": "西圣修道院出身",
+    "type": "涩涩",
+    "desc": "你曾是西圣某修道院的修士，立过禁欲圣愿——但你后来还俗了。圣愿留下的痕迹仍在你身上反向作用。",
+    "mechanic": "所有压抑/禁忌相关情绪触发额外加成；普通双修无效，需特殊条件。"
+  },
+  {
+    "name": "暗渊春楼出身",
+    "type": "涩涩",
+    "desc": "你在暗渊集市最大的春楼长大，世故老辣。哪个客人爱什么你一眼就看透，给得起价的你都见过。",
+    "mechanic": "与各类 NPC 沟通有\"看透人心\"加成；暗渊集市内有照应。"
+  },
+  {
+    "name": "中枢神域选妃落选",
+    "type": "涩涩",
+    "desc": "中枢神域妃位选拔，你落选了——但被某位权贵私下截胡。你成了他/她的私房人，但身份不公开。",
+    "mechanic": "与该权贵 NPC 高好感开局；可秘密接触中枢神域上层。"
+  },
+  {
+    "name": "蛋孕过早",
+    "type": "涩涩",
+    "desc": "你出生那天恰好是另一颗蛋孵化的时刻——蛋的部分特性渗入你的身体。某些\"非人\"的本能你天生就懂。",
+    "mechanic": "与所有契约同伴亲密度自然提升；偶尔会做些动物般的本能行为。"
+  },
+  {
+    "name": "裁定官随从",
+    "type": "涩涩",
+    "desc": "某裁定官出门时常带着你，名义上是近身随从，实际上是秘密枕席之人。她/他不让别人碰你。",
+    "mechanic": "与该裁定官高好感；他人对你强行接触会触发裁定官的惩戒。"
+  },
+  {
+    "name": "七国艳名",
+    "type": "涩涩",
+    "desc": "你的容貌远播七国，去哪都被搭讪。你既享受这种关注，也常被它困扰。",
+    "mechanic": "所有 NPC 第一次见面好感+1；偶尔会引来不怀好意的纠缠。"
+  },
+  {
+    "name": "双性源体",
+    "type": "涩涩",
+    "desc": "你的体内同时具备阴阳两种源能，可男可女，随你心意。这种体质千年一遇。",
+    "mechanic": "可在创角后切换性别表现；双修兼容性极高。"
+  },
+  {
+    "name": "触觉过载",
+    "type": "涩涩",
+    "desc": "你的神经异于常人，所有触感都被放大十倍。轻轻一碰也会让你呼吸急促——战斗时这是劣势，亲密时是优势。",
+    "mechanic": "感知精度极高；近身战易受干扰。"
+  },
+  {
+    "name": "遗失初恋的源契",
+    "type": "涩涩",
+    "desc": "你曾与一个人立过源契——从此你的源能里永远带着对方的痕迹。即使对方早已不在身边。",
+    "mechanic": "源能里有特殊\"印记\"，部分 NPC 能感知到（多为羡慕或好奇）。"
+  },
+  {
+    "name": "共契亲密",
+    "type": "涩涩",
+    "desc": "你与你的契约同伴亲密无界——同伴可以分享你所有的感受，反之亦然。亲密时同伴的喘息和你叠在一起。",
+    "mechanic": "与同伴情感同步；同伴亲密度上限解除。"
+  },
+  {
+    "name": "极乐宫弃徒",
+    "type": "涩涩",
+    "desc": "你曾是极乐宫弟子，因情感问题被驱逐。秘功仍在你身上，但用一次就提醒你一次旧情。",
+    "mechanic": "可使用极乐宫秘技但有 cd；触发时偶尔出现旧梦扰心。"
+  },
+  {
+    "name": "夜行裸修",
+    "type": "涩涩",
+    "desc": "你的修源方式很特殊——必须在月光下脱光修炼。任何衣物都会阻碍源能流动。",
+    "mechanic": "夜间裸修时源能恢复极快；白天和穿衣修炼效率减半。"
+  },
+  {
+    "name": "七域名妓后人",
+    "type": "涩涩",
+    "desc": "你的母亲是七国闻名的名妓，临终前把全套魅惑术传给了你。你现在还藏着她的胭脂盒。",
+    "mechanic": "可对 NPC 使用魅惑技；获取地下情报有捷径。"
+  },
+  {
+    "name": "蜜糖体",
+    "type": "涩涩",
+    "desc": "你的体液（汗、唾液、其他）天然带有微量魅惑成分。一个吻能让对方心跳乱半天。",
+    "mechanic": "亲密接触有强力吸引效果；偶尔会被人当成异类围观。"
+  },
+  {
+    "name": "双倍快感",
+    "type": "涩涩",
+    "desc": "你的神经回路特殊，所有快感（包括性、修炼成就感、复仇满足感）都被双倍放大。",
+    "mechanic": "所有正向情绪触发的 buff 加倍；负向情绪触发的 debuff 也加倍。"
+  },
+  {
+    "name": "裁定官摸鱼群（试用版）",
+    "type": "恶趣味",
+    "desc": "（梗源：诸天聊天群）\n━━━【七域订阅系统 · 试用通知】━━━\n当前订阅：万象裁定官内部聊天群（v1.0）\n试用期：7 天，到期自动续费 99 源石/月\n未续费惩罚：吊销宿主灵魂阅读权限\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "每天能从群里抢到一份七国机密情报，偶尔抢到源石红包。",
+    "twist": "那条吓人的惩罚？开发它的程序员早跑路了——续不续随便。"
+  },
+  {
+    "name": "源石每日签到（盗版客户端）",
+    "type": "恶趣味",
+    "desc": "（梗源：每日签到流）\n━━━【七域签到系统 v3.5 · 破解版】━━━\n连续签到第：001 天\n今日奖励：1 颗下品源石\n[警告] 检测到您使用了非法破解客户端\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "每天醒来枕头下多一颗下品源石，连签 30 天送一颗中品。",
+    "twist": "警告永远在闪，但盗版客户端是从街头集市买的——警告不会真生效。"
+  },
+  {
+    "name": "七域人生模拟器",
+    "type": "恶趣味",
+    "desc": "（梗源：人生模拟器）\n━━━【人生模拟系统】━━━\n本次模拟消耗：10 源石\n预测结果：宿主三日后会因不慎踩到一只蛤蟆而死\n是否重新模拟？\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "每次模拟能预知未来三日内的一件关键事。",
+    "twist": "模拟结果会因为你看了它而改变——你绕开蛤蟆，结果踩到蛇。"
+  },
+  {
+    "name": "裁定局通缉外卖",
+    "type": "恶趣味",
+    "desc": "（梗源：外卖跑腿）\n━━━【今日通缉令外送服务】━━━\n配送费：1 源石\n30 分钟必达，超时免单\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能提前一天得知裁定局当日通缉令变更。",
+    "twist": "偶尔自己出现在名单上——但外卖员认错门送到隔壁，你逃过一劫。"
+  },
+  {
+    "name": "七国论坛 · 已被永久禁言",
+    "type": "恶趣味",
+    "desc": "（梗源：贴吧/论坛）\n━━━【您的账号状态】━━━\n昵称：宿主\n违规记录：发布\"七国排名第一国王最丑\"\n处罚：永久禁言（无限期）\n申诉？没用。\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能匿名读到七国所有论坛/茶馆的内幕讨论。",
+    "twist": "发不出帖子但读权限保留——纯吃瓜。"
+  },
+  {
+    "name": "契约同伴盲盒",
+    "type": "恶趣味",
+    "desc": "（梗源：盲盒）\n━━━【限定隐藏款契约盲盒】━━━\n拆盒前缴费：99 源石\n拆完不退不换\n当前隐藏款获得概率：0.0001%\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你的契约同伴每过 7 天会随机变形一次（外貌/性别/语气全变），能力不变。",
+    "twist": "同伴脾气暴躁，每次变形都会骂你十分钟。"
+  },
+  {
+    "name": "源能直播间",
+    "type": "恶趣味",
+    "desc": "（梗源：直播打赏）\n━━━【您的直播状态】━━━\n观众数：123\n今日收入：5 源石\n当前热门话题：宿主刚才裸奔了\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你做出\"震撼性举动\"时会获得人气加成（NPC 知名度+信任+1）。",
+    "twist": "你不主动做时，观众会自己编谣言充数。"
+  },
+  {
+    "name": "智能驾驶坐骑",
+    "type": "恶趣味",
+    "desc": "（梗源：自动驾驶）\n━━━【自动驾驶系统已启用】━━━\n导航目的地：中枢神域\n预计到达：3 天 4 小时\n[警告] 检测到驾驶员瞌睡，已自动接管\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你的坐骑能自己赶路、自动避开危险。",
+    "twist": "偶尔接管失败把你送到完全不相干的边境酒馆。"
+  },
+  {
+    "name": "七国云盘",
+    "type": "恶趣味",
+    "desc": "（梗源：网盘）\n━━━【您的存储容量】━━━\n免费版：1 GB（已使用 90%）\n升级会员：99 源石/月\n免费下载速度：10 KB/秒\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能远程储物，物品再大都行。",
+    "twist": "免费版下载慢——存进去的物品 7 天后才能取出来。"
+  },
+  {
+    "name": "源石付费会员",
+    "type": "恶趣味",
+    "desc": "（梗源：VIP 会员）\n━━━【您的会员等级】━━━\n当前：黄金会员（9 源石/月）\n特权：免广告 / 跳过废话\n本月已为您节省 12 小时\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能一句话跳过 NPC 的所有铺垫直奔重点。",
+    "twist": "偶尔跳过力度太狠，跳掉了关键剧情，事后一脸懵。"
+  },
+  {
+    "name": "WIFI 万能钥匙之灵",
+    "type": "恶趣味",
+    "desc": "（梗源：蹭网神器）\n━━━【附近源能阵法扫描】━━━\n检测到：12 个\n已破解：8 个\n正在尝试：万象裁定局监控阵法...\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能\"蹭\"七国所有公共阵法的源能补给。",
+    "twist": "偶尔蹭到的是裁定局监控阵法——会反向追踪到你头上。"
+  },
+  {
+    "name": "源能信用分",
+    "type": "恶趣味",
+    "desc": "（梗源：信用分）\n━━━【宿主信用画像】━━━\n当前信用分：350（信用极差）\n已开通先用后付\n逾期天数：1 天\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能在七国所有商铺赊账买东西。",
+    "twist": "信用分天天降，因为系统觉得你\"言行举止过于可疑\"。"
+  },
+  {
+    "name": "七域知识付费",
+    "type": "恶趣味",
+    "desc": "（梗源：知识付费）\n━━━【今日推荐课程】━━━\n《如何 30 天突破白晶印记》\n原价 999 源石，限时特价 199\n已售：3 份\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能花源石购买\"快速学习\"buff（缩短副职修炼时间）。",
+    "twist": "买的课程都是骗人的，但你听完确实悟道了——是因为你被气到了。"
+  },
+  {
+    "name": "源能弹幕墙",
+    "type": "恶趣味",
+    "desc": "（梗源：弹幕）\n━━━【实时弹幕】━━━\n\"前方高能预警！！！\"\n\"宿主你确定要走这条路？\"\n\"哈哈哈哈哈哈哈哈哈\"\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "进入危险区域时会浮现其他\"过路者\"的评论提示。",
+    "twist": "弹幕都是抽象话和无意义嘲讽，没人说人话。"
+  },
+  {
+    "name": "裁定局监听设备（已激活）",
+    "type": "恶趣味",
+    "desc": "（梗源：监听）\n━━━【设备状态】━━━\n信号：满格\n今日上报数据量：3.2 GB\n\"宿主刚才骂裁定官的话已存档\"\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能听到 100 米内所有源能频率的对话。",
+    "twist": "监听是双向的——裁定局也能听到你的脑内吐槽，所以你最好闭嘴。"
+  },
+  {
+    "name": "便携源石充电宝",
+    "type": "恶趣味",
+    "desc": "（梗源：充电宝）\n━━━【设备电量】━━━\n当前：80%\n快充模式：开启\n[警告] 检测到使用劣质源石，可能影响电池寿命\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能给周围装备/法宝即时充能。",
+    "twist": "用劣质源石会爆炸——不致命但很糗，把你脸炸黑半天。"
+  },
+  {
+    "name": "七域跑腿",
+    "type": "恶趣味",
+    "desc": "（梗源：跑腿平台）\n━━━【今日订单】━━━\n完成：3 单\n收入：5 源石\n当前评分：4.9 ★\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能接七国跑腿任务赚源石。",
+    "twist": "一个差评评分就崩到 3.5，从此没人接你单。"
+  },
+  {
+    "name": "契约同伴宠物店连锁",
+    "type": "恶趣味",
+    "desc": "（梗源：连锁宠物店）\n━━━【本店服务】━━━\n寄养：5 源石/天\n出借：押金 99 源石\n\" 押金不退（小字）\"\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能临时租借各种契约同伴的能力来用。",
+    "twist": "押金真的不退——借完一次，钱包就少 99 源石。"
+  },
+  {
+    "name": "源石众筹",
+    "type": "恶趣味",
+    "desc": "（梗源：众筹）\n━━━【您发起的项目】━━━\n项目名：组建宿主的私人空岛\n已筹：3 源石\n目标：99,999 源石\n关注者：1（系统账号）\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能向七国发起众筹募资。",
+    "twist": "没人给你打钱，但裁定局总是\"关注\"你的项目动态。"
+  },
+  {
+    "name": "七国客服热线",
+    "type": "恶趣味",
+    "desc": "（梗源：客服热线）\n━━━【您的呼叫】━━━\n您前面还有 9,998 位\n预计等待：72 小时\n请耐心等待，您的来电对我们很重要\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能在临死前拨通客服电话求救。",
+    "twist": "客服每次都说\"我们记录一下您的反馈\"然后挂断。"
+  },
+  {
+    "name": "七域短视频平台 · 我的频道",
+    "type": "恶趣味",
+    "desc": "（梗源：短视频）\n━━━【数据后台】━━━\n粉丝：1 人\n今日播放：12\n\"刷得太频繁，请稍后再试\"\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你的\"日常视频\"会让 NPC 在剧情中认出你。",
+    "twist": "那一个粉丝是裁定局的内部账号。"
+  },
+  {
+    "name": "源能问答助手",
+    "type": "恶趣味",
+    "desc": "（梗源：AI 问答助手）\n━━━【宿主提问】━━━\n\"怎么 7 天突破 1 阶？\"\n[助手回答] 建议您询问其他更专业的高手。\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能咨询任何七域知识。",
+    "twist": "助手啥都不懂，回答全是模糊话术——但偶尔蒙对一句让你顿悟。"
+  },
+  {
+    "name": "七域代购",
+    "type": "恶趣味",
+    "desc": "（梗源：跨境代购）\n━━━【今日特价】━━━\n神兵 8 折 / 海外直邮 3 天到\n\"假一赔万（小字：详见用户协议第 88 条）\"\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能跨七国低价代购各种限定物资。",
+    "twist": "\"假一赔万\"条款的\"赔\"字写在小字里——其实根本不赔。"
+  },
+  {
+    "name": "七域搜索引擎",
+    "type": "恶趣味",
+    "desc": "（梗源：搜索引擎广告）\n━━━【搜索\"如何修源能\"】━━━\n找到 1,280 万结果\n前 3 条为推广（医院广告）\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能搜到七国一切公开信息。",
+    "twist": "广告里的\"补习班\"其实就是裁定局开的免费图书馆——只是装得像骗子。"
+  },
+  {
+    "name": "七域驾照考试",
+    "type": "恶趣味",
+    "desc": "（梗源：驾照考试）\n━━━【您的考试进度】━━━\n科目一：已通过\n科目二：预约失败 ×3\n重考费：99 源石\n━━━━━━━━━━━━━━━━━━━━━━",
+    "mechanic": "你能合法驾驶各种坐骑/机械/空岛。",
+    "twist": "考官每次都故意挂你——他觉得你长得欠揍，纯私人恩怨。"
+  },
+  {
+    "name": "灾前圣物携带者",
+    "type": "隐藏",
+    "desc": "你出生时手心紧握着一块灾前圣物。任何检测都查不出它的来历，但它和你的命运绑死了。",
+    "mechanic": "圣物可激活某种特殊能力（剧情决定具体内容）。",
+    "tag": "低概率随机",
+    "subgroup": "抽签时极低概率出现，纯运气"
+  },
+  {
+    "name": "双源体",
+    "type": "隐藏",
+    "desc": "你的身体同时具备两种七国源能体系。两套源力在体内并存，互不冲突。",
+    "mechanic": "可同时修两种源能体系；切换时有过渡时间。",
+    "tag": "低概率随机",
+    "subgroup": "抽签时极低概率出现，纯运气"
+  },
+  {
+    "name": "蛋中存活者",
+    "type": "隐藏",
+    "desc": "你不是从娘胎出生的——你是从一颗破裂的蛋里活下来的。你不算正常人。",
+    "mechanic": "与契约同伴的关系特殊化；不被一些\"人类专属\"机构接受。",
+    "tag": "低概率随机",
+    "subgroup": "抽签时极低概率出现，纯运气"
+  },
+  {
+    "name": "全域通灵",
+    "type": "隐藏",
+    "desc": "七国所有源能频率，你都能感应到。这种能力让你像是个活人雷达。",
+    "mechanic": "感知半径极大；强源能区域会让你头痛欲裂。",
+    "tag": "低概率随机",
+    "subgroup": "抽签时极低概率出现，纯运气"
+  },
+  {
+    "name": "源鼎共鸣者",
+    "type": "隐藏",
+    "desc": "源鼎认你为唯一传承者——这个秘密只有源鼎自己知道，你也不知道。直到某天它召唤你。",
+    "mechanic": "源鼎相关任务/事件中有隐藏剧情；最终剧情有特殊解锁。",
+    "tag": "低概率随机",
+    "subgroup": "抽签时极低概率出现，纯运气"
+  },
+  {
+    "name": "裁定局通缉令上的名字",
+    "type": "隐藏",
+    "desc": "创角第一天，你的名字就在裁定局当日通缉令上。理由不公开，赏金巨大。",
+    "mechanic": "开局即被全国通缉；战斗逃亡相关 buff；正常社交渠道关闭。",
+    "tag": "星弃/星裁难度限定",
+    "subgroup": "只有最高两档难度才会出现"
+  },
+  {
+    "name": "蛋孵失败",
+    "type": "隐藏",
+    "desc": "你的蛋永远不会孵化——它一直在你身上，但里面的同伴沉睡着，不肯出来。",
+    "mechanic": "无契约同伴；但你与蛋有不寻常的羁绊（蛋会偶尔给你信号）。",
+    "tag": "星弃/星裁难度限定",
+    "subgroup": "只有最高两档难度才会出现"
+  },
+  {
+    "name": "七国共敌",
+    "type": "隐藏",
+    "desc": "某段隐秘往事让七国都欠你一笔血债——但都不愿提起。每个国家见到你都想杀人灭口。",
+    "mechanic": "所有国家境内 NPC 默认敌意；唯一安全是无主空岛和地下城。",
+    "tag": "星弃/星裁难度限定",
+    "subgroup": "只有最高两档难度才会出现"
+  },
+  {
+    "name": "源能反噬体",
+    "type": "隐藏",
+    "desc": "源能在你体内反向流动。修炼会受伤，但战斗时这反向流动反而是奇袭。",
+    "mechanic": "常规修炼受损；但战斗中爆发性强、源能消耗减半。",
+    "tag": "星弃/星裁难度限定",
+    "subgroup": "只有最高两档难度才会出现"
+  },
+  {
+    "name": "契约毒誓",
+    "type": "隐藏",
+    "desc": "你和你的契约同伴立过毒誓——你死的那一刻，同伴必死。同伴死的那一刻，你必死。",
+    "mechanic": "与同伴战力高度耦合；任一方死亡，另一方立刻死亡。",
+    "tag": "星弃/星裁难度限定",
+    "subgroup": "只有最高两档难度才会出现"
+  },
+  {
+    "name": "失忆的灾前人",
+    "type": "隐藏",
+    "desc": "你不记得自己是谁、从哪来。直到某天剧情中你触动了一段灾前记忆——你才发现自己是从一千一百年前活下来的人。",
+    "mechanic": "剧情触发后获得灾前知识/技能；与现今体系格格不入。",
+    "tag": "剧情解锁",
+    "subgroup": "创角抽不到，进游戏后特定剧情触发"
+  },
+  {
+    "name": "裁定局叛变后裔",
+    "type": "隐藏",
+    "desc": "某次裁定局内部叛变，留下了一批遗孤。你是其中之一——但这身份直到剧情才揭晓。",
+    "mechanic": "剧情触发后部分裁定局成员愿协助；另一部分立刻翻脸。",
+    "tag": "剧情解锁",
+    "subgroup": "创角抽不到，进游戏后特定剧情触发"
+  },
+  {
+    "name": "八国残党",
+    "type": "隐藏",
+    "desc": "灾前其实有八国，第八国被抹去得太彻底。你是第八国后裔——剧情中你才知道这一点。",
+    "mechanic": "剧情触发后解锁第八国相关任务/秘密区域。",
+    "tag": "剧情解锁",
+    "subgroup": "创角抽不到，进游戏后特定剧情触发"
+  },
+  {
+    "name": "伪源鼎制造者",
+    "type": "隐藏",
+    "desc": "你能仿制源鼎——但你自己不知道，直到剧情某个关键时刻你的手不受控制地刻出了源鼎纹路。",
+    "mechanic": "剧情触发后解锁仿制源鼎能力；为黑市梦寐以求的存在。",
+    "tag": "剧情解锁",
+    "subgroup": "创角抽不到，进游戏后特定剧情触发"
+  },
+  {
+    "name": "时之蛋",
+    "type": "隐藏",
+    "desc": "你的蛋来自未来——某段未来时间里的某人把它送回了过去。蛋里的同伴知道未来。",
+    "mechanic": "剧情触发后同伴会偶尔预言未来事件；预言不一定准。",
+    "tag": "剧情解锁",
+    "subgroup": "创角抽不到，进游戏后特定剧情触发"
+  },
+  {
+    "name": "源鼎之子的兄弟",
+    "type": "隐藏",
+    "desc": "你不是唯一的源鼎之子——三百年这一次，源鼎选了两人。另一个人也活着。",
+    "mechanic": "剧情会引出你的\"兄弟\"NPC；他/她可能是盟友也可能是对手。",
+    "tag": "前置：已抽中\"01.源鼎之子\"",
+    "subgroup": "抽过某条正常宿命后才会出现"
+  },
+  {
+    "name": "裁定官私生子的同父姐妹",
+    "type": "隐藏",
+    "desc": "你父亲的另一个女人也生了一个孩子——她/他在中枢神域长大，是你的同父姐妹。",
+    "mechanic": "解锁姐妹剧情；中枢神域获得潜在内应。",
+    "tag": "前置：已抽中\"03.裁定官私生子\"",
+    "subgroup": "抽过某条正常宿命后才会出现"
+  },
+  {
+    "name": "废墟血脉觉醒",
+    "type": "隐藏",
+    "desc": "某天你的血脉里残留的灾前波纹完全觉醒——你能回忆起灾前文明的某些片段，但只是片段。",
+    "mechanic": "剧情中获得灾前知识碎片；偶尔做\"前世梦\"。",
+    "tag": "前置：已抽中\"02.废墟血脉\"",
+    "subgroup": "抽过某条正常宿命后才会出现"
+  },
+  {
+    "name": "星陨之夜重现",
+    "type": "隐藏",
+    "desc": "出生那夜的星陨在某个特殊时刻再次出现——这次它召唤了你。你必须回到出生地。",
+    "mechanic": "触发星陨秘境（一次性副本）；获得特殊星陨能力。",
+    "tag": "前置：已抽中\"04.星陨弃儿\"",
+    "subgroup": "抽过某条正常宿命后才会出现"
+  },
+  {
+    "name": "源石矿权之争",
+    "type": "隐藏",
+    "desc": "你父辈矿权的另一个继承人现身了——一个你从没见过的所谓表亲。他要么是你的盟友，要么是你的死敌。",
+    "mechanic": "解锁矿权争夺剧情线；西圣国境内事件密度大幅提升。\n\n\n================================================================\n更新记录：\n2026-05-05  v1  恶趣味 25 条初列；正常/涩涩/隐藏待续\n2026-05-05  v1.1  正常 20 / 涩涩 25 / 隐藏 20 全部补完，共 90 条",
+    "tag": "前置：已抽中\"05.源石矿之嗣\"",
+    "subgroup": "抽过某条正常宿命后才会出现"
+  }
+];
+
   window.qyClDrawFate = function() {
-    var pick = fatePool[Math.floor(Math.random() * fatePool.length)];
-    document.getElementById('qy-cl-fate-display').innerHTML =
-      '<div class="name">' + pick.name + '</div><div class="desc">' + pick.desc + '</div>';
+    var ero = false;
+    var eroToggle = document.getElementById('qy-cl-ero-toggle');
+    if (eroToggle) ero = eroToggle.classList.contains('on');
+    var diffEl = document.querySelector('.qy-cl-difficulty-card.active');
+    var diff = (diffEl && diffEl.dataset && diffEl.dataset.diff) || '星衡';
+    var pool = [];
+    fatePool.forEach(function(f) {
+      if (f.type === '正常' || f.type === '恶趣味') {
+        pool.push(f);
+      } else if (f.type === '涩涩' && ero) {
+        pool.push(f);
+      } else if (f.type === '隐藏') {
+        if (f.subgroup && f.subgroup.indexOf('低概率') !== -1) {
+          if (Math.random() < 0.05) pool.push(f); // A 组 5% 概率进池
+        } else if (f.subgroup && f.subgroup.indexOf('星弃') !== -1 && (diff === '星弃' || diff === '星裁')) {
+          pool.push(f); // B 组 仅星弃/星裁难度
+        }
+        // C 剧情解锁 / D 前置触发 创角不抽
+      }
+    });
+    if (pool.length === 0) return;
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    var fateEl = document.getElementById('qy-cl-fate-display');
+    if (!fateEl) return;
+    var html = '<div class="name">' + pick.name + '</div>' +
+               '<div class="desc">' + pick.desc + '</div>' +
+               '<div class="desc" style="margin-top:0.7em;color:#a8b8d0;font-size:0.85em;letter-spacing:0.05em;"><span style="color:#d4af37;">机制：</span>' + pick.mechanic + '</div>';
+    if (pick.twist) {
+      html += '<div class="desc" style="color:#7a8090;font-style:italic;font-size:0.82em;margin-top:0.4em;">反转：' + pick.twist + '</div>';
+    }
+    fateEl.innerHTML = html;
+    fateEl.dataset.fateType = pick.type || '';
+    fateEl.dataset.fateName = pick.name || '';
+    if (pick.subgroup) fateEl.dataset.fateSubgroup = pick.subgroup;
   };
+
   window.qyClClearFate = function() {
-    document.getElementById('qy-cl-fate-display').innerHTML = '<div class="empty">— 尚 未 抽 取 —</div>';
+    var fateEl = document.getElementById('qy-cl-fate-display');
+    if (fateEl) {
+      fateEl.innerHTML = '<div class="empty">— 尚 未 抽 取 —</div>';
+      delete fateEl.dataset.fateType;
+      delete fateEl.dataset.fateName;
+      delete fateEl.dataset.fateSubgroup;
+    }
   };
   
 
@@ -8584,11 +9404,28 @@ html, body {
     qyShowPage('poster');
     bindModalCloseFallback();
     qyBindFullscreenWatcher();  // 只绑事件, 不主动接管 - 进 fullscreen 才接管, 退出 fullscreen 还原
+    qyBindPlayButtons();  // 5 玩法 page 按钮 → AI 叙事 + mvu 更新
 
-    // 恢复 mvu 持久化 chat history + 渲染状态栏（mvu 异步初始化, waitGlobalInitialized 等就绪）
+    // 恢复 mvu 持久化 chat history + 渲染状态栏 + 已创角自动跳过创角层（mvu 异步初始化, waitGlobalInitialized 等就绪）
     function tryRestoreFromMvu() {
       try { if (typeof window.qyRestoreChatHistory === 'function') window.qyRestoreChatHistory(); } catch (e) { console.warn('[qy] qyRestoreChatHistory:', e); }
       try { if (typeof window.qyRenderStatusBar === 'function') window.qyRenderStatusBar(); } catch (e) { console.warn('[qy] qyRenderStatusBar:', e); }
+      // 已创角检查: mvu stat_data.主角.姓名 非空 → 自动加 .qy-play-started + 隐藏创角层（退海报重进不会要求重新创角）
+      try {
+        if (typeof window.Mvu !== 'undefined') {
+          var data = Mvu.getMvuData({ type: 'chat' });
+          var stat = (data && data.stat_data) || {};
+          var p = stat['主角'] || {};
+          var name = Array.isArray(p['姓名']) ? p['姓名'][0] : p['姓名'];
+          if (name && String(name).trim()) {
+            var app = document.getElementById('qy-app');
+            if (app) app.classList.add('qy-play-started');
+            var createLayer = document.getElementById('qy-create-layer');
+            if (createLayer) createLayer.classList.add('hidden');
+            console.log('[qy] 已创角 (姓名=' + name + ') 自动恢复 play-started 状态');
+          }
+        }
+      } catch (e) { console.warn('[qy] 创角状态恢复失败:', e); }
     }
     if (typeof waitGlobalInitialized === 'function') {
       waitGlobalInitialized('Mvu').then(tryRestoreFromMvu).catch(function(e) {
