@@ -7907,11 +7907,8 @@ html, body {
       '外貌: ' + (p['外貌'] || '（未描述）'),
       c ? '契约同伴: ' + c['名字'] + ' (' + c['种族'] + '), 关系: ' + c['关系'] + ', 渊源: ' + (c['渊源'] || '（未描述）') : '契约同伴: 无（剧情中再缔结）',
       '',
-      '请根据以上设定生成第一段开场叙事（300-500 字）。要求:',
-      '- 第二人称"你"叙述',
-      '- 体现选定的出身地与宿命氛围',
-      '- 引出第一个交互节点（让玩家有动力回话）',
-      '- 不要罗列状态字段',
+      '请根据以上设定生成第一段开场叙事。',
+      '体现选定的出身地与宿命氛围, 引出第一个交互节点。',
     ].join('\n');
 
     try {
@@ -7973,12 +7970,10 @@ html, body {
     ];
     if (extraContext) injectLines.push('上下文: ' + extraContext);
     injectLines.push('');
-    injectLines.push('请按以下要求叙事:');
-    injectLines.push('- 100-200 字描述操作过程与结果 (沉浸式, 第二人称"你")');
-    injectLines.push('- 自然推进时间 / 触发偶发事件');
-    injectLines.push('- 按 mvu 协议在结尾输出 <UpdateVariable> 块, 更新对应玩法 stat_data 字段');
-    injectLines.push('  (钓鱼: 钓鱼.地面熟练度/空岛熟练度; 种地: 种地.种地熟练度/田地/作物库存; 做菜: 做菜.做菜熟练度/食材库存; 副职: 副职.X熟练度)');
-    injectLines.push('- 物品收获 / 装备变化 走玩家背包: 在叙事中描述, 由前端 UI 决定是否真写入 (你只做叙事 + 熟练度变化)');
+    injectLines.push('叙事描述操作过程与结果, 自然推进时间, 可触发偶发事件。');
+    injectLines.push('结尾按 mvu 协议输出 <UpdateVariable> 块更新对应玩法 stat_data 字段:');
+    injectLines.push('  钓鱼: 钓鱼.地面熟练度/空岛熟练度; 种地: 种地.种地熟练度/田地/作物库存; 做菜: 做菜.做菜熟练度/食材库存; 副职: 副职.X熟练度');
+    injectLines.push('物品收获 / 装备变化由前端 UI 决定, 你只做叙事 + 熟练度变化。');
     var injectMsg = injectLines.join('\n');
 
     try {
