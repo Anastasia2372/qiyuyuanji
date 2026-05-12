@@ -6790,10 +6790,16 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   }
 
   // 拆 AI 输出: 分离思维链块 + mvu 协议块 + 正文
-  // 识别多种 thinking 边界 (任一预设用都能折叠):
-  //   <thinking>...</thinking> / <think>...</think> / <reasoning>...</reasoning>
-  //   Basic_confirmation...</基础确认> (bby 风格)
-  //   <Analysis>...</Analysis> / <self_check>...</self_check> (mvu/bby 衍生)
+  // 覆盖主流思维链包装格式 (卡是给玩家用的不绑预设, 各派思维链全识别折叠):
+  //   <konatan_planning~>...</konatan_planning~>
+  //   <think_nya~>...</think_nya~>
+  //   <thinking>...</thinking>
+  //   <｜begin▁of▁thinking｜>...<｜end▁of▁thinking｜> (注意 ｜ 是全角 U+FF5C 不是 ASCII |)
+  //   <meow>...</meow>
+  //   <think>...</think> (最后跑, 防 greedy 吃掉 think_nya~)
+  // 孤儿尾标签 (单 </thinking> / 单 <｜end▁of▁thinking｜> 等) 删字符不成块, 不折叠
+  // 外壳 <Chain_of_Thought>...</Chain_of_Thought> (内部思维链已抽走) 标签砍掉
+  // 走 API 原生 reasoning 通道的模型: reasoning 经 STREAM_REASONING_DONE 事件单独传, 不进 content, 不用管
   // 抽取: <UpdateVariable>...</UpdateVariable> mvu 协议块 → 折叠展示 (朔可点开验证 _.set 是否生效)
   // 砍掉: <content>/</content> 标签 + HTML 注释 <!-- -->
   function qyExtractThinking(text) {
@@ -6801,12 +6807,12 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     var t = String(text);
     var thinkingParts = [];
     var THINKING_PATTERNS = [
-      /Basic_confirmation[\s\S]*?<\/基础确认>/g,
+      /<konatan_planning~>[\s\S]*?<\/konatan_planning~>/gi,
+      /<think_nya~>[\s\S]*?<\/think_nya~>/gi,
       /<thinking>[\s\S]*?<\/thinking>/gi,
+      /<｜begin▁of▁thinking｜>[\s\S]*?<｜end▁of▁thinking｜>/g,
+      /<meow>[\s\S]*?<\/meow>/gi,
       /<think>[\s\S]*?<\/think>/gi,
-      /<reasoning>[\s\S]*?<\/reasoning>/gi,
-      /<Analysis>[\s\S]*?<\/Analysis>/gi,
-      /<self_check>[\s\S]*?<\/self_check>/gi,
     ];
     THINKING_PATTERNS.forEach(function(re) {
       t = t.replace(re, function(match) {
@@ -6814,6 +6820,10 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         return '';
       });
     });
+    // 孤儿尾标签 + Chain_of_Thought 外壳 (单独删字符不成块)
+    t = t.replace(/<\/?Chain_of_Thought>/gi, '');
+    t = t.replace(/<\/(?:thinking|think|meow|think_nya~|konatan_planning~)>/gi, '');
+    t = t.replace(/<｜end▁of▁thinking｜>/g, '');
     // 抽取 mvu UpdateVariable 块到 mvuParts (不再 strip), 渲染时折叠展示让朔验证
     var mvuParts = [];
     t = t.replace(/<UpdateVariable>[\s\S]*?<\/UpdateVariable>/g, function(match) {
