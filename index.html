@@ -6843,6 +6843,100 @@ html, body {
     }
   };
 
+  // ============= mvu 状态注入 (vamp 模式补 bundle.js 自动注入的 <status_current_variables> 标签) =============
+  // 根因: TavernHelper.generate({overrides:{chat_history}}) bypass ST 标准 prompt 渲染链 → mvu bundle.js prompt hook 不触发 →
+  //       AI 看不到当前 stat_data → 凭空脑补 (姓名/背包/羁绊度都不准). 这个 helper 手动构造 inject 模拟 bundle.js 行为.
+  window.qyBuildMvuInject = function() {
+    if (typeof window.Mvu === 'undefined') return null;
+    try {
+      var data = Mvu.getMvuData({ type: 'chat' }) || {};
+      var raw = data.stat_data || {};
+      var stat = (typeof qyDeepUnwrap === 'function') ? qyDeepUnwrap(raw) : raw;
+      var json = JSON.stringify(stat, null, 2);
+      return {
+        role: 'system',
+        content: '<status_current_variables>\n' + json + '\n</status_current_variables>',
+        position: 'in_chat',
+        depth: 0,
+        should_scan: false,
+      };
+    } catch (e) {
+      console.warn('[qy] qyBuildMvuInject 失败:', e);
+      return null;
+    }
+  };
+
+  // ============= 玩法抽签 (SPA 主导, 不让 AI 决定数值) =============
+  // 抽签池从 mvu.图鉴.{玩法图鉴} 读 (B 类, AI 通过解锁场景 _.set 时 push 新种).
+  // 首次玩法触发时图鉴为空 → 进 unlock 模式, AI 创意新种 + _.set push 图鉴.
+  // 已有图鉴 → SPA 平均抽 (后续可改加权: 熟练度高 → 抽高品级).
+  var QY_POOL_PATHS = {
+    fishing: { pool: '图鉴.钓鱼图鉴', prof: '钓鱼.地面熟练度' },
+    farming: { pool: '图鉴.种地图鉴', prof: '种地.种地熟练度' },
+    cooking: { pool: '图鉴.做菜图鉴', prof: '做菜.做菜熟练度' },
+    craft:   { pool: '图鉴.配方图鉴', prof: '副职.炼丹熟练度' },
+  };
+  function qyGetPath(obj, dotPath) {
+    var parts = dotPath.split('.');
+    var cur = obj;
+    for (var i = 0; i < parts.length; i++) {
+      if (cur == null) return undefined;
+      cur = cur[parts[i]];
+    }
+    return cur;
+  }
+  window.qyPlayRoll = function(pageId) {
+    if (typeof window.Mvu === 'undefined') return { type: 'no_mvu' };
+    var conf = QY_POOL_PATHS[pageId];
+    if (!conf) return { type: 'no_conf' };
+    try {
+      var data = Mvu.getMvuData({ type: 'chat' }) || {};
+      var raw = data.stat_data || {};
+      var stat = (typeof qyDeepUnwrap === 'function') ? qyDeepUnwrap(raw) : raw;
+      var pool = qyGetPath(stat, conf.pool);
+      var prof = qyGetPath(stat, conf.prof);
+      if (!Array.isArray(pool) || pool.length === 0) {
+        return { type: 'unlock', prof: prof || 0, pool_path: conf.pool };
+      }
+      var idx = Math.floor(Math.random() * pool.length);
+      var picked = pool[idx];
+      return { type: 'roll', picked: picked, pool_size: pool.length, prof: prof || 0 };
+    } catch (e) {
+      console.warn('[qy] qyPlayRoll 失败:', e);
+      return { type: 'error', error: String((e && e.message) || e) };
+    }
+  };
+  // 抽得物 push 到 主角.背包物品 (B 类, SPA 写)
+  window.qyPushItem = async function(picked) {
+    if (typeof window.Mvu === 'undefined') return false;
+    if (!picked) return false;
+    try {
+      var data = Mvu.getMvuData({ type: 'chat' }) || {};
+      var stat = data.stat_data || {};
+      var p = stat['主角'] || {};
+      var rawBag = p['背包物品'];
+      var bag = (typeof qyDeepUnwrap === 'function') ? qyDeepUnwrap(rawBag) : rawBag;
+      if (!Array.isArray(bag)) bag = [];
+      var itemName = (typeof picked === 'string') ? picked : (picked && (picked.名字 || picked.name)) || String(picked);
+      var quality = (picked && (picked.品级 || picked.quality)) || '凡品';
+      var exist = null;
+      for (var i = 0; i < bag.length; i++) {
+        if (bag[i] && (bag[i].名字 === itemName || bag[i].name === itemName)) { exist = bag[i]; break; }
+      }
+      if (exist) {
+        exist.数量 = (parseInt(exist.数量, 10) || 0) + 1;
+      } else {
+        bag.push({ 名字: itemName, 数量: 1, 品级: quality, 描述: '' });
+      }
+      await Mvu.setMvuVariable('主角.背包物品', bag, { type: 'chat' });
+      if (typeof window.qyRenderStatusBar === 'function') window.qyRenderStatusBar();
+      return true;
+    } catch (e) {
+      console.warn('[qy] qyPushItem 失败:', e);
+      return false;
+    }
+  };
+
   // ============= mvu 解析 + 写入 helper（vamp 模式用户视角"自动更新"）=============
   window.qyApplyMvu = async function(aiText) {
     if (!aiText || typeof aiText !== 'string') return false;
@@ -7017,11 +7111,15 @@ html, body {
 
       // prompts 来自 mvu 持久化历史 (大总结 + 小总结池 + 当前原文), 不含本轮 user
       var prompts = window.qyBuildPrompts();
+      // vamp 模式补 mvu bundle.js 自动注入的 <status_current_variables> 块
+      var mvuInject = window.qyBuildMvuInject();
+      var injects = mvuInject ? [mvuInject] : [];
 
       var result = await generate({
         user_input: text,
         should_stream: true,
         should_silence: true,
+        injects: injects,
         overrides: { chat_history: { prompts: prompts } },
       });
 
@@ -7863,7 +7961,7 @@ html, body {
     craft: '副 职',
   };
 
-  window.qyTriggerPlayAction = async function(pageId, actionLabel, extraContext) {
+  window.qyTriggerPlayAction = async function(pageId, actionLabel, extraContext, rollResult) {
     if (!actionLabel) return;
     var pageName = QY_PAGE_NAMES[pageId] || pageId;
 
@@ -7888,10 +7986,29 @@ html, body {
     ];
     if (extraContext) injectLines.push('上下文: ' + extraContext);
     injectLines.push('');
+    // SPA 抽签结果嵌入 prompt: AI 按 SPA 给的结果叙事, 不自己编物品
+    if (rollResult) {
+      if (rollResult.type === 'unlock') {
+        injectLines.push('【SPA 抽签反馈】');
+        injectLines.push('玩家首次在该玩法尝试. 图鉴池 ' + (rollResult.pool_path || '') + ' 为空, 当前熟练度 ' + (rollResult.prof || 0) + '.');
+        injectLines.push('请按角色阶级/地点/季节/熟练度创意 1-2 种合理新发现 (鱼/作物/菜/方剂), 用 _.set push 新条目 (含 名字/品级/描述 字段) 到该图鉴数组.');
+        injectLines.push('叙事描述发现过程, 不要凭空捏造 2 种以上新物.');
+      } else if (rollResult.type === 'roll') {
+        var pickedName = (typeof rollResult.picked === 'string') ? rollResult.picked
+                       : (rollResult.picked && (rollResult.picked.名字 || rollResult.picked.name)) || JSON.stringify(rollResult.picked);
+        injectLines.push('【SPA 抽签反馈 (必须按此结果叙事)】');
+        injectLines.push('本次抽得: ' + pickedName + ' (从图鉴 ' + (rollResult.pool_size || 0) + ' 项中)');
+        injectLines.push('熟练度: ' + (rollResult.prof || 0));
+        injectLines.push('请按这个结果叙事, 严禁创造其他物品名 (会跟前端不一致). 玩家收获已由 SPA 同步加进背包.');
+      }
+      injectLines.push('');
+    }
     injectLines.push('叙事描述操作过程与结果, 自然推进时间, 可触发偶发事件。');
-    injectLines.push('结尾按 mvu 协议输出 <UpdateVariable> 块更新对应玩法 stat_data 字段:');
-    injectLines.push('  钓鱼: 钓鱼.地面熟练度/空岛熟练度; 种地: 种地.种地熟练度/田地/作物库存; 做菜: 做菜.做菜熟练度/食材库存; 副职: 副职.X熟练度');
-    injectLines.push('物品收获 / 装备变化由前端 UI 决定, 你只做叙事 + 熟练度变化。');
+    injectLines.push('结尾按 mvu 协议输出 <UpdateVariable> 块更新 A 类字段:');
+    injectLines.push('  熟练度: 钓鱼.地面熟练度/空岛熟练度, 种地.种地熟练度, 做菜.做菜熟练度, 副职.X熟练度 (单次 +1 ~ +3 克制)');
+    injectLines.push('  关系/羁绊度 (若 NPC 同伴在场): 见 D1 协议同步约束');
+    injectLines.push('  故事节点 (高影响事件必 push)');
+    injectLines.push('禁: B 类字段 (背包/装备/天元/图鉴新增由 SPA 写, 除 unlock 模式 push 新种到图鉴).');
     var injectMsg = injectLines.join('\n');
 
     try {
@@ -7899,11 +8016,15 @@ html, body {
         streamHandle = eventOn(iframe_events.STREAM_TOKEN_RECEIVED_FULLY, onToken);
       }
       var prompts = (typeof window.qyBuildPrompts === 'function') ? window.qyBuildPrompts() : [];
+      var injects = [{ role: 'system', content: injectMsg, position: 'in_chat', depth: 0, should_scan: true }];
+      // vamp 模式补 mvu bundle.js 自动注入的 <status_current_variables> 块
+      var mvuInject = window.qyBuildMvuInject();
+      if (mvuInject) injects.unshift(mvuInject);
       var result = await generate({
         user_input: '（玩家操作: ' + actionLabel + '）',
         should_stream: true,
         should_silence: true,
-        injects: [{ role: 'system', content: injectMsg, position: 'in_chat', depth: 0, should_scan: true }],
+        injects: injects,
         overrides: { chat_history: { prompts: prompts } },
       });
       var finalText = (typeof result === 'string') ? result : (result && result.content) || '';
@@ -7911,6 +8032,10 @@ html, body {
       qyRenderChat();
       await window.qyPersistTurn('（玩家操作: ' + pageName + ' / ' + actionLabel + '）', finalText);
       await window.qyApplyMvu(finalText);
+      // SPA 抽签的 roll 模式: AI 叙事完后把抽得物 push 到背包 (B 类, 不让 AI 写)
+      if (rollResult && rollResult.type === 'roll' && rollResult.picked) {
+        try { await window.qyPushItem(rollResult.picked); } catch (e) { console.warn('[qy] qyPushItem 失败:', e); }
+      }
       window.qyMaybeCompressHistory().catch(function(e) { console.warn('[qy] 压缩失败:', e); });
     } catch (e) {
       console.warn('[qy] 玩法操作 generate 失败:', e);
@@ -7948,7 +8073,9 @@ html, body {
           }
           btn.disabled = true;
           try {
-            await window.qyTriggerPlayAction(bind.pageId, label, extra);
+            // 抽签先于 AI 叙事: SPA 决定本次产出, 然后告诉 AI
+            var rollResult = (typeof window.qyPlayRoll === 'function') ? window.qyPlayRoll(bind.pageId) : null;
+            await window.qyTriggerPlayAction(bind.pageId, label, extra, rollResult);
           } catch (err) {
             console.warn('[qy] 玩法按钮失败:', err);
           } finally {
