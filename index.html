@@ -10,25 +10,30 @@ html, body {
   margin: 0; padding: 0;
   background: #050510;
 }
-/* fullscreen 状态下 SPA 内 body 撑满 viewport + 允许内部滚动 (.qy-fs-keep--root 外层滚动对 iframe 内容无效, 必须 iframe 内 body 自己滚) */
+/* fullscreen 状态下 SPA 内 body 撑满 viewport (.qy-fs-keep--root 外层滚动对 iframe 内容无效, 必须 iframe 内自己滚) */
 html.qy-spa-fs, body.qy-spa-fs {
   height: 100vh !important;
-  overflow: hidden !important;  /* body 不滚, 让内部 .qy-main 滚 */
+  overflow: hidden !important;  /* body 不滚, 让内部容器滚 */
 }
-/* fullscreen 状态下恢复 chat 滚动容器: strip_inner_100vh 砍掉了 .qy-app height:100vh, 这里加回让 .qy-main overflow-y:auto 工作 */
+/* 其他 page (钓鱼/种地/做菜/副职/图鉴) 整体可滚 fallback */
 body.qy-spa-fs .qy-page.active {
   height: 100vh !important;
+  overflow-y: auto !important;
+}
+/* 状态栏 page: 走 flex 链 .qy-status-app → .qy-status-main 内部滚 (STATUS_RENAMES 改了类名: qy-app→qy-status-app, qy-main→qy-status-main, 必须用新名) */
+body.qy-spa-fs #page-main.qy-page.active {
   display: flex !important;
   flex-direction: column !important;
+  overflow: hidden !important;
 }
-body.qy-spa-fs .qy-page.active .qy-app {
+body.qy-spa-fs #page-main.qy-page.active .qy-status-app {
   flex: 1 1 auto !important;
   min-height: 0 !important;
   height: auto !important;
   display: flex !important;
   flex-direction: column !important;
 }
-body.qy-spa-fs .qy-page.active .qy-main {
+body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   flex: 1 1 auto !important;
   min-height: 0 !important;
   overflow-y: auto !important;
