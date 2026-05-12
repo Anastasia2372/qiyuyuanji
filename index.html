@@ -10,6 +10,11 @@ html, body {
   margin: 0; padding: 0;
   background: #050510;
 }
+/* fullscreen 状态下 SPA 内 body 撑满 viewport + 允许内部滚动 (.qy-fs-keep--root 外层滚动对 iframe 内容无效, 必须 iframe 内 body 自己滚) */
+html.qy-spa-fs, body.qy-spa-fs {
+  height: 100vh !important;
+  overflow-y: auto !important;
+}
 #qy-app {
   width: 100%;
   background: #050510;
@@ -8273,8 +8278,13 @@ html, body {
       var fsEl = pdoc.fullscreenElement || pdoc.webkitFullscreenElement || pdoc.mozFullScreenElement || pdoc.msFullscreenElement;
       if (fsEl) {
         window.qyTakeoverParent();
+        // SPA iframe 内 body 加 class 让内容可滚 (修朔报告 2026-05-11 滑不下去 bug)
+        document.documentElement.classList.add('qy-spa-fs');
+        document.body.classList.add('qy-spa-fs');
       } else {
         window.qyRestoreParent();
+        document.documentElement.classList.remove('qy-spa-fs');
+        document.body.classList.remove('qy-spa-fs');
         // 退全屏自动回海报（仅已创角后, chatHistory + mvu 都保留）
         var app = document.getElementById('qy-app');
         if (app && app.classList.contains('qy-play-started')) {
