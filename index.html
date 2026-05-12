@@ -8365,25 +8365,9 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     pdoc.addEventListener('webkitfullscreenchange', onFsChange);
     pdoc.addEventListener('mozfullscreenchange', onFsChange);
     pdoc.addEventListener('MSFullscreenChange', onFsChange);
-
-    // 海报 page 上按 ESC: 已创角 + 不在 fullscreen → 触发 fullscreen + 切回聊天（朔: "里边的东西不能丢"）
-    function onKeyDown(e) {
-      if (e.key !== 'Escape' && e.keyCode !== 27) return;
-      if (qyState.currentPage !== 'poster') return;
-      var fsEl = pdoc.fullscreenElement || pdoc.webkitFullscreenElement;
-      if (fsEl) return; // 在 fullscreen 时浏览器默认 ESC 退出, 不抢
-      var app = document.getElementById('qy-app');
-      if (!app || !app.classList.contains('qy-play-started')) return; // 未创角不响应
-      try {
-        var fsTarget = (window.parent && window.parent.document && window.parent.document.documentElement) || document.documentElement;
-        if (fsTarget.requestFullscreen) fsTarget.requestFullscreen();
-        else if (fsTarget.webkitRequestFullscreen) fsTarget.webkitRequestFullscreen();
-      } catch (err) { console.warn('[qy] ESC 进全屏失败:', err); }
-      window.qyShowPage('main');
-      e.preventDefault();
-    }
-    document.addEventListener('keydown', onKeyDown);
-    try { pdoc.addEventListener('keydown', onKeyDown); } catch (_) {} // 双重绑保险
+    // ESC 只在全屏聊天界面有反应(浏览器自动退 fullscreen → fullscreenchange 自动切回海报).
+    // 海报上 ESC 不响应: Chrome 限制 ESC keydown 不算 user gesture, 不能 requestFullscreen.
+    // 想回全屏聊天 → 点海报"源神启动"按钮(已创角分支跑 requestFullscreen + qyShowPage('main')).
   }
 
   // ============= page-poster (first_mes_海报_v2.html) =============
