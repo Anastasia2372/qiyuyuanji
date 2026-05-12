@@ -13,6 +13,24 @@ html, body {
 /* fullscreen 状态下 SPA 内 body 撑满 viewport + 允许内部滚动 (.qy-fs-keep--root 外层滚动对 iframe 内容无效, 必须 iframe 内 body 自己滚) */
 html.qy-spa-fs, body.qy-spa-fs {
   height: 100vh !important;
+  overflow: hidden !important;  /* body 不滚, 让内部 .qy-main 滚 */
+}
+/* fullscreen 状态下恢复 chat 滚动容器: strip_inner_100vh 砍掉了 .qy-app height:100vh, 这里加回让 .qy-main overflow-y:auto 工作 */
+body.qy-spa-fs .qy-page.active {
+  height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+body.qy-spa-fs .qy-page.active .qy-app {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+body.qy-spa-fs .qy-page.active .qy-main {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
   overflow-y: auto !important;
 }
 #qy-app {
