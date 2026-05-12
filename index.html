@@ -148,10 +148,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   padding: 60px 50px 40px 50px;
   transition: opacity 800ms ease-in;
 }
-.qy-poster.qy-fade-out {
-  opacity: 0;
-  pointer-events: none;
-}
+
 
 /* ============= 标题区（左上） ============= */
 .qy-title-area {
@@ -454,37 +451,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   transition: width 80ms linear;
 }
 
-/* ============= 主 UI 占位（hook） ============= */
-.qy-main-placeholder {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 16px;
-  color: #c8d4e8;
-  font-family: 'Noto Serif SC', serif;
-  font-size: 1.1rem;
-  letter-spacing: 0.5em;
-  text-indent: 0.5em;
-  opacity: 0;
-  transition: opacity 800ms ease-out 200ms;
-  pointer-events: none;
-  text-shadow: 0 0 12px rgba(180, 210, 240, 0.4);
-}
-.qy-main-placeholder.show {
-  display: flex;
-  opacity: 1;
-}
-.qy-main-placeholder .qy-mp-line {
-  font-size: 0.75rem;
-  letter-spacing: 0.3em;
-  text-indent: 0.3em;
-  opacity: 0.6;
-  font-family: 'Cinzel Decorative', serif;
-}
+
 
 /* ============= 响应式（窄屏单列） ============= */
 @media (max-width: 720px) {
@@ -4665,11 +4632,6 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   </div>
 
 </div>
-
-<div class="qy-main-placeholder" id="qy-main-placeholder">
-  <div>· 七 域 已 临 ·</div>
-  <div class="qy-mp-line">MAIN UI PLACEHOLDER</div>
-</div>
 </div>
 
 <!-- ============= page-main (状态栏.html) ============= -->
@@ -8522,27 +8484,13 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       return;
     }
 
-    var poster = document.getElementById('qy-poster');
-    var nebula = document.querySelector('.qy-poster-nebula');
-    if (poster) poster.classList.add('qy-fade-out');
-    if (nebula) nebula.classList.add('qy-fade-out');
-
-    setTimeout(function() {
-      var ph = document.getElementById('qy-main-placeholder');
-      if (ph) ph.classList.add('show');
-
-      // hook: 主 UI 接入点
-      // first_mes 海报是 ST 楼层 iframe, window 是 iframe 内的 → qyEnterMainUI 在 ST 主页面 (parent/top) 上
-      var fn;
-      try { fn = window.parent && window.parent.qyEnterMainUI; } catch (_) {}
-      if (typeof fn !== 'function') { try { fn = window.top && window.top.qyEnterMainUI; } catch (_) {} }
-      if (typeof fn !== 'function') { fn = window.qyEnterMainUI; }
-      if (typeof fn === 'function') {
-        try { fn(); } catch (e) { console.warn('[qy] qyEnterMainUI threw:', e); }
-      } else {
-        console.warn('[qy] qyEnterMainUI not found in window/parent/top — 检查酒馆助手扩展是否启用 + 卡的 tavern_helper.scripts 是否运行');
-      }
-    }, 600);
+    // 切 main page (未创角时创角层自动显示, 已创角已被 add_poster_fullscreen_trigger 头部分支提前 return)
+    if (typeof window.qyShowPage === 'function') {
+      setTimeout(function() {
+        window.qyShowPage('main');
+        btn.disabled = false;
+      }, 200);
+    }
   });
 })();
     } catch (e) { console.error("[qy-init-poster]", e); }
