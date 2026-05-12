@@ -7565,6 +7565,22 @@ html, body {
         if (targetName === 'summary' && typeof window.qyRenderCreationSummary === 'function') {
           try { window.qyRenderCreationSummary(); } catch (e) { console.warn('[qy] qyRenderCreationSummary 失败:', e); }
         }
+        // entry 选的难度同步到 create 段七 (避免朔在 entry 选了星弃, 进 create 还显示星衡默认)
+        if (targetName === 'create') {
+          try {
+            var entryActive = document.querySelector('[data-cl-screen="entry"] .qy-cl-difficulty-card.active');
+            var entryDiff = (entryActive && entryActive.dataset && entryActive.dataset.diff) || null;
+            if (entryDiff) {
+              document.querySelectorAll('[data-cl-screen="create"] .qy-cl-difficulty-card').forEach(function(card) {
+                if (card.dataset && card.dataset.diff === entryDiff) {
+                  card.classList.add('active');
+                } else {
+                  card.classList.remove('active');
+                }
+              });
+            }
+          } catch (e) { console.warn('[qy] entry→create 难度同步失败:', e); }
+        }
         return ret;
       };
       window.__qyClGotoWrapped = true;
@@ -7782,10 +7798,12 @@ html, body {
         return;
       }
       await updateWorldbookWith(primaryWB, function(entries) {
-        return entries.filter(function(e) {
-          return e.name && e.name.indexOf('难度·') === 0;
-        }).map(function(e) {
-          return { uid: e.uid, enabled: e.name === targetName };
+        // 仅改 4 条难度条目 enabled, 其他 170+ 条原样返回 (filter 写法会把其他条目全删)
+        return entries.map(function(e) {
+          if (e.name && e.name.indexOf('难度·') === 0) {
+            return { uid: e.uid, enabled: e.name === targetName };
+          }
+          return e;
         });
       });
       console.log('[qy] 难度切换完成: 启用 ' + targetName + ', 禁用其他难度条目');
