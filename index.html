@@ -6835,28 +6835,13 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       }
     } catch (e) { /* 拿不到 ST API 退到原文当正文 */ }
 
-    // 5. DOM 解析抽 <details> 块 → 文本作为思维链内容 (剥离预设折叠样式, 七域用自己的黑金折叠壳)
-    var thinkingTextParts = [];
-    try {
-      var sandbox = document.createElement('div');
-      sandbox.innerHTML = html;
-      var detailsEls = sandbox.querySelectorAll('details');
-      detailsEls.forEach(function(el) {
-        var txt = (el.textContent || '').trim();
-        if (txt) thinkingTextParts.push(txt);
-        el.remove();
-      });
-      html = sandbox.innerHTML;
-    } catch (e) { /* DOM 失败保留原 html, thinking 空 */ }
-
-    // 6. 占位符还原为七域场景铭牌 HTML
+    // 5. 占位符还原场景铭牌 (messageFormatting 输出的 HTML 含预设 regex 生成的 <details> 折叠块, 原样保留)
     html = html.replace(/\u2063QYSCENE(\d+)\u2063/g, function(_, i) {
       var tag = sceneTags[parseInt(i, 10)] || '';
       return '<div class="qy-scene-tag">' + qyEscapeHtml(tag) + '</div>';
     });
 
     return {
-      thinking: thinkingTextParts.join('\n\n').trim(),
       mvu: mvuParts.join('\n\n').trim(),
       body: html.trim(),
     };
@@ -6902,19 +6887,12 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     var aiEl = document.getElementById('qy-vamp-ai');
     if (aiEl) {
       if (lastAi && lastAi.content) {
-        // 每次 (含流式中 + 流式结束) 都调 qyExtractThinking, ST messageFormatting 跑预设折叠正则
-        // 流式中间态: 折叠正则需成对标签, 中间态 thinking 空 + body 含字面量 (跟 ST 标准聊天一致行为)
-        // 流式结束: 完整标签触发折叠 → thinking 抽出 → 黑金折叠包装
+        // ST messageFormatting 跑当前激活预设的折叠正则 → body 直接含 <details> 折叠块 (预设自带样式, 不再七域重包)
         var extracted = qyExtractThinking(lastAi.content);
         var html = '';
-        if (extracted.thinking) {
-          html += '<details class="qy-thinking-block"><summary><span>思 维 链</span></summary>' +
-                  '<div class="qy-thinking-content">' + qyEscapeHtml(extracted.thinking) + '</div></details>';
-        }
         if (extracted.body) {
-          // body 已是 ST messageFormatting 处理后的 HTML (含 markdown 转换 + 场景铭牌占位还原), 直接塞
           html += extracted.body;
-        } else if (extracted.thinking || extracted.mvu) {
+        } else if (extracted.mvu) {
           html += '<p class="qy-vamp-ai-empty">（命运正在书写...）</p>';
         }
         if (extracted.mvu) {
