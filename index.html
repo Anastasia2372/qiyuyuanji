@@ -7525,13 +7525,27 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         if (taskPanes[i]) taskPanes[i].classList.add('active');
       });
     });
-    // 任务卡按钮 (B 类: SPA 写 mvu)
+    // 任务卡按钮 (B 类: SPA 写 mvu) - 加 click 视觉反馈, 朔肉眼看 button 文字区分 wire 没绑 / handler 失败
     el.querySelectorAll('[data-quest-action]').forEach(function(btn) {
+      var origText = btn.textContent;
       btn.addEventListener('click', async function() {
-        var action = btn.getAttribute('data-quest-action');
-        var qname = btn.getAttribute('data-quest-name');
-        if (typeof window.qyQuestAction === 'function') {
+        if (btn.disabled) return;
+        btn.disabled = true;
+        btn.textContent = '处理中...';
+        try {
+          var action = btn.getAttribute('data-quest-action');
+          var qname = btn.getAttribute('data-quest-name');
+          if (typeof window.qyQuestAction !== 'function') {
+            btn.textContent = '失败:qyQuestAction 未定义';
+            setTimeout(function() { btn.textContent = origText; btn.disabled = false; }, 3500);
+            return;
+          }
           await window.qyQuestAction(action, qname);
+          // qyQuestAction 内部会调 qyRenderStatusBar 重渲染任务区 → 按钮整个被替换, 不需要还原文字
+        } catch (e) {
+          console.warn('[qy] 任务按钮 handler 失败:', e);
+          btn.textContent = '失败:' + String((e && e.message) || e).slice(0, 18);
+          setTimeout(function() { btn.textContent = origText; btn.disabled = false; }, 3500);
         }
       });
     });
@@ -9309,40 +9323,58 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   });
 
   // 工具按钮: 重新处理变量 / 重新生成正文（按 textContent 区分, 共用 .qy-status-tool-btn）
+  // 加 click 视觉反馈: 按下立即变"处理中..." → 失败变"失败:xxx" → 成功还原, 朔肉眼看 button 文字就能区分 wire 没绑 / handler 失败
   document.querySelectorAll('.qy-status-tool-btn').forEach(function(tbtn) {
     var label = (tbtn.textContent || '').trim();
+    var origLabel = label;
+    function showErr(msg) {
+      tbtn.textContent = '失败:' + String(msg).slice(0, 18);
+      setTimeout(function() { tbtn.textContent = origLabel; tbtn.disabled = false; }, 3500);
+    }
     if (label === '重新处理变量') {
       tbtn.addEventListener('click', async function() {
         if (tbtn.disabled) return;
-        var hist = qyState.chatHistory || [];
-        var lastAi = null;
-        for (var i = hist.length - 1; i >= 0; i--) {
-          if (hist[i].role === 'assistant' && hist[i].content) { lastAi = hist[i]; break; }
-        }
-        if (!lastAi) { console.log('[qy] 没有 AI 回复可重新处理变量'); return; }
         tbtn.disabled = true;
-        try { await window.qyApplyMvu(lastAi.content); }
-        catch (e) { console.warn('[qy] 重新处理变量失败:', e); }
-        finally { tbtn.disabled = false; }
+        tbtn.textContent = '处理中...';
+        try {
+          var hist = qyState.chatHistory || [];
+          var lastAi = null;
+          for (var i = hist.length - 1; i >= 0; i--) {
+            if (hist[i].role === 'assistant' && hist[i].content) { lastAi = hist[i]; break; }
+          }
+          if (!lastAi) { showErr('无 AI 回复'); return; }
+          if (typeof window.qyApplyMvu !== 'function') { showErr('qyApplyMvu 未定义'); return; }
+          await window.qyApplyMvu(lastAi.content);
+          tbtn.textContent = '已重处理';
+          setTimeout(function() { tbtn.textContent = origLabel; tbtn.disabled = false; }, 1500);
+        } catch (e) {
+          console.warn('[qy] 重新处理变量失败:', e);
+          showErr((e && e.message) || e);
+        }
       });
     } else if (label === '重新生成正文') {
       tbtn.addEventListener('click', async function() {
         if (tbtn.disabled) return;
-        var hist = qyState.chatHistory || [];
-        // 找最后一条 user 作为重 roll 的 user_input
-        var lastUserIdx = -1;
-        for (var i = hist.length - 1; i >= 0; i--) {
-          if (hist[i].role === 'user') { lastUserIdx = i; break; }
-        }
-        if (lastUserIdx < 0) { console.log('[qy] 没有玩家消息可重新生成正文'); return; }
-        var userMsg = hist[lastUserIdx];
-        // 弹掉这条 user + 之后所有（qyTriggerGenerate 会重新 push user 和占位 assistant）
-        qyState.chatHistory = hist.slice(0, lastUserIdx);
-        qyRenderChat();
         tbtn.disabled = true;
-        try { await window.qyTriggerGenerate(userMsg.content); }
-        catch (e) { console.warn('[qy] 重新生成正文失败:', e); }
-        finally { tbtn.disabled = false; }
+        tbtn.textContent = '处理中...';
+        try {
+          var hist = qyState.chatHistory || [];
+          var lastUserIdx = -1;
+          for (var i = hist.length - 1; i >= 0; i--) {
+            if (hist[i].role === 'user') { lastUserIdx = i; break; }
+          }
+          if (lastUserIdx < 0) { showErr('无玩家消息'); return; }
+          if (typeof window.qyTriggerGenerate !== 'function') { showErr('qyTriggerGenerate 未定义'); return; }
+          var userMsg = hist[lastUserIdx];
+          qyState.chatHistory = hist.slice(0, lastUserIdx);
+          qyRenderChat();
+          await window.qyTriggerGenerate(userMsg.content);
+          tbtn.textContent = origLabel;
+          tbtn.disabled = false;
+        } catch (e) {
+          console.warn('[qy] 重新生成正文失败:', e);
+          showErr((e && e.message) || e);
+        }
       });
     }
   });
