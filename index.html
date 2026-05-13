@@ -6789,61 +6789,51 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  // ============= 思维链处理: 调 ST messageFormatting 让预设带的折叠正则跑起来 =============
-  // ST 真实机制 (源码 public/scripts/script.js:1644 + extensions/regex/engine.js:334):
-  //   messageFormatting → getRegexedString 跑当前激活预设的 embedded_regex_scripts (markdownOnly:true placement:[2])
-  //   任何预设带的思维链折叠 (konatan_planning~ / think_nya~ / thinking / meow / DeepSeek R1 / 其他玩家自配) 都自动生效
-  //   ST 不暴露 getRegexedString 单独函数, SillyTavern.getContext() 只有 messageFormatting (整套含 markdown 转换 + 宏替换)
-  // 七域 vamp 模式 TavernHelper.generate 绕开 ST 标准消息渲染管线 → 预设 regex 没机会跑 → 必须 SPA 手动调 messageFormatting
-  // 实施细节:
-  //   1. 抽场景铭牌成不可见字符占位, 避免 markdown 把 ```场景``` 转成 <pre><code>
-  //   2. 抽 mvu UpdateVariable 块走 SPA 黑金折叠 (不让 markdown 处理)
-  //   3. strip <content>/HTML 注释
-  //   4. 调 messageFormatting (fakeId=-1, isSystem=false, isUser=false, isReasoning=false) → 拿处理过的 HTML
-  //   5. DOM 解析抽 <details> 块作为思维链内容文本 (剥离预设自带的折叠 HTML 壳, 七域用自己黑金折叠包装)
-  //   6. 占位符还原为 .qy-scene-tag 灰盒
-  // 流式中间态: messageFormatting 每次重渲染都跑, 但折叠正则需成对标签 - 中间态因没收尾标签所以折叠未触发, 字面量外露
-  //   这是跟 ST 标准聊天**完全一致**的行为, 不是 bug. ST 标准聊天里流式中间态也是这样
+  // ============= 思维链隐藏: 通用 regex 砍掉所有自定义成对标签 (玩家完全不可见) =============
+  // 不调 ST messageFormatting (vamp 模式 + fakeId=-1 实测会吞整段). SPA 端自管:
+  //   1. 抽 mvu UpdateVariable 块 → SPA 蓝色折叠 (含流式未闭合兜底)
+  //   2. strip <content>/HTML 注释
+  //   3. 通用 regex 砍所有自定义成对标签 `<xxx>...</xxx>` (包含任何预设思维链标签)
+  //   4. 孤儿头标签兜底: 剩下文本里有未闭合的 `<某标签>` → 从这里砍到末尾 (防流式中字面量外露)
+  //   5. 正文走 qyRenderBody 自管段落渲染 (escape + 场景铭牌 + 换行)
+  // 流式中: 收到 `<标签>` 立即截掉后面所有字符, 正文区显示"命运正在书写..."; 流式结束后所有标签收齐成对砍掉, 正文完整显示
   function qyExtractThinking(text) {
-    if (!text) return { thinking: '', mvu: '', body: '' };
-    var raw = String(text);
+    if (!text) return { mvu: '', body: '' };
+    var t = String(text);
 
-    // 1. 抽场景铭牌成不可见字符占位 (保护不被 messageFormatting 的 markdown 转换吃掉)
-    var sceneTags = [];
-    var t = raw.replace(/```([^\n`]+)```/g, function(_, inner) {
-      sceneTags.push(inner.trim());
-      return '\u2063QYSCENE' + (sceneTags.length - 1) + '\u2063';
-    });
-
-    // 2. 抽 mvu UpdateVariable 块 → SPA 蓝色折叠
+    // 1. 抽 mvu UpdateVariable 块 → SPA 蓝色折叠
     var mvuParts = [];
     t = t.replace(/<UpdateVariable>[\s\S]*?<\/UpdateVariable>/g, function(match) {
       mvuParts.push(match);
       return '';
     });
+    // 兜底: 流式中未闭合的 UpdateVariable 头标签, 把从这里到末尾的所有字符当作未完成的 mvu 块抽走
+    var mvuOpenIdx = t.indexOf('<UpdateVariable>');
+    if (mvuOpenIdx >= 0) {
+      mvuParts.push(t.slice(mvuOpenIdx));
+      t = t.slice(0, mvuOpenIdx);
+    }
 
-    // 3. strip <content>/HTML 注释
+    // 2. strip <content>/HTML 注释
     t = t.replace(/<\/?content>/gi, '');
     t = t.replace(/<!--[\s\S]*?-->/g, '');
 
-    // 4. 调 ST messageFormatting 跑当前激活预设的 regex (思维链折叠 details 生成) + markdown 转换 + 宏替换
-    var html = t;
-    try {
-      var ctx = window.parent && window.parent.SillyTavern && window.parent.SillyTavern.getContext && window.parent.SillyTavern.getContext();
-      if (ctx && typeof ctx.messageFormatting === 'function') {
-        html = ctx.messageFormatting(t, '', false, false, -1, {}, false);
-      }
-    } catch (e) { /* 拿不到 ST API 退到原文当正文 */ }
+    // 3. 通用砍所有自定义成对标签 (思维链等). 反复跑处理嵌套
+    var prev;
+    do {
+      prev = t;
+      t = t.replace(/<([a-zA-Z][\w~_\-]*)[^>]*>[\s\S]*?<\/\1[^>]*>/g, '');
+    } while (t !== prev);
 
-    // 5. 占位符还原场景铭牌 (messageFormatting 输出的 HTML 含预设 regex 生成的 <details> 折叠块, 原样保留)
-    html = html.replace(/\u2063QYSCENE(\d+)\u2063/g, function(_, i) {
-      var tag = sceneTags[parseInt(i, 10)] || '';
-      return '<div class="qy-scene-tag">' + qyEscapeHtml(tag) + '</div>';
-    });
+    // 4. 兜底: 剩下文本里有未闭合的 <某标签> → 从这里砍到末尾 (防流式中外露)
+    var orphanMatch = t.match(/<[a-zA-Z][\w~_\-]*[^>]*>/);
+    if (orphanMatch) {
+      t = t.slice(0, orphanMatch.index);
+    }
 
     return {
       mvu: mvuParts.join('\n\n').trim(),
-      body: html.trim(),
+      body: t.trim(),
     };
   }
   // 渲染 AI body: 识别 ```xxx``` 单行场景铭牌渲染成灰盒, 其他文本按段落 escape
@@ -6887,11 +6877,11 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     var aiEl = document.getElementById('qy-vamp-ai');
     if (aiEl) {
       if (lastAi && lastAi.content) {
-        // ST messageFormatting 跑当前激活预设的折叠正则 → body 直接含 <details> 折叠块 (预设自带样式, 不再七域重包)
+        // qyExtractThinking 已砍掉所有自定义成对标签 (思维链不可见). body 是 raw 正文, 走 qyRenderBody 段落渲染
         var extracted = qyExtractThinking(lastAi.content);
         var html = '';
         if (extracted.body) {
-          html += extracted.body;
+          html += qyRenderBody(extracted.body);
         } else if (extracted.mvu) {
           html += '<p class="qy-vamp-ai-empty">（命运正在书写...）</p>';
         }
@@ -7178,8 +7168,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     qyState.chatHistory.push({ role: 'assistant', content: '' });
     qyRenderChat();
 
-    // 3. 流式 listener: 每次累积 text 塞 .content → qyRenderChat → qyExtractThinking 调 ST messageFormatting 跑预设折叠正则
-    //    流式中间态: 折叠正则需成对标签, 中间态没收尾标签时不折叠 (跟 ST 标准聊天一致); 完整收完后预设 regex 触发 details 折叠
+    // 3. 流式 listener: 每次累积 text 塞 .content → qyRenderChat → qyExtractThinking 砍所有自定义成对标签
+    //    流式中: 收到 <某标签> 立即截掉到末尾 → 正文区显示"命运正在书写..."; 流式结束后所有标签成对砍掉, 正文完整显示
     var streamHandle = null;
     var onToken = function(fullText) {
       qyState.chatHistory[aiIdx].content = fullText;
@@ -7210,7 +7200,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       });
 
       finalText = (typeof result === 'string') ? result : (result && result.content) || '';
-      // 流式结束 finalText 是 raw 完整字符串. 渲染由 qyExtractThinking 处理 (调 ST messageFormatting → 预设折叠正则触发)
+      // 流式结束 finalText 是 raw 完整字符串. 渲染由 qyExtractThinking 处理 (砍所有自定义成对标签, 思维链不可见)
       qyState.chatHistory[aiIdx].content = finalText;
       qyRenderChat();
 
