@@ -6835,11 +6835,9 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     // 3. ### 正文 marker (双人成行): 仅删字面量, 不重新分割 (marker 之前 <time_format> 等辅助标签留 body 头部)
     t = t.replace(/(^|\n)###[ \t]*\u6b63\u6587[ \t]*(?=\n|$)/g, '$1');
 
-    // 4. strip 辅助标签字面量: 预设输出的元数据 UI 元素, vamp 不经 ST regex 处理直接 escape 显示一堆 XML 字面量
-    //    time_format / meow_FM / branches / pacing / option / choice / 状态面板系列 / StatusPlaceHolderImpl 自闭合
-    t = t.replace(/<(time_format|meow_FM|branches|pacing|option|choice)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
-    t = t.replace(/<(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\b[^>]*>[\s\S]*?<\/(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\s*>/gi, '');
-    t = t.replace(/<StatusPlaceHolderImpl\s*\/?\s*>/gi, '');
+    // 4. 砍未知 wrapper 标签字面量保留内容 (AI 偶然输出 <gametxt>/<gameText>/<story>/<narrative> 等包裹正文)
+    //    辅助元数据标签 (time_format/meow_FM/branches/pacing/状态面板) 保留字面量, 留给 qyRenderBody 调 ST messageFormatting 跑预设 regex 美化
+    t = t.replace(/<\/?(gametxt|gameText|game_text|story|narrative)\b[^>]*>/gi, '');
 
     // 5. 流式中未闭合的开头白名单标签 → 截到末尾归思维链
     var openMatch = t.match(/<(draft|\u57fa\u7840\u786e\u8ba4|\u4fee\u6539\u786e\u8ba4|thinking|think)\b[^>]*>/i);
@@ -6854,7 +6852,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       body: t.trim()
     };
   }
-  // 渲染 AI body: 识别 ```xxx``` 单行场景铭牌渲染成灰盒, 其他文本按段落 escape
+  // 渲染 AI body: 优先调 ST messageFormatting 让预设 markdownOnly regex 跑 (时间卡片/摘要/选项栏美化),
+  //              失败 fallback: 砍辅助元数据标签 + escape 段落渲染
   function qyRenderBody(body) {
     if (!body) return '';
     var sceneTags = [];
@@ -6862,6 +6861,29 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       sceneTags.push(inner.trim());
       return '\u0000QYSCENE' + (sceneTags.length - 1) + '\u0000';
     });
+
+    // A 路: 尝试 ST messageFormatting 跑当前预设 markdownOnly regex 美化辅助标签为 UI 卡片
+    try {
+      var ctx = (window.parent && window.parent.SillyTavern && window.parent.SillyTavern.getContext)
+                ? window.parent.SillyTavern.getContext() : null;
+      if (ctx && typeof ctx.messageFormatting === 'function') {
+        var formatted = ctx.messageFormatting(marked, '', false, false, -1, {}, false);
+        if (formatted && String(formatted).trim()) {
+          // 占位符换回场景铭牌
+          return String(formatted).replace(/\u0000QYSCENE(\d+)\u0000/g, function(_, i) {
+            var tag = sceneTags[parseInt(i, 10)] || '';
+            return '<div class="qy-scene-tag">' + qyEscapeHtml(tag) + '</div>';
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[qy] messageFormatting fallback:', e);
+    }
+
+    // Fallback: 砍辅助元数据标签整段 + 老的 escape 段落渲染
+    marked = marked.replace(/<(time_format|meow_FM|branches|pacing|option|choice)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+    marked = marked.replace(/<(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\b[^>]*>[\s\S]*?<\/(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\s*>/gi, '');
+    marked = marked.replace(/<StatusPlaceHolderImpl\s*\/?\s*>/gi, '');
     var paragraphs = marked.split(/\n\s*\n/);
     return paragraphs.map(function(p) {
       var escaped = qyEscapeHtml(p).replace(/\n/g, '<br>');
