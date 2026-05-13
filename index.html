@@ -6835,6 +6835,18 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       }
     } catch (e) { /* 拿不到 ST API 退到原文当正文 */ }
 
+    // 4.5. 流式中间态判断: 思维链结构性在 AI 输出开头, 用 XML 标签包裹
+    //   raw 开头是 < (含 leading 空白) + messageFormatting 还没切出 <details> = 思维链段还没收完整尾标签
+    //   → body 留空让 qyRenderChat 显示"命运正在书写..."占位, 等收到完整 details 后正文才开始流式显示
+    //   预设折叠正则一定要成对标签触发, 没 details 就是还在思维链段中
+    if (/^\s*</.test(raw) && !/<details/i.test(html)) {
+      return {
+        thinking: '',
+        mvu: mvuParts.join('\n\n').trim(),
+        body: '',
+      };
+    }
+
     // 5. DOM 解析抽 <details> 块 → 文本作为思维链内容 (剥离预设折叠样式, 七域用自己的黑金折叠壳)
     var thinkingTextParts = [];
     try {
