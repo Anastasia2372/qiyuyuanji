@@ -6789,51 +6789,76 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  // 拆 AI 输出: 分离思维链块 + mvu 协议块 + 正文
-  // 覆盖主流思维链包装格式 (卡是给玩家用的不绑预设, 各派思维链全识别折叠):
-  //   <konatan_planning~>...</konatan_planning~>
-  //   <think_nya~>...</think_nya~>
-  //   <thinking>...</thinking>
-  //   <｜begin▁of▁thinking｜>...<｜end▁of▁thinking｜> (注意 ｜ 是全角 U+FF5C 不是 ASCII |)
-  //   <meow>...</meow>
-  //   <think>...</think> (最后跑, 防 greedy 吃掉 think_nya~)
-  // 孤儿尾标签 (单 </thinking> / 单 <｜end▁of▁thinking｜> 等) 删字符不成块, 不折叠
-  // 外壳 <Chain_of_Thought>...</Chain_of_Thought> (内部思维链已抽走) 标签砍掉
-  // 走 API 原生 reasoning 通道的模型: reasoning 经 STREAM_REASONING_DONE 事件单独传, 不进 content, 不用管
-  // 抽取: <UpdateVariable>...</UpdateVariable> mvu 协议块 → 折叠展示 (朔可点开验证 _.set 是否生效)
-  // 砍掉: <content>/</content> 标签 + HTML 注释 <!-- -->
+  // ============= 思维链处理: 用 ST 通用 API 不硬编码任何标签 =============
+  // 朔铁律: 卡给玩家用不绑预设, ST 暴露 parseReasoningFromString + substituteParams 已支持任何预设
+  //   ST 用当前激活的预设/连接源里配的 reasoningPrefix/reasoningSuffix 自动 split → 任何思维链格式都识别
+  //   走 API 原生 reasoning_effort 的模型 reasoning 经 STREAM_REASONING_DONE 单独通道, 不在 generate content 里, 不用管
+  // 流式策略: 正文边流边出 (朔要的实时感), 思维链段在流式中不外露 (状态机切段隐藏) → 流式结束后落到 .qy-thinking-block 黑金折叠块默认折叠
+  // qyGetReasoningConfig: 异步拿当前预设的 reasoningPrefix + reasoningSuffix 字面量
+  //   玩家预设未配 → 宏返回字面 '{{reasoningPrefix}}' 或空字符串, 视为未配置, 不做切, 全文当正文 (玩家自负)
+  async function qyGetReasoningConfig() {
+    var cfg = { prefix: '', suffix: '' };
+    try {
+      var ctx = window.parent && window.parent.SillyTavern && window.parent.SillyTavern.getContext && window.parent.SillyTavern.getContext();
+      if (ctx && typeof ctx.substituteParams === 'function') {
+        var pre = await ctx.substituteParams('{{reasoningPrefix}}');
+        var suf = await ctx.substituteParams('{{reasoningSuffix}}');
+        if (typeof pre === 'string' && pre && pre !== '{{reasoningPrefix}}') cfg.prefix = pre;
+        if (typeof suf === 'string' && suf && suf !== '{{reasoningSuffix}}') cfg.suffix = suf;
+      }
+    } catch (e) { /* 拿不到就降级为空字符串, 不切 */ }
+    return cfg;
+  }
+  // qySliceVisibleStream: 流式 onToken 状态机切段
+  //   累积 text 按 prefix/suffix 切: prefix 之前 + suffix 之后 = 正文 (可见); 中间 reasoning 段 buffer 不渲染
+  //   末尾若是 prefix 头部前缀片段 (如 '<th' 之于 '<thinking>'), 也 buffer 避免瞬间外露
+  function qySliceVisibleStream(fullText, prefix, suffix) {
+    if (!fullText) return '';
+    if (!prefix || !suffix) return fullText;   // 未配置 reasoning → 全文可见
+    var startIdx = fullText.indexOf(prefix);
+    if (startIdx < 0) {
+      // 检查末尾是否是 prefix 头部前缀 → buffer 末尾避免瞬间外露
+      var maxStart = Math.max(0, fullText.length - prefix.length + 1);
+      for (var i = maxStart; i < fullText.length; i++) {
+        if (prefix.indexOf(fullText.slice(i)) === 0) return fullText.slice(0, i);
+      }
+      return fullText;
+    }
+    var before = fullText.slice(0, startIdx);
+    var afterStart = fullText.slice(startIdx + prefix.length);
+    var endIdx = afterStart.indexOf(suffix);
+    if (endIdx < 0) return before;   // prefix 到 suffix 未到 → 只渲染 prefix 之前
+    return before + afterStart.slice(endIdx + suffix.length);   // prefix + suffix 都到 → 拼前后
+  }
+  // qyFinalSplit: 流式结束后用 parseReasoningFromString 二次 split 最终文本
+  //   返回 { reasoning, content }; 拿不到 API 或预设未配则 reasoning='', content=原文
+  function qyFinalSplit(finalText) {
+    var out = { reasoning: '', content: String(finalText || '') };
+    try {
+      var ctx = window.parent && window.parent.SillyTavern && window.parent.SillyTavern.getContext && window.parent.SillyTavern.getContext();
+      if (ctx && typeof ctx.parseReasoningFromString === 'function') {
+        var parsed = ctx.parseReasoningFromString(out.content, { strict: false });
+        if (parsed && typeof parsed === 'object') {
+          if (parsed.reasoning) out.reasoning = String(parsed.reasoning).trim();
+          if (typeof parsed.content === 'string') out.content = parsed.content;
+        }
+      }
+    } catch (e) { /* 拿不到就保留原文当正文 */ }
+    return out;
+  }
+  // 拆 AI 正文: 抽 mvu UpdateVariable 块 + strip <content>/HTML 注释
+  // 思维链切已经在流式 onToken / 流式结束 split 阶段做了, 这里 text 已经是干净正文 (或玩家预设未配的全文)
   function qyExtractThinking(text) {
-    if (!text) return { thinking: '', mvu: '', body: '' };
+    if (!text) return { mvu: '', body: '' };
     var t = String(text);
-    var thinkingParts = [];
-    var THINKING_PATTERNS = [
-      /<konatan_planning~>[\s\S]*?<\/konatan_planning~>/gi,
-      /<think_nya~>[\s\S]*?<\/think_nya~>/gi,
-      /<thinking>[\s\S]*?<\/thinking>/gi,
-      /<｜begin▁of▁thinking｜>[\s\S]*?<｜end▁of▁thinking｜>/g,
-      /<meow>[\s\S]*?<\/meow>/gi,
-      /<think>[\s\S]*?<\/think>/gi,
-    ];
-    THINKING_PATTERNS.forEach(function(re) {
-      t = t.replace(re, function(match) {
-        thinkingParts.push(match);
-        return '';
-      });
-    });
-    // 孤儿尾标签 + Chain_of_Thought 外壳 (单独删字符不成块)
-    t = t.replace(/<\/?Chain_of_Thought>/gi, '');
-    t = t.replace(/<\/(?:thinking|think|meow|think_nya~|konatan_planning~)>/gi, '');
-    t = t.replace(/<｜end▁of▁thinking｜>/g, '');
-    // 抽取 mvu UpdateVariable 块到 mvuParts (不再 strip), 渲染时折叠展示让朔验证
     var mvuParts = [];
     t = t.replace(/<UpdateVariable>[\s\S]*?<\/UpdateVariable>/g, function(match) {
       mvuParts.push(match);
       return '';
     });
-    // strip <content>/</content> 标签 + HTML 注释
     t = t.replace(/<\/?content>/gi, '');
     t = t.replace(/<!--[\s\S]*?-->/g, '');
-    return { thinking: thinkingParts.join('\n\n').trim(), mvu: mvuParts.join('\n\n').trim(), body: t.trim() };
+    return { mvu: mvuParts.join('\n\n').trim(), body: t.trim() };
   }
   // 渲染 AI body: 识别 ```xxx``` 单行场景铭牌渲染成灰盒, 其他文本按段落 escape
   function qyRenderBody(body) {
@@ -6875,20 +6900,20 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
     var aiEl = document.getElementById('qy-vamp-ai');
     if (aiEl) {
-      if (lastAi && lastAi.content) {
-        var extracted = qyExtractThinking(lastAi.content);
+      // lastAi.reasoning: 流式结束后由 qyFinalSplit 落库 (流式中保持空 → 折叠块流式中不显示, 结束后才显示)
+      var thinking = (lastAi && typeof lastAi.reasoning === 'string') ? lastAi.reasoning.trim() : '';
+      if (lastAi && (lastAi.content || thinking)) {
+        var extracted = qyExtractThinking(lastAi.content || '');
         var html = '';
-        if (extracted.thinking) {
+        if (thinking) {
           html += '<details class="qy-thinking-block"><summary><span>思 维 链</span></summary>' +
-                  '<div class="qy-thinking-content">' + qyEscapeHtml(extracted.thinking) + '</div></details>';
+                  '<div class="qy-thinking-content">' + qyEscapeHtml(thinking) + '</div></details>';
         }
         if (extracted.body) {
           html += qyRenderBody(extracted.body);
-        } else if (extracted.thinking || extracted.mvu) {
-          // 只有思维链/mvu 块没正文 (AI 还在写)
+        } else if (thinking || extracted.mvu) {
           html += '<p class="qy-vamp-ai-empty">（命运正在书写...）</p>';
         }
-        // mvu UpdateVariable 块折叠展示在正文末尾 (朔可点开验证 AI 是否按 D1 协议输出 _.set)
         if (extracted.mvu) {
           html += '<details class="qy-mvu-block"><summary><span>变 量 更 新</span></summary>' +
                   '<div class="qy-mvu-content">' + qyEscapeHtml(extracted.mvu) + '</div></details>';
@@ -7172,10 +7197,13 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     qyState.chatHistory.push({ role: 'assistant', content: '' });
     qyRenderChat();
 
-    // 3. 流式 listener
+    // 拿当前预设的 reasoning prefix/suffix 字面量 (用于流式状态机切, 玩家用啥预设都自动跟)
+    var reasoningCfg = await qyGetReasoningConfig();
+
+    // 3. 流式 listener: 状态机切, reasoning 段 buffer 不渲染 (避免外露), 正文段一字字流出
     var streamHandle = null;
     var onToken = function(fullText) {
-      qyState.chatHistory[aiIdx].content = fullText;
+      qyState.chatHistory[aiIdx].content = qySliceVisibleStream(fullText, reasoningCfg.prefix, reasoningCfg.suffix);
       qyRenderChat();
     };
 
@@ -7203,14 +7231,17 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       });
 
       finalText = (typeof result === 'string') ? result : (result && result.content) || '';
-      qyState.chatHistory[aiIdx].content = finalText;
+      // 流式结束用 ST parseReasoningFromString 二次 split: reasoning 落 .reasoning 字段 → 折叠块显示; content 落 .content 字段
+      var split = qyFinalSplit(finalText);
+      qyState.chatHistory[aiIdx].content = split.content;
+      qyState.chatHistory[aiIdx].reasoning = split.reasoning;
       qyRenderChat();
 
-      // 4. 持久化本轮到 mvu 原文 (user + assistant)
-      await window.qyPersistTurn(text, finalText);
+      // 4. 持久化本轮到 mvu 原文 (干净正文, 不含 reasoning, 下轮 AI 不需要看上轮思维链)
+      await window.qyPersistTurn(text, split.content);
 
-      // 5. generate 完成 → 自动调 mvu 解析 AI 输出里的 _.set 命令 (A 类字段)
-      await window.qyApplyMvu(finalText);
+      // 5. generate 完成 → 自动调 mvu 解析 AI 输出里的 _.set 命令 (用 split.content, _.set 在 <UpdateVariable> 块不在 reasoning 段)
+      await window.qyApplyMvu(split.content);
 
       // 6. 异步触发压缩检查 (不 await, 不阻塞下一轮发送)
       window.qyMaybeCompressHistory().catch(function(e) { console.warn('[qy] 压缩异步失败:', e); });
@@ -8000,9 +8031,10 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     qyState.chatHistory.push({ role: 'assistant', content: '' });
     qyRenderChat();
 
+    var reasoningCfg = await qyGetReasoningConfig();
     var streamHandle = null;
     var onToken = function(fullText) {
-      qyState.chatHistory[aiIdx].content = fullText;
+      qyState.chatHistory[aiIdx].content = qySliceVisibleStream(fullText, reasoningCfg.prefix, reasoningCfg.suffix);
       qyRenderChat();
     };
 
@@ -8042,9 +8074,11 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         overrides: { chat_history: { prompts: [] } },
       });
       var finalText = (typeof result === 'string') ? result : (result && result.content) || '';
-      qyState.chatHistory[aiIdx].content = finalText;
+      var split = qyFinalSplit(finalText);
+      qyState.chatHistory[aiIdx].content = split.content;
+      qyState.chatHistory[aiIdx].reasoning = split.reasoning;
       qyRenderChat();
-      await window.qyApplyMvu(finalText);
+      await window.qyApplyMvu(split.content);
     } catch (e) {
       console.warn('[qy] 开场叙事 generate 失败:', e);
       qyState.chatHistory[aiIdx].content = '[开场生成失败] ' + ((e && e.message) || e);
@@ -8076,9 +8110,10 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     qyState.chatHistory.push({ role: 'assistant', content: '' });
     qyRenderChat();
 
+    var reasoningCfg = await qyGetReasoningConfig();
     var streamHandle = null;
     var onToken = function(fullText) {
-      qyState.chatHistory[aiIdx].content = fullText;
+      qyState.chatHistory[aiIdx].content = qySliceVisibleStream(fullText, reasoningCfg.prefix, reasoningCfg.suffix);
       qyRenderChat();
     };
 
@@ -8130,10 +8165,12 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         overrides: { chat_history: { prompts: prompts } },
       });
       var finalText = (typeof result === 'string') ? result : (result && result.content) || '';
-      qyState.chatHistory[aiIdx].content = finalText;
+      var split = qyFinalSplit(finalText);
+      qyState.chatHistory[aiIdx].content = split.content;
+      qyState.chatHistory[aiIdx].reasoning = split.reasoning;
       qyRenderChat();
-      await window.qyPersistTurn('（玩家操作: ' + pageName + ' / ' + actionLabel + '）', finalText);
-      await window.qyApplyMvu(finalText);
+      await window.qyPersistTurn('（玩家操作: ' + pageName + ' / ' + actionLabel + '）', split.content);
+      await window.qyApplyMvu(split.content);
       // SPA 抽签的 roll 模式: AI 叙事完后把抽得物 push 到背包 (B 类, 不让 AI 写)
       if (rollResult && rollResult.type === 'roll' && rollResult.picked) {
         try { await window.qyPushItem(rollResult.picked); } catch (e) { console.warn('[qy] qyPushItem 失败:', e); }
