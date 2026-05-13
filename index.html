@@ -1720,10 +1720,10 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   padding: 2em 0;
 }
 
-/* ============= 思维链折叠（七域 UI 配色, 金边深底, 默认折叠）============= */
+/* ============= 思维链折叠 (白名单标签 + 开头到 </think(ing)?> 截断, 金色, 默认折叠) ============= */
 .qy-thinking-block {
-  margin: 0 0 1.2em;
-  background: rgba(5, 5, 16, 0.55);
+  margin: 0.8em 0 1.2em;
+  background: rgba(20, 14, 4, 0.55);
   border: 1px solid rgba(212, 175, 55, 0.35);
   border-radius: 6px;
   overflow: hidden;
@@ -1731,12 +1731,12 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
 .qy-thinking-block summary {
   cursor: pointer;
   list-style: none;
-  padding: 0.6em 1em;
-  color: #d4af37;
-  font-size: 0.92em;
+  padding: 0.55em 1em;
+  color: #f0d878;
+  font-size: 0.9em;
   letter-spacing: 0.18em;
   user-select: none;
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.08), transparent);
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.1), transparent);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1751,16 +1751,17 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
 }
 .qy-thinking-block[open] summary::after { content: '折 叠'; opacity: 0.85; }
 .qy-thinking-block[open] summary {
-  border-bottom: 1px solid rgba(212, 175, 55, 0.22);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.25);
 }
 .qy-thinking-content {
-  padding: 0.9em 1.2em 1em;
-  color: #a8b8d0;
-  font-size: 0.85em;
-  line-height: 1.75;
+  padding: 0.85em 1.2em 1em;
+  color: #e0d4b8;
+  font-size: 0.82em;
+  line-height: 1.65;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 460px;
+  font-family: 'ZCOOL XiaoWei', 'KaiTi', serif;
+  max-height: 420px;
   overflow-y: auto;
 }
 .qy-thinking-content::-webkit-scrollbar { width: 6px; }
@@ -1769,7 +1770,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   border-radius: 3px;
 }
 
-/* ============= 变量更新折叠 (mvu UpdateVariable 块, 蓝色区分思维链, 默认折叠) ============= */
+/* ============= 变量更新折叠 (mvu UpdateVariable 块, 蓝色, 默认折叠) ============= */
 .qy-mvu-block {
   margin: 0.8em 0 1.2em;
   background: rgba(5, 8, 22, 0.6);
@@ -6789,61 +6790,68 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  // ============= 思维链折叠: 通用 regex 抽所有自定义成对标签 (走金边 details 默认折叠, 朔可点开看) =============
-  // 不调 ST messageFormatting (vamp 模式 + fakeId=-1 实测会吞整段). SPA 端自管:
-  //   1. 抽 mvu UpdateVariable 块 → SPA 蓝色折叠 (含流式未闭合兜底)
-  //   2. strip <content>/HTML 注释
-  //   3. 通用 regex 抽所有自定义成对标签 `<xxx>...</xxx>` → 思维链 (金色折叠)
-  //   4. 孤儿头标签兜底: 未闭合的 `<某标签>` → 也归思维链, body 从这里截断 (防流式中字面量外露)
-  //   5. 正文走 qyRenderBody 自管段落渲染 (escape + 场景铭牌 + 换行)
-  // 流式中: 收到 `<标签>` 立即截掉到末尾归思维链, 正文区显示"命运正在书写..."; 流式结束后标签成对抽走, 正文完整显示
-  function qyExtractThinking(text) {
-    if (!text) return { thinking: '', mvu: '', body: '' };
+  // 抽 AI raw 里 mvu UpdateVariable 块 (蓝色折叠给玩家可查 _.set), 顺便清 content/HTML 注释字面量
+  function qyExtractMvu(text) {
+    if (!text) return { mvu: '', body: '' };
     var t = String(text);
-
-    // 1. strip <content>/HTML 注释 (先清干净, 避免干扰下面成对标签匹配)
     t = t.replace(/<\/?content>/gi, '');
     t = t.replace(/<!--[\s\S]*?-->/g, '');
-
-    // 2. 先抽思维链 (通用成对标签, 跳过 UpdateVariable 留给 mvu 处理). 反复跑处理嵌套
-    //    放在 mvu 之前是为了: 思维链里有时会出现 <UpdateVariable> 字面量讨论, 如果先跑 mvu regex
-    //    非贪婪匹配会从思维链里的字面量开始, 一直吃到末尾真正的 </UpdateVariable>,
-    //    导致 [思维链尾巴 + 正文 + 真 mvu] 一锅端进蓝框. 先抽思维链能整段连同字面量一起带走.
-    var thinkingParts = [];
-    var prev;
-    do {
-      prev = t;
-      t = t.replace(/<([a-zA-Z][\w~_\-]*)[^>]*>[\s\S]*?<\/\1[^>]*>/g, function(match, tag) {
-        if (tag === 'UpdateVariable') return match;
-        thinkingParts.push(match);
-        return '';
-      });
-    } while (t !== prev);
-
-    // 3. 抽 mvu UpdateVariable 块 → SPA 蓝色折叠
     var mvuParts = [];
     t = t.replace(/<UpdateVariable>[\s\S]*?<\/UpdateVariable>/g, function(match) {
       mvuParts.push(match);
       return '';
     });
-    // 兜底: 流式中未闭合的 UpdateVariable 头标签, 把从这里到末尾的所有字符当作未完成的 mvu 块抽走
-    var mvuOpenIdx = t.indexOf('<UpdateVariable>');
-    if (mvuOpenIdx >= 0) {
-      mvuParts.push(t.slice(mvuOpenIdx));
-      t = t.slice(0, mvuOpenIdx);
+    // 流式中未闭合的 UpdateVariable 头标签砍到末尾归 mvu
+    var openIdx = t.indexOf('<UpdateVariable>');
+    if (openIdx >= 0) {
+      mvuParts.push(t.slice(openIdx));
+      t = t.slice(0, openIdx);
+    }
+    return { mvu: mvuParts.join('\n\n').trim(), body: t.trim() };
+  }
+  // 抽 AI body 里思维链 (白名单成对标签 + prefill 场景"开头到 </think(ing)?>" 整段), 返回 {thinking, body}
+  // 白名单覆盖两预设: 潮汐 <draft>/<修改确认>, 双人成行 <thinking>/<think> 完整对
+  // 双人成行 prefill 让 raw 开头无 <thinking> 但有 </thinking> → 开头到结束整段抽
+  // 双人成行 ### 正文 marker 后半当 body, 前半归思维链
+  // 流式中未闭合的开头白名单标签 → 截到末尾归思维链 (占位 "命运正在书写...")
+  function qyExtractThinking(text) {
+    if (!text) return { thinking: '', body: '' };
+    var t = String(text);
+    var thinkingParts = [];
+
+    // 1. 抽完整成对白名单标签 (闭合): draft / 基础确认 / 修改确认 / thinking / think (允许任意属性)
+    t = t.replace(/<(draft|\u57fa\u7840\u786e\u8ba4|\u4fee\u6539\u786e\u8ba4|thinking|think)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, function(m) {
+      thinkingParts.push(m);
+      return '';
+    });
+
+    // 2. prefill 场景: 开头无 <thinking> 开始标签但有 </thinking> → 开头到结束整段抽
+    var endMatch = t.match(/^[\s\S]*?<\/think(?:ing)?\s*>/i);
+    if (endMatch) {
+      thinkingParts.unshift(endMatch[0]);
+      t = t.slice(endMatch[0].length);
     }
 
-    // 4. 兜底: 剩下文本里有未闭合的 <某标签> → 当流式思维链, 归 thinking, body 截断
-    var orphanMatch = t.match(/<[a-zA-Z][\w~_\-]*[^>]*>/);
-    if (orphanMatch) {
-      thinkingParts.push(t.slice(orphanMatch.index));
-      t = t.slice(0, orphanMatch.index);
+    // 3. ### 正文 marker (双人成行): 仅删字面量, 不重新分割 (marker 之前 <time_format> 等辅助标签留 body 头部)
+    t = t.replace(/(^|\n)###[ \t]*\u6b63\u6587[ \t]*(?=\n|$)/g, '$1');
+
+    // 4. strip 辅助标签字面量: 预设输出的元数据 UI 元素, vamp 不经 ST regex 处理直接 escape 显示一堆 XML 字面量
+    //    time_format / meow_FM / branches / pacing / option / choice / 状态面板系列 / StatusPlaceHolderImpl 自闭合
+    t = t.replace(/<(time_format|meow_FM|branches|pacing|option|choice)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+    t = t.replace(/<(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\b[^>]*>[\s\S]*?<\/(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\s*>/gi, '');
+    t = t.replace(/<StatusPlaceHolderImpl\s*\/?\s*>/gi, '');
+
+    // 5. 流式中未闭合的开头白名单标签 → 截到末尾归思维链
+    var openMatch = t.match(/<(draft|\u57fa\u7840\u786e\u8ba4|\u4fee\u6539\u786e\u8ba4|thinking|think)\b[^>]*>/i);
+    if (openMatch) {
+      var openIdx = t.indexOf(openMatch[0]);
+      thinkingParts.push(t.slice(openIdx));
+      t = t.slice(0, openIdx);
     }
 
     return {
       thinking: thinkingParts.join('\n\n').trim(),
-      mvu: mvuParts.join('\n\n').trim(),
-      body: t.trim(),
+      body: t.trim()
     };
   }
   // 渲染 AI body: 识别 ```xxx``` 单行场景铭牌渲染成灰盒, 其他文本按段落 escape
@@ -6887,21 +6895,21 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     var aiEl = document.getElementById('qy-vamp-ai');
     if (aiEl) {
       if (lastAi && lastAi.content) {
-        // qyExtractThinking 抽出思维链/mvu, body 走 qyRenderBody 段落渲染. 思维链/mvu 走金/蓝折叠 details (默认折叠)
-        var extracted = qyExtractThinking(lastAi.content);
+        var extractedMvu = qyExtractMvu(lastAi.content);
+        var extractedThink = qyExtractThinking(extractedMvu.body);
         var html = '';
-        if (extracted.thinking) {
-          html += '<details class="qy-thinking-block"><summary><span>思 维 链</span></summary>' +
-                  '<div class="qy-thinking-content">' + qyEscapeHtml(extracted.thinking) + '</div></details>';
-        }
-        if (extracted.body) {
-          html += qyRenderBody(extracted.body);
-        } else if (extracted.thinking || extracted.mvu) {
+        if (extractedThink.body) {
+          html += qyRenderBody(extractedThink.body);
+        } else if (extractedThink.thinking || extractedMvu.mvu) {
           html += '<p class="qy-vamp-ai-empty">（命运正在书写...）</p>';
         }
-        if (extracted.mvu) {
+        if (extractedThink.thinking) {
+          html += '<details class="qy-thinking-block"><summary><span>思 维 链</span></summary>' +
+                  '<div class="qy-thinking-content">' + qyEscapeHtml(extractedThink.thinking) + '</div></details>';
+        }
+        if (extractedMvu.mvu) {
           html += '<details class="qy-mvu-block"><summary><span>变 量 更 新</span></summary>' +
-                  '<div class="qy-mvu-content">' + qyEscapeHtml(extracted.mvu) + '</div></details>';
+                  '<div class="qy-mvu-content">' + qyEscapeHtml(extractedMvu.mvu) + '</div></details>';
         }
         aiEl.innerHTML = html;
       } else if (lastAi) {
@@ -7182,8 +7190,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     qyState.chatHistory.push({ role: 'assistant', content: '' });
     qyRenderChat();
 
-    // 3. 流式 listener: 每次累积 text 塞 .content → qyRenderChat → qyExtractThinking 抽思维链折叠
-    //    流式中: 收到 <某标签> 截掉到末尾归思维链, 正文区显示"命运正在书写..."; 流式结束后标签成对抽走, 正文显示
+    // 3. 流式 listener: 每次累积 text 塞 .content → qyRenderChat → qyExtractMvu 抽 mvu 块到蓝色折叠
     var streamHandle = null;
     var onToken = function(fullText) {
       qyState.chatHistory[aiIdx].content = fullText;
@@ -7214,14 +7221,14 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       });
 
       finalText = (typeof result === 'string') ? result : (result && result.content) || '';
-      // 流式结束 finalText 是 raw 完整字符串. 渲染由 qyExtractThinking 处理 (抽思维链成对标签到金色折叠)
+      // 流式结束 finalText 是 raw 完整字符串. 渲染由 qyRenderChat 处理 (qyExtractMvu 抽 mvu 块到蓝色折叠)
       qyState.chatHistory[aiIdx].content = finalText;
       qyRenderChat();
 
-      // 4. 持久化本轮到 mvu 原文 (raw, 跟 ST 标准聊天 message.mes 行为一致 - 下轮 prompt 包含上轮完整含思维链)
+      // 4. 持久化本轮到 mvu 原文 (raw, 跟 ST 标准聊天 message.mes 行为一致 - 下轮 prompt 包含上轮完整 raw)
       await window.qyPersistTurn(text, finalText);
 
-      // 5. generate 完成 → mvu 解析 AI 输出里的 _.set 命令 (UpdateVariable 块在 raw 里, mvu bundle.js 按块抽取不会误解析思维链段)
+      // 5. generate 完成 → mvu 解析 AI 输出里的 _.set 命令 (UpdateVariable 块在 raw 里, mvu bundle.js 按块抽取)
       await window.qyApplyMvu(finalText);
 
       // 6. 异步触发压缩检查 (不 await, 不阻塞下一轮发送)
