@@ -7035,7 +7035,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         <div class="qy-mem-title">记 忆</div>
         <div class="qy-mem-title-en">MEMORY</div>
       </div>
-      <button class="qy-mem-close qy-close-btn" type="button">关 闭</button>
+      <button class="qy-mem-close qy-close-btn" type="button" onclick="window.qyShowPage && window.qyShowPage('main')">关 闭</button>
     </div>
 
     <div class="qy-mem-tabs">
@@ -7078,11 +7078,21 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   }
 
   // 抽 AI raw 里 mvu UpdateVariable 块 (蓝色折叠给玩家可查 _.set), 顺便清 content/HTML 注释字面量
+  // 完美记忆系统 5 类 push 标签 (纪要新增/关键人物更新/同伴更新/任务更新/物品更新) 已由 qyExtractPushTags 抽数据写 worldbook,
+  // 字面量必须在这里砍掉, 否则会留在 body 里被 qyRenderBody 当正文显示 / 把 mvu 块边界冲乱 / 干扰 qyExtractThinking
   function qyExtractMvu(text) {
     if (!text) return { mvu: '', body: '' };
     var t = String(text);
     t = t.replace(/<\/?content>/gi, '');
     t = t.replace(/<!--[\s\S]*?-->/g, '');
+    // 砍 5 类 push 标签字面量 (含未闭合的流式中状态)
+    t = t.replace(/<(?:\u7eaa\u8981\u65b0\u589e|\u5173\u952e\u4eba\u7269\u66f4\u65b0|\u540c\u4f34\u66f4\u65b0|\u4efb\u52a1\u66f4\u65b0|\u7269\u54c1\u66f4\u65b0)>[\s\S]*?<\/(?:\u7eaa\u8981\u65b0\u589e|\u5173\u952e\u4eba\u7269\u66f4\u65b0|\u540c\u4f34\u66f4\u65b0|\u4efb\u52a1\u66f4\u65b0|\u7269\u54c1\u66f4\u65b0)>/g, '');
+    // 流式中: 未闭合的 push 头标签 → 从该标签起截到末尾砍掉 (避免半截 JSON 流出现在 body)
+    var pushOpenRegex = /<(?:\u7eaa\u8981\u65b0\u589e|\u5173\u952e\u4eba\u7269\u66f4\u65b0|\u540c\u4f34\u66f4\u65b0|\u4efb\u52a1\u66f4\u65b0|\u7269\u54c1\u66f4\u65b0)>/;
+    var pushOpen = t.search(pushOpenRegex);
+    if (pushOpen >= 0) {
+      t = t.slice(0, pushOpen);
+    }
     var mvuParts = [];
     t = t.replace(/<UpdateVariable>[\s\S]*?<\/UpdateVariable>/g, function(match) {
       mvuParts.push(match);
@@ -8715,7 +8725,13 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   window.qyHideCraftUI       = function() { qyShowPage('main'); };
   window.qyShowCodexUI       = function() { qyShowPage('codex'); };
   window.qyHideCodexUI       = function() { qyShowPage('main'); };
-  window.qyShowMemoryUI      = function() { qyShowPage('memory'); };
+  window.qyShowMemoryUI      = function() {
+    qyShowPage('memory');
+    // page init 只跑一次, 这里每次进入强制刷新数据 (mvu/纪要/关键人物 可能已变)
+    if (typeof window.qyRenderMemoryAll === 'function') {
+      try { window.qyRenderMemoryAll(); } catch (_) {}
+    }
+  };
   window.qyHideMemoryUI      = function() { qyShowPage('main'); };
 
   // ============= 错误日志 小窗 modal (黑底白字, 悬浮球菜单点"错误日志") =============
@@ -10819,36 +10835,16 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     if (qyState._inited.memory) return;
     qyState._inited.memory = true;
     try {
-window.qyInit_memory = function() {
-  document.querySelectorAll('#qy-memory-app .qy-mem-tab').forEach(function(t) {
-    t.addEventListener('click', function() {
-      var key = t.dataset.memTab;
-      document.querySelectorAll('#qy-memory-app .qy-mem-tab').forEach(function(b) { b.classList.remove('active'); });
-      document.querySelectorAll('#qy-memory-app .qy-mem-pane').forEach(function(p) { p.classList.remove('active'); });
-      t.classList.add('active');
-      var pane = document.querySelector('#qy-memory-app .qy-mem-pane[data-mem-pane="' + key + '"]');
-      if (pane) pane.classList.add('active');
-      window.qyRenderMemoryAll();
-    });
-  });
-  window.qyRenderMemoryAll();
-};
-
-function qyEscMem(s) {
+// 全局工具 (放外面方便 qyShowMemoryUI 重渲染时调用)
+window.qyEscMem = function(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-function qyUnwrapMem(v) {
+};
+window.qyUnwrapMem = function(v) {
   if (Array.isArray(v) && v.length === 2 && typeof v[1] === 'string') return v[0];
   return v;
-}
-
-window.qyRenderMemoryAll = function() {
-  qyRenderMemoryNarrations();
-  qyRenderMemoryCharacters();
-  qyRenderMemoryArchives();
 };
 
-function qyRenderMemoryNarrations() {
+window.qyRenderMemoryNarrations = function() {
   var listEl = document.getElementById('qy-mem-narr-list');
   if (!listEl) return;
   if (typeof window.Mvu === 'undefined') {
@@ -10858,18 +10854,18 @@ function qyRenderMemoryNarrations() {
   try {
     var data = window.Mvu.getMvuData({ type: 'chat' }) || {};
     var stat = data.stat_data || {};
-    var idx = qyUnwrapMem(stat['纪要索引']);
+    var idx = window.qyUnwrapMem(stat['纪要索引']);
     if (!Array.isArray(idx) || idx.length === 0) {
       listEl.innerHTML = '<li class="qy-mem-empty">尚未生成任何纪要节点</li>';
       return;
     }
     var sorted = idx.slice().reverse();
     listEl.innerHTML = sorted.map(function(it) {
-      it = qyUnwrapMem(it) || {};
-      var am = qyEscMem(it.AM || '');
-      var time = qyEscMem(it['时间'] || '');
-      var place = qyEscMem(it['地点'] || '');
-      var brief = qyEscMem(it['概要'] || '');
+      it = window.qyUnwrapMem(it) || {};
+      var am = window.qyEscMem(it.AM || '');
+      var time = window.qyEscMem(it['时间'] || '');
+      var place = window.qyEscMem(it['地点'] || '');
+      var brief = window.qyEscMem(it['概要'] || '');
       return '<li class="qy-mem-item" data-am="' + am + '">' +
         '<div class="qy-mem-item-head">' +
           '<span class="qy-mem-am">' + am + '</span>' +
@@ -10911,11 +10907,11 @@ function qyRenderMemoryNarrations() {
       });
     });
   } catch (e) {
-    listEl.innerHTML = '<li class="qy-mem-empty">渲染失败: ' + qyEscMem(e.message) + '</li>';
+    listEl.innerHTML = '<li class="qy-mem-empty">渲染失败: ' + window.qyEscMem(e.message) + '</li>';
   }
-}
+};
 
-async function qyRenderMemoryCharacters() {
+window.qyRenderMemoryCharacters = async function() {
   var listEl = document.getElementById('qy-mem-char-list');
   if (!listEl) return;
   try {
@@ -10934,19 +10930,19 @@ async function qyRenderMemoryCharacters() {
       return;
     }
     listEl.innerHTML = chars.map(function(e) {
-      var name = qyEscMem(e.comment.replace('[关键人物]', '').trim());
-      var preview = qyEscMem(String(e.content || '').slice(0, 240));
+      var name = window.qyEscMem(e.comment.replace('[关键人物]', '').trim());
+      var preview = window.qyEscMem(String(e.content || '').slice(0, 240));
       return '<li class="qy-mem-item">' +
         '<div class="qy-mem-am">' + name + '</div>' +
         '<div class="qy-mem-brief" style="white-space:pre-wrap;">' + preview + (e.content && e.content.length > 240 ? '\n...' : '') + '</div>' +
       '</li>';
     }).join('');
   } catch (e) {
-    listEl.innerHTML = '<li class="qy-mem-empty">加载失败: ' + qyEscMem(e.message) + '</li>';
+    listEl.innerHTML = '<li class="qy-mem-empty">加载失败: ' + window.qyEscMem(e.message) + '</li>';
   }
-}
+};
 
-async function qyRenderMemoryArchives() {
+window.qyRenderMemoryArchives = async function() {
   var listEl = document.getElementById('qy-mem-arch-list');
   if (!listEl) return;
   try {
@@ -10965,17 +10961,45 @@ async function qyRenderMemoryArchives() {
       return;
     }
     listEl.innerHTML = archives.map(function(e) {
-      var title = qyEscMem(e.comment);
-      var content = qyEscMem(String(e.content || ''));
+      var title = window.qyEscMem(e.comment);
+      var content = window.qyEscMem(String(e.content || ''));
       return '<li class="qy-mem-item">' +
         '<div class="qy-mem-am">' + title + '</div>' +
         '<div class="qy-mem-brief" style="white-space:pre-wrap;">' + content + '</div>' +
       '</li>';
     }).join('');
   } catch (e) {
-    listEl.innerHTML = '<li class="qy-mem-empty">加载失败: ' + qyEscMem(e.message) + '</li>';
+    listEl.innerHTML = '<li class="qy-mem-empty">加载失败: ' + window.qyEscMem(e.message) + '</li>';
   }
-}
+};
+
+window.qyRenderMemoryAll = function() {
+  window.qyRenderMemoryNarrations();
+  window.qyRenderMemoryCharacters();
+  window.qyRenderMemoryArchives();
+};
+
+// 立即执行 (build script 自动包外层 init, 这里直接是首次进入 page 时跑)
+// sub-tab 切换
+document.querySelectorAll('#qy-memory-app .qy-mem-tab').forEach(function(t) {
+  t.addEventListener('click', function() {
+    var key = t.dataset.memTab;
+    document.querySelectorAll('#qy-memory-app .qy-mem-tab').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('#qy-memory-app .qy-mem-pane').forEach(function(p) { p.classList.remove('active'); });
+    t.classList.add('active');
+    var pane = document.querySelector('#qy-memory-app .qy-mem-pane[data-mem-pane="' + key + '"]');
+    if (pane) pane.classList.add('active');
+    window.qyRenderMemoryAll();
+  });
+});
+// 关闭按钮 (inline onclick 已直接绑, 这里再加 fallback)
+document.querySelectorAll('#qy-memory-app .qy-mem-close').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    if (typeof window.qyShowPage === 'function') window.qyShowPage('main');
+  });
+});
+// 首次渲染
+window.qyRenderMemoryAll();
     } catch (e) { console.error("[qy-init-memory]", e); }
   };
 
