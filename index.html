@@ -1894,6 +1894,55 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   border-radius: 3px;
 }
 
+/* ============= 通用 <details><summary>xxx</summary>...</details> 折叠 (潮汐小总结 / 吐槽剧场 / 平行世界时间轴) ============= */
+.qy-summary-block {
+  margin: 0.8em 0 1.2em;
+  background: rgba(10, 20, 36, 0.6);
+  border: 1px solid rgba(120, 168, 200, 0.35);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.qy-summary-block summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.55em 1em;
+  color: #b8d4e8;
+  font-size: 0.9em;
+  letter-spacing: 0.1em;
+  user-select: none;
+  background: linear-gradient(90deg, rgba(120, 168, 200, 0.15), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.qy-summary-block summary::-webkit-details-marker { display: none; }
+.qy-summary-block summary::marker { content: ''; }
+.qy-summary-block summary::after {
+  content: '展 开';
+  font-size: 0.78em;
+  opacity: 0.65;
+  letter-spacing: 0.1em;
+}
+.qy-summary-block[open] summary::after { content: '折 叠'; opacity: 0.85; }
+.qy-summary-block[open] summary {
+  border-bottom: 1px solid rgba(120, 168, 200, 0.3);
+}
+.qy-summary-content {
+  padding: 0.85em 1.2em 1em;
+  color: #c8d8e4;
+  font-size: 0.85em;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 420px;
+  overflow-y: auto;
+}
+.qy-summary-content::-webkit-scrollbar { width: 6px; }
+.qy-summary-content::-webkit-scrollbar-thumb {
+  background: rgba(120, 168, 200, 0.3);
+  border-radius: 3px;
+}
+
 /* ============= branches 选项按钮 (淡蓝边 + 透明底, hover 金边) ============= */
 .qy-branches {
   display: flex;
@@ -6943,8 +6992,11 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       return '';
     });
 
-    // 2. prefill 场景: 开头无 <thinking> 开始标签但有 </thinking> → 开头到结束整段抽
-    var endMatch = t.match(/^[\s\S]*?<\/think(?:ing)?\s*>/i);
+    // 2. prefill 场景: 开头无开始标签但有结束标签 → 开头到结束整段抽
+    //    潮汐 assistant prefill = "Chaoxi: <基础确认><|no-trans|>"  → raw 只有 </基础确认> 没 <基础确认>
+    //    双人成行 prefill = "<thinking>" → raw 只有 </thinking> 没 <thinking>
+    //    支持的结束标签: </think> /</thinking> / </基础确认> / </修改确认>
+    var endMatch = t.match(/^[\s\S]*?<\/(?:think(?:ing)?|\u57fa\u7840\u786e\u8ba4|\u4fee\u6539\u786e\u8ba4)\s*>/i);
     if (endMatch) {
       thinkingParts.unshift(endMatch[0]);
       t = t.slice(endMatch[0].length);
@@ -7027,7 +7079,16 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       return ph('<div class="qy-branches">' + btns + '</div>');
     });
 
-    // 5. 其他辅助标签 strip (UI 元素不在正文显示)
+    // 5. <details><summary>xxx</summary>...</details> → 通用蓝色折叠 (潮汐小总结/吐槽剧场/平行世界时间轴, summary 文字保留)
+    marked = marked.replace(/<details(?:\s[^>]*)?>\s*<summary(?:\s[^>]*)?>([\s\S]*?)<\/summary>([\s\S]*?)<\/details>/gi, function(_, summary, content) {
+      var sumText = summary.replace(/<[^>]+>/g, '').trim();
+      return ph(
+        '<details class="qy-summary-block"><summary><span>' + qyEscapeHtml(sumText) + '</span></summary>' +
+        '<div class="qy-summary-content">' + qyEscapeHtml(content.trim()) + '</div></details>'
+      );
+    });
+
+    // 6. 其他辅助标签 strip (UI 元素不在正文显示)
     marked = marked.replace(/<(pacing|option|choice)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
     marked = marked.replace(/<(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\b[^>]*>[\s\S]*?<\/(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\s*>/gi, '');
     marked = marked.replace(/<StatusPlaceHolderImpl\s*\/?\s*>/gi, '');
