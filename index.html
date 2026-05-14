@@ -1820,18 +1820,121 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   border-radius: 3px;
 }
 
-/* ============= 临时 messageFormatting debug 框 (调试完删) ============= */
-.qy-fmt-debug {
-  background: #b22;
-  color: #fff;
-  font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 0.85em;
-  padding: 0.5em 0.8em;
-  margin: 0 0 0.8em;
+/* ============= time_format 横幅 (深海蓝底 + 金边, 左 scene 右 time 单行) ============= */
+.qy-time-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  background: linear-gradient(90deg, rgba(30, 58, 95, 0.85), rgba(20, 38, 65, 0.9));
+  border: 1px solid rgba(212, 175, 55, 0.4);
   border-radius: 4px;
+  padding: 0.5em 1em;
+  margin: 0 0 1em;
+  font-size: 0.92em;
+  letter-spacing: 0.05em;
+}
+.qy-time-banner-scene {
+  color: #a8d8ff;
+  font-weight: 500;
+}
+.qy-time-banner-time {
+  color: #d4af37;
+  font-family: 'ZCOOL XiaoWei', 'KaiTi', serif;
+  font-size: 0.95em;
+}
+
+/* ============= meow_FM 本轮摘要折叠 (灰蓝偏冷, 区别于 mvu 中蓝) ============= */
+.qy-meow-fm-block {
+  margin: 0.8em 0 1.2em;
+  background: rgba(15, 28, 42, 0.6);
+  border: 1px solid rgba(77, 122, 158, 0.4);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.qy-meow-fm-block summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.55em 1em;
+  color: #9bc4d8;
+  font-size: 0.9em;
+  letter-spacing: 0.18em;
+  user-select: none;
+  background: linear-gradient(90deg, rgba(77, 122, 158, 0.15), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.qy-meow-fm-block summary::-webkit-details-marker { display: none; }
+.qy-meow-fm-block summary::marker { content: ''; }
+.qy-meow-fm-block summary::after {
+  content: '展 开';
+  font-size: 0.78em;
+  opacity: 0.65;
+  letter-spacing: 0.1em;
+}
+.qy-meow-fm-block[open] summary::after { content: '折 叠'; opacity: 0.85; }
+.qy-meow-fm-block[open] summary {
+  border-bottom: 1px solid rgba(77, 122, 158, 0.3);
+}
+.qy-meow-fm-content {
+  padding: 0.85em 1.2em 1em;
+  color: #b8cad8;
+  font-size: 0.82em;
+  line-height: 1.65;
   white-space: pre-wrap;
-  word-break: break-all;
-  line-height: 1.4;
+  word-break: break-word;
+  font-family: 'Consolas', 'Courier New', monospace;
+  max-height: 420px;
+  overflow-y: auto;
+}
+.qy-meow-fm-content::-webkit-scrollbar { width: 6px; }
+.qy-meow-fm-content::-webkit-scrollbar-thumb {
+  background: rgba(77, 122, 158, 0.3);
+  border-radius: 3px;
+}
+
+/* ============= branches 选项按钮 (淡蓝边 + 透明底, hover 金边) ============= */
+.qy-branches {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin: 1em 0;
+}
+.qy-branch-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+  padding: 0.7em 1em;
+  background: rgba(136, 184, 224, 0.06);
+  border: 1px solid rgba(136, 184, 224, 0.45);
+  border-radius: 4px;
+  color: #d8e8f5;
+  font-size: 0.9em;
+  font-family: 'ZCOOL XiaoWei', 'KaiTi', serif;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+.qy-branch-btn:hover {
+  background: rgba(136, 184, 224, 0.14);
+  border-color: rgba(212, 175, 55, 0.65);
+  color: #f0d878;
+}
+.qy-branch-letter {
+  display: inline-block;
+  min-width: 1.4em;
+  text-align: center;
+  font-weight: 600;
+  color: #88b8e0;
+  font-family: 'Cinzel Decorative', serif;
+}
+.qy-branch-btn:hover .qy-branch-letter {
+  color: #d4af37;
+}
+.qy-branch-text {
+  flex: 1;
 }
 
 /* ============= 场景铭牌 (AI 输出 ```xxx``` markdown 三反引号渲染) ============= */
@@ -6866,84 +6969,97 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       body: t.trim()
     };
   }
-  // 渲染 AI body: 优先调 ST messageFormatting 让预设 markdownOnly regex 跑 (时间卡片/摘要/选项栏美化),
-  //              失败 fallback: 砍辅助元数据标签 + escape 段落渲染
+  // 渲染 AI body: SPA 自管, 不依赖 ST messageFormatting (vamp 模式跑过返回 empty, #46/最新调试两次验证)
+  //   1. ```xxx``` 单行场景铭牌
+  //   2. <time_format>...</time_format> → 深海蓝金边横幅 (左 scene 右 time)
+  //   3. <meow_FM>...</meow_FM> → 灰蓝 details 折叠 (本轮摘要)
+  //   4. <branches>...</branches> → 淡蓝按钮列表 (点击拼到输入框已有内容后)
+  //   5. <pacing>/<option>/<choice>/<状态面板>/<角色状态面板>/<StatusPlaceHolderImpl/> 砍掉不显示
+  //   6. 其余段落 escape + <p> 包裹
   function qyRenderBody(body) {
     if (!body) return '';
-    var sceneTags = [];
+    var placeholders = [];
+    function ph(html) { placeholders.push(html); return '\u0000QYPH' + (placeholders.length - 1) + '\u0000'; }
+
+    // 1. 场景铭牌
     var marked = body.replace(/```([^\n`]+)```/g, function(_, inner) {
-      sceneTags.push(inner.trim());
-      return '\u0000QYSCENE' + (sceneTags.length - 1) + '\u0000';
+      return ph('<div class="qy-scene-tag">' + qyEscapeHtml(inner.trim()) + '</div>');
     });
 
-    // A 路: 尝试 ST messageFormatting 跑当前预设 markdownOnly regex 美化辅助标签为 UI 卡片
-    // === 临时 debug 收集 (调完删) ===
-    var dbg = {
-      ctx: '?', fmt: '?',
-      in_len: marked.length,
-      in_head: marked.slice(0, 50).replace(/\n/g, '\u23ce'),
-      out_state: '未尝试', out_len: 0, out_head: '', threw: ''
-    };
-    try {
-      var ctx = (window.parent && window.parent.SillyTavern && window.parent.SillyTavern.getContext)
-                ? window.parent.SillyTavern.getContext() : null;
-      dbg.ctx = ctx ? '\u62ff\u5230' : '\u6ca1\u62ff\u5230';
-      if (ctx && typeof ctx.messageFormatting === 'function') {
-        dbg.fmt = 'function';
-        var formatted = ctx.messageFormatting(marked, '', false, false, -1, {}, false);
-        if (formatted === null || formatted === undefined) {
-          dbg.out_state = 'null/undefined';
-        } else if (!String(formatted).trim()) {
-          dbg.out_state = 'empty';
-          dbg.out_len = String(formatted).length;
-        } else {
-          dbg.out_state = 'success';
-          dbg.out_len = String(formatted).length;
-          dbg.out_head = String(formatted).slice(0, 50).replace(/\n/g, '\u23ce');
-        }
-        if (formatted && String(formatted).trim()) {
-          return qyBuildFmtDebug(dbg) + String(formatted).replace(/\u0000QYSCENE(\d+)\u0000/g, function(_, i) {
-            var tag = sceneTags[parseInt(i, 10)] || '';
-            return '<div class="qy-scene-tag">' + qyEscapeHtml(tag) + '</div>';
-          });
-        }
-      } else if (ctx) {
-        dbg.fmt = '\u4e0d\u662f function';
-      }
-    } catch (e) {
-      dbg.threw = (e && e.message) ? e.message : String(e);
-    }
+    // 2. <time_format> 横幅 (解析 time/scene 字段)
+    marked = marked.replace(/<time_format>([\s\S]*?)<\/time_format>/gi, function(_, inner) {
+      var timeMatch = inner.match(/time\s*:\s*([^\n]+)/i);
+      var sceneMatch = inner.match(/scene\s*:\s*([^\n]+)/i);
+      var tt = timeMatch ? timeMatch[1].trim() : '';
+      var ss = sceneMatch ? sceneMatch[1].trim() : '';
+      if (!tt && !ss) return '';
+      return ph(
+        '<div class="qy-time-banner">' +
+        '<span class="qy-time-banner-scene">' + qyEscapeHtml(ss) + '</span>' +
+        '<span class="qy-time-banner-time">' + qyEscapeHtml(tt) + '</span>' +
+        '</div>'
+      );
+    });
 
-    // Fallback: 砍辅助元数据标签整段 + 老的 escape 段落渲染
-    marked = marked.replace(/<(time_format|meow_FM|branches|pacing|option|choice)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+    // 3. <meow_FM> 摘要折叠
+    marked = marked.replace(/<meow_FM>([\s\S]*?)<\/meow_FM>/gi, function(_, inner) {
+      return ph(
+        '<details class="qy-meow-fm-block"><summary><span>本 轮 摘 要</span></summary>' +
+        '<div class="qy-meow-fm-content">' + qyEscapeHtml(inner.trim()) + '</div></details>'
+      );
+    });
+
+    // 4. <branches> 选项按钮 (剥外层 <details><summary> 后解析 A./B./C./D. 行)
+    marked = marked.replace(/<branches>([\s\S]*?)<\/branches>/gi, function(_, inner) {
+      var coreMatch = inner.match(/<details[^>]*>[\s\S]*?<\/summary>([\s\S]*?)<\/details>/i);
+      var optionsText = coreMatch ? coreMatch[1] : inner;
+      var lines = optionsText.split(/\n/).map(function(l){return l.trim();}).filter(Boolean);
+      var btns = lines.map(function(line) {
+        var m = line.match(/^([A-Za-z])[\.\u3001\)]\s*(.+)/);
+        if (!m) return '';
+        return '<button type="button" class="qy-branch-btn" data-qy-branch-text="' + qyEscapeHtml(m[2]) + '">' +
+               '<span class="qy-branch-letter">' + qyEscapeHtml(m[1].toUpperCase()) + '</span>' +
+               '<span class="qy-branch-text">' + qyEscapeHtml(m[2]) + '</span>' +
+               '</button>';
+      }).filter(Boolean).join('');
+      if (!btns) return '';
+      return ph('<div class="qy-branches">' + btns + '</div>');
+    });
+
+    // 5. 其他辅助标签 strip (UI 元素不在正文显示)
+    marked = marked.replace(/<(pacing|option|choice)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
     marked = marked.replace(/<(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\b[^>]*>[\s\S]*?<\/(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\s*>/gi, '');
     marked = marked.replace(/<StatusPlaceHolderImpl\s*\/?\s*>/gi, '');
+
+    // 6. 段落 escape + 占位符还原
     var paragraphs = marked.split(/\n\s*\n/);
-    var fallbackHtml = paragraphs.map(function(p) {
+    return paragraphs.map(function(p) {
       var escaped = qyEscapeHtml(p).replace(/\n/g, '<br>');
-      escaped = escaped.replace(/\u0000QYSCENE(\d+)\u0000/g, function(_, i) {
-        var tag = sceneTags[parseInt(i, 10)] || '';
-        return '<div class="qy-scene-tag">' + qyEscapeHtml(tag) + '</div>';
+      escaped = escaped.replace(/\u0000QYPH(\d+)\u0000/g, function(_, i) {
+        return placeholders[parseInt(i, 10)] || '';
       });
       return '<p>' + escaped + '</p>';
     }).join('');
-    return qyBuildFmtDebug(dbg) + fallbackHtml;
   }
 
-  // 临时 debug 框 helper (调完删)
-  function qyBuildFmtDebug(d) {
-    var lines = [
-      '[QY-FMT-DEBUG]',
-      'ctx:       ' + d.ctx,
-      'fmt:       ' + d.fmt,
-      'in_len:    ' + d.in_len + ' chars',
-      'in_head:   ' + d.in_head,
-      'out_state: ' + d.out_state,
-      'out_len:   ' + d.out_len + ' chars',
-      'out_head:  ' + d.out_head
-    ];
-    if (d.threw) lines.push('threw:     ' + d.threw);
-    return '<div class="qy-fmt-debug">' + qyEscapeHtml(lines.join('\n')) + '</div>';
+  // branches 按钮点击 → 拼到 SPA 输入框已有内容后 (event delegation, bootstrap 期绑一次)
+  if (!window.qyBranchClickBound) {
+    window.qyBranchClickBound = true;
+    document.addEventListener('click', function(e) {
+      var btn = e.target && e.target.closest && e.target.closest('.qy-branch-btn');
+      if (!btn) return;
+      var text = btn.getAttribute('data-qy-branch-text');
+      if (!text) return;
+      var ta = document.querySelector('.qy-status-input');
+      if (!ta) return;
+      if (ta.value && ta.value.trim()) {
+        ta.value = ta.value.replace(/\s+$/, '') + ' ' + text;
+      } else {
+        ta.value = text;
+      }
+      ta.focus();
+      try { ta.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){}
+    });
   }
 
   window.qyRenderChat = function() {
