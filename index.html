@@ -1820,6 +1820,20 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   border-radius: 3px;
 }
 
+/* ============= 临时 messageFormatting debug 框 (调试完删) ============= */
+.qy-fmt-debug {
+  background: #b22;
+  color: #fff;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.85em;
+  padding: 0.5em 0.8em;
+  margin: 0 0 0.8em;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
 /* ============= 场景铭牌 (AI 输出 ```xxx``` markdown 三反引号渲染) ============= */
 .qy-scene-tag {
   display: block;
@@ -6863,24 +6877,41 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     });
 
     // A 路: 尝试 ST messageFormatting 跑当前预设 markdownOnly regex 美化辅助标签为 UI 卡片
+    // === 临时 debug 收集 (调完删) ===
+    var dbg = {
+      ctx: '?', fmt: '?',
+      in_len: marked.length,
+      in_head: marked.slice(0, 50).replace(/\n/g, '\u23ce'),
+      out_state: '未尝试', out_len: 0, out_head: '', threw: ''
+    };
     try {
       var ctx = (window.parent && window.parent.SillyTavern && window.parent.SillyTavern.getContext)
                 ? window.parent.SillyTavern.getContext() : null;
-      console.log('[qy-fmt] ctx?', !!ctx, 'messageFormatting?', !!(ctx && ctx.messageFormatting));
+      dbg.ctx = ctx ? '\u62ff\u5230' : '\u6ca1\u62ff\u5230';
       if (ctx && typeof ctx.messageFormatting === 'function') {
-        console.log('[qy-fmt] input len:', marked.length, 'first 300:', marked.slice(0, 300));
+        dbg.fmt = 'function';
         var formatted = ctx.messageFormatting(marked, '', false, false, -1, {}, false);
-        console.log('[qy-fmt] result:', formatted ? 'len=' + formatted.length : 'null/empty', 'first 300:', formatted ? String(formatted).slice(0, 300) : '');
+        if (formatted === null || formatted === undefined) {
+          dbg.out_state = 'null/undefined';
+        } else if (!String(formatted).trim()) {
+          dbg.out_state = 'empty';
+          dbg.out_len = String(formatted).length;
+        } else {
+          dbg.out_state = 'success';
+          dbg.out_len = String(formatted).length;
+          dbg.out_head = String(formatted).slice(0, 50).replace(/\n/g, '\u23ce');
+        }
         if (formatted && String(formatted).trim()) {
-          // 占位符换回场景铭牌
-          return String(formatted).replace(/\u0000QYSCENE(\d+)\u0000/g, function(_, i) {
+          return qyBuildFmtDebug(dbg) + String(formatted).replace(/\u0000QYSCENE(\d+)\u0000/g, function(_, i) {
             var tag = sceneTags[parseInt(i, 10)] || '';
             return '<div class="qy-scene-tag">' + qyEscapeHtml(tag) + '</div>';
           });
         }
+      } else if (ctx) {
+        dbg.fmt = '\u4e0d\u662f function';
       }
     } catch (e) {
-      console.error('[qy-fmt] threw:', e);
+      dbg.threw = (e && e.message) ? e.message : String(e);
     }
 
     // Fallback: 砍辅助元数据标签整段 + 老的 escape 段落渲染
@@ -6888,7 +6919,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     marked = marked.replace(/<(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\b[^>]*>[\s\S]*?<\/(?:\u89d2\u8272)?\u72b6\u6001\u9762\u677f\s*>/gi, '');
     marked = marked.replace(/<StatusPlaceHolderImpl\s*\/?\s*>/gi, '');
     var paragraphs = marked.split(/\n\s*\n/);
-    return paragraphs.map(function(p) {
+    var fallbackHtml = paragraphs.map(function(p) {
       var escaped = qyEscapeHtml(p).replace(/\n/g, '<br>');
       escaped = escaped.replace(/\u0000QYSCENE(\d+)\u0000/g, function(_, i) {
         var tag = sceneTags[parseInt(i, 10)] || '';
@@ -6896,6 +6927,23 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       });
       return '<p>' + escaped + '</p>';
     }).join('');
+    return qyBuildFmtDebug(dbg) + fallbackHtml;
+  }
+
+  // 临时 debug 框 helper (调完删)
+  function qyBuildFmtDebug(d) {
+    var lines = [
+      '[QY-FMT-DEBUG]',
+      'ctx:       ' + d.ctx,
+      'fmt:       ' + d.fmt,
+      'in_len:    ' + d.in_len + ' chars',
+      'in_head:   ' + d.in_head,
+      'out_state: ' + d.out_state,
+      'out_len:   ' + d.out_len + ' chars',
+      'out_head:  ' + d.out_head
+    ];
+    if (d.threw) lines.push('threw:     ' + d.threw);
+    return '<div class="qy-fmt-debug">' + qyEscapeHtml(lines.join('\n')) + '</div>';
   }
 
   window.qyRenderChat = function() {
