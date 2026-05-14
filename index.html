@@ -6937,7 +6937,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     var thinkingParts = [];
 
     // 1. 抽完整成对白名单标签 (闭合): draft / 基础确认 / 修改确认 / thinking / think (允许任意属性)
-    t = t.replace(/<(draft|\u57fa\u7840\u786e\u8ba4|\u4fee\u6539\u786e\u8ba4|thinking|think)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, function(m) {
+    //    用 (?=[\s>]) lookahead 替代 \b: \b 在 JS 只匹配 ASCII 单词边界, 中文标签 (认/认/确) 两侧不算 word char 永远 fail
+    t = t.replace(/<(draft|\u57fa\u7840\u786e\u8ba4|\u4fee\u6539\u786e\u8ba4|thinking|think)(?=[\s>])[^>]*>[\s\S]*?<\/\1\s*>/gi, function(m) {
       thinkingParts.push(m);
       return '';
     });
@@ -6956,8 +6957,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     //    辅助元数据标签 (time_format/meow_FM/branches/pacing/状态面板) 保留字面量, 留给 qyRenderBody 调 ST messageFormatting 跑预设 regex 美化
     t = t.replace(/<\/?(gametxt|gameText|game_text|story|narrative)\b[^>]*>/gi, '');
 
-    // 5. 流式中未闭合的开头白名单标签 → 截到末尾归思维链
-    var openMatch = t.match(/<(draft|\u57fa\u7840\u786e\u8ba4|\u4fee\u6539\u786e\u8ba4|thinking|think)\b[^>]*>/i);
+    // 5. 流式中未闭合的开头白名单标签 → 截到末尾归思维链 (中文标签也用 lookahead 替代 \b)
+    var openMatch = t.match(/<(draft|\u57fa\u7840\u786e\u8ba4|\u4fee\u6539\u786e\u8ba4|thinking|think)(?=[\s>])[^>]*>/i);
     if (openMatch) {
       var openIdx = t.indexOf(openMatch[0]);
       thinkingParts.push(t.slice(openIdx));
