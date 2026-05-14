@@ -4742,6 +4742,96 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
 }
 .qy-modal-meta .item { letter-spacing: 0.06em; }
 .qy-modal-meta .item .label { color: #8a6830; margin-right: 4px; }
+
+/* ============= page-memory (记忆.html) ============= */
+.qy-mem-app {
+  padding: 1.5em 2em;
+  background: #0d1a2e;
+  color: #ffffff;
+  font-family: 'ZCOOL XiaoWei', 'KaiTi', 'STKaiti', serif;
+  min-height: 100%;
+}
+.qy-mem-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.qy-mem-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 1em; margin-bottom: 1em;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.qy-mem-title {
+  font-size: 1.4em; letter-spacing: 0.35em; color: #ffffff;
+}
+.qy-mem-title-en {
+  font-size: 0.7em; color: rgba(255,255,255,0.45); letter-spacing: 0.3em; margin-top: 0.2em;
+}
+.qy-mem-close {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2);
+  color: #ffffff; padding: 0.4em 1.2em; cursor: pointer;
+  font-family: inherit; letter-spacing: 0.2em;
+}
+.qy-mem-close:hover { background: rgba(255,255,255,0.14); }
+.qy-mem-tabs {
+  display: flex; gap: 0.2em; margin-bottom: 1em;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.qy-mem-tab {
+  padding: 0.6em 1.5em; cursor: pointer; color: rgba(255,255,255,0.55);
+  letter-spacing: 0.2em; font-size: 0.95em;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.qy-mem-tab:hover { color: rgba(255,255,255,0.85); }
+.qy-mem-tab.active {
+  color: #ffffff; border-bottom-color: #ffffff;
+}
+.qy-mem-pane { display: none; }
+.qy-mem-pane.active { display: block; }
+.qy-mem-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 0.6em;
+}
+.qy-mem-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  padding: 0.9em 1.2em;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.qy-mem-item:hover {
+  border-color: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.07);
+}
+.qy-mem-item-head {
+  display: flex; justify-content: space-between; gap: 1em;
+  margin-bottom: 0.4em;
+}
+.qy-mem-am {
+  color: #ffffff; letter-spacing: 0.15em; font-size: 0.95em;
+}
+.qy-mem-time {
+  color: rgba(255,255,255,0.5); font-size: 0.82em; letter-spacing: 0.1em;
+}
+.qy-mem-place {
+  color: rgba(255,255,255,0.7); font-size: 0.85em; margin-bottom: 0.3em;
+}
+.qy-mem-brief {
+  color: #ffffff; font-size: 0.95em; line-height: 1.7;
+}
+.qy-mem-detail {
+  margin-top: 0.6em; padding-top: 0.6em;
+  border-top: 1px dashed rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.85); font-size: 0.88em; line-height: 1.8;
+  white-space: pre-wrap;
+  display: none;
+}
+.qy-mem-item.expanded .qy-mem-detail { display: block; }
+.qy-mem-empty {
+  text-align: center; color: rgba(255,255,255,0.4); padding: 3em 0;
+  font-style: italic; font-size: 0.9em;
+}
 </style>
 </head>
 <body>
@@ -4885,7 +4975,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   </span>
 </button>
 
-<!-- 悬浮球菜单（5 玩法 + 2 工具） -->
+<!-- 悬浮球菜单（5 玩法 + 1 记忆） -->
 <nav class="qy-fab-menu hidden" id="qy-fab-menu">
   <ul>
     <li data-action="fishing">钓 鱼<span class="menu-en">FISHING</span></li>
@@ -4894,8 +4984,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     <li data-action="craft">副 职<span class="menu-en">CRAFT</span></li>
     <li data-action="codex">图 鉴<span class="menu-en">CODEX</span></li>
     <li class="menu-divider"></li>
-    <li data-action="difficulty">难 度 切 换<span class="menu-en">DIFFICULTY</span></li>
-    <li data-action="settings">设 置<span class="menu-en">SETTINGS</span></li>
+    <li data-action="memory">记 忆<span class="menu-en">MEMORY</span></li>
+    <li data-action="errorlog">错 误 日 志<span class="menu-en">ERROR LOG</span></li>
   </ul>
 </nav>
 
@@ -6935,6 +7025,37 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   </div>
 </div>
 </div>
+
+<!-- ============= page-memory (记忆.html) ============= -->
+<div class="qy-page" id="page-memory">
+<div class="qy-mem-app" id="qy-memory-app">
+  <div class="qy-mem-inner">
+    <div class="qy-mem-head">
+      <div>
+        <div class="qy-mem-title">记 忆</div>
+        <div class="qy-mem-title-en">MEMORY</div>
+      </div>
+      <button class="qy-mem-close qy-close-btn" type="button">关 闭</button>
+    </div>
+
+    <div class="qy-mem-tabs">
+      <div class="qy-mem-tab active" data-mem-tab="narrations">纪 要</div>
+      <div class="qy-mem-tab" data-mem-tab="characters">关 键 人 物</div>
+      <div class="qy-mem-tab" data-mem-tab="archives">大 事 记</div>
+    </div>
+
+    <div class="qy-mem-pane active" data-mem-pane="narrations">
+      <ul class="qy-mem-list" id="qy-mem-narr-list"></ul>
+    </div>
+    <div class="qy-mem-pane" data-mem-pane="characters">
+      <ul class="qy-mem-list" id="qy-mem-char-list"></ul>
+    </div>
+    <div class="qy-mem-pane" data-mem-pane="archives">
+      <ul class="qy-mem-list" id="qy-mem-arch-list"></ul>
+    </div>
+  </div>
+</div>
+</div>
 </div>
 
 <script>
@@ -7199,7 +7320,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   // vamp 模式 generate({overrides:{chat_history:{prompts}}}) 整个替换 chat_history → at_depth 注入链断裂 →
   // AI 看不到 D1 协议 → 不输出 <UpdateVariable> 块 → Mvu.parseMessage 解析不出 → mvu 不更新.
   // 修法: SPA 手动 inject D1 协议到 generate.injects 数组. D1 内容 build 时从卡 PNG 自动抽出 (load_d1_content_from_png).
-  var QY_D1_CONTENT = "<UpdateVariableRule>\ndescription: |\n  在每条 AI 回复末尾, 输出 <UpdateVariable> 块说明本轮变量更新.\n  - 七域采用前端 SPA + mvu 混合模式, 字段分两类:\n    A 类 = 剧情驱动 (AI 用 _.set 写)\n    B 类 = 玩法操作 (前端 UI 写, AI 禁止 _.set)\n  - 路径必须严格匹配 stat_data 已有 key, 不要新建路径\n  - 老值用 stat_data 当前值, 新值用合理推进结果\n  - 数值变化要克制 (羁绊度单次变化 [-10, 20]; 声望单次变化 [-10, 10])\n  - 不需要更新就不写 _.set, 不要凑字数\n\n**关系↔羁绊度同步约束 (强制)**:\n  当 同伴.伙伴X.关系 字段更新 (相识/朋友/恋人/挚友/兄弟/师徒 等任意值变动) 时,\n  必须在同一轮 _.set 块里同步把 同伴.伙伴X.羁绊度 调到对应阈值, 否则数值跟描述脱节会让玩家困惑.\n  对应表:\n    - 关系=陌生/初见       → 羁绊度 0-20  (阶段=陌生)\n    - 关系=相识/熟人       → 羁绊度 20-40 (阶段=相识)\n    - 关系=朋友/同伴/知己  → 羁绊度 40-65 (阶段=知己)\n    - 关系=挚友/恋人       → 羁绊度 65-85 (阶段=挚友)\n    - 关系=生死之交/灵契   → 羁绊度 85-100 (阶段=生死之交)\n  即: 关系一旦变到\"挚友/恋人\", 同一轮必须把羁绊度跳到 ≥65; 关系到\"生死之交\"必须 ≥85.\n  数值跳跃不受 [-10,20] 单次范围限制 (因为是同步, 不算常规推进).\n\nA 类可写路径 (剧情驱动):\n  - 主角.当前势力 / 主角.源石阶印记 / 主角.契约物品 / 主角.心里话\n  - 同伴.伙伴1.关系 / 羁绊度 / 羁绊阶段 / 心情 / 忠诚 / 契约状态 / 心里话 (伙伴2/3 同结构)\n  - NPC1.姓名 / 所属势力 / 大致信息 / 心里话 (NPC2/3 同结构)\n  - 大区域 / 时辰 / 季节 / 在场角色\n  - 世界事件 (整个对象覆盖, value 含 状态/进度/起始时间/地点/描述)\n  - 声望阵营.七国王室.<国名> / 特权家族.<家族名> / 中枢机构.<机构名> / 法外势力.<势力名>\n  - 当前世界动态.活跃事件 / 酒馆传闻 / 邻国动态 (数组直接覆盖)\n  - 任务.未接 (推送新任务对象到数组)\n  - **故事节点 (最高优先级·绝对不能丢)**: 数组, push 新事件对象到末尾.\n\n禁止 _.set 路径 (B 类, 由前端控制):\n  - 主角.姓名 / 性别 / 年龄 / 外貌 / 种族 / 出身地 / 当前阶级 / 宿命 / 涩涩开启\n  - 主角.天元.* / 装备.* / 背包物品\n  - 难度模式\n  - 同伴.伙伴1.名字 / 种族 / 外貌 / 渊源 / 装备 (伙伴2/3 同)\n  - 任务.进行中 / 已完成\n  - 空岛领地.* / 钓鱼.* / 种地.* / 做菜.* / 副职.* / 图鉴.*\n  - 对话历史.* (系统字段)\n\n**故事节点字段特别规则 (最高优先级)**:\n触发条件 (任一即必须 push): 承诺 / 誓言 / 告白 / 交易 / 契约 / 印记进阶专属剧情 / 宿命兑现 / 势力变化 / NPC 关系大转 (相识→挚友/友→敌) / 玩家关键选择 (留下决定性后果的) / 重要伏笔 / 规则变化 / 任何 low 频但 high 影响的一句话.\nschema: 每条 = { time: '七域历法时间', sides: '涉及方', content: '内容(短而明确)', impact: '未来影响', evidence: '证据原句(≤25字)', type: '类型 tag (你自由)' }.\n**绝对不能丢**: 总结压缩时此字段最高优先级保留. 即使 100 条对话也每条都要保留.\n\nformat: |\n  <UpdateVariable>\n  _.set('${path}', ${old_value}, ${new_value});//${reason}\n  </UpdateVariable>\n\nexample: |\n  <UpdateVariable>\n  _.set('同伴.伙伴1.羁绊度', 12, 28);//数日同行后从陌生进入相识\n  _.set('同伴.伙伴1.羁绊阶段', '陌生', '相识');//羁绊度跨阈值 20\n  _.set('同伴.伙伴1.关系', '初见', '熟人');//AI 关系字段同步推进\n  _.set('同伴.伙伴1.心情', '平静', '欣慰');//玩家保护了伙伴1\n  _.set('NPC1.大致信息', '暂无记录', '中枢律官, 与玩家有数面之缘');//NPC1 信息扩充\n  _.set('时辰', '辰时', '巳时');//时辰推进\n  _.set('故事节点', [], [{time:'辰时·初春第二日', sides:'柳青衣 → 玩家', content:'柳青衣承诺三日后在万象裁定局门外等玩家', impact:'三日后约期触发, 不到则失约影响裁定局声望', evidence:'三日后此门外, 我会等你', type:'承诺'}]);//柳青衣立下承诺\n  </UpdateVariable>\n</UpdateVariableRule>";
+  var QY_D1_CONTENT = "<UpdateVariableRule>\ndescription: |\n  在每条 AI 回复末尾, 输出 <UpdateVariable> 块说明本轮变量更新.\n  - 七域采用前端 SPA + mvu 混合模式, 字段分两类:\n    A 类 = 剧情驱动 (AI 用 _.set 写)\n    B 类 = 玩法操作 (前端 UI 写, AI 禁止 _.set)\n  - 路径必须严格匹配 stat_data 已有 key, 不要新建路径\n  - 老值用 stat_data 当前值, 新值用合理推进结果\n  - 数值变化要克制 (羁绊度单次变化 [-10, 20]; 声望单次变化 [-10, 10])\n  - 不需要更新就不写 _.set, 不要凑字数\n\n**关系↔羁绊度同步约束 (强制)**:\n  当 同伴.伙伴X.关系 字段更新 (相识/朋友/恋人/挚友/兄弟/师徒 等任意值变动) 时,\n  必须在同一轮 _.set 块里同步把 同伴.伙伴X.羁绊度 调到对应阈值, 否则数值跟描述脱节会让玩家困惑.\n  对应表:\n    - 关系=陌生/初见       → 羁绊度 0-20  (阶段=陌生)\n    - 关系=相识/熟人       → 羁绊度 20-40 (阶段=相识)\n    - 关系=朋友/同伴/知己  → 羁绊度 40-65 (阶段=知己)\n    - 关系=挚友/恋人       → 羁绊度 65-85 (阶段=挚友)\n    - 关系=生死之交/灵契   → 羁绊度 85-100 (阶段=生死之交)\n  即: 关系一旦变到\"挚友/恋人\", 同一轮必须把羁绊度跳到 ≥65; 关系到\"生死之交\"必须 ≥85.\n  数值跳跃不受 [-10,20] 单次范围限制 (因为是同步, 不算常规推进).\n\nA 类可写路径 (剧情驱动):\n  - 主角.当前势力 / 主角.源石阶印记 / 主角.契约物品 / 主角.心里话\n  - 同伴.伙伴1.关系 / 羁绊度 / 羁绊阶段 / 心情 / 忠诚 / 契约状态 / 心里话 (伙伴2/3 同结构)\n  - NPC1.姓名 / 所属势力 / 大致信息 / 心里话 (NPC2/3 同结构)\n  - 大区域 / 时辰 / 季节 / 在场角色\n  - 世界事件 (整个对象覆盖, value 含 状态/进度/起始时间/地点/描述)\n  - 声望阵营.七国王室.<国名> / 特权家族.<家族名> / 中枢机构.<机构名> / 法外势力.<势力名>\n  - 当前世界动态.活跃事件 / 酒馆传闻 / 邻国动态 (数组直接覆盖)\n  - 任务.未接 (推送新任务对象到数组)\n\n禁止 _.set 路径 (B 类, 由前端控制):\n  - 主角.姓名 / 性别 / 年龄 / 外貌 / 种族 / 出身地 / 当前阶级 / 宿命 / 涩涩开启\n  - 主角.天元.* / 装备.* / 背包物品\n  - 难度模式\n  - 同伴.伙伴1.名字 / 种族 / 外貌 / 渊源 / 装备 (伙伴2/3 同)\n  - 任务.进行中 / 已完成\n  - 空岛领地.* / 钓鱼.* / 种地.* / 做菜.* / 副职.* / 图鉴.*\n  - 对话历史.* (系统字段)\n\nformat: |\n  <UpdateVariable>\n  _.set('${path}', ${old_value}, ${new_value});//${reason}\n  </UpdateVariable>\n\nexample: |\n  <UpdateVariable>\n  _.set('同伴.伙伴1.羁绊度', 12, 28);//数日同行后从陌生进入相识\n  _.set('同伴.伙伴1.羁绊阶段', '陌生', '相识');//羁绊度跨阈值 20\n  _.set('同伴.伙伴1.关系', '初见', '熟人');//AI 关系字段同步推进\n  _.set('同伴.伙伴1.心情', '平静', '欣慰');//玩家保护了伙伴1\n  _.set('NPC1.大致信息', '暂无记录', '中枢律官, 与玩家有数面之缘');//NPC1 信息扩充\n  _.set('时辰', '辰时', '巳时');//时辰推进\n  </UpdateVariable>\n</UpdateVariableRule>\n\n\n<PushTagRule>\ndescription: |\n  在每条 AI 回复末尾的 <UpdateVariable> 块之后, 根据本轮实际叙事需要,\n  追加下列 push 标签把\"事件 / 关键人物 / 同伴互动 / 任务 / 物品\" 信息推送给前端写入 worldbook 长期记忆.\n  这套标签是七域\"完美记忆系统\"的核心: 主 AI 永远看到 worldbook 锁定的真实数据, 不依赖回忆 → 防瞎编.\n\n  **基于召回信息叙事 (硬约束)**:\n    - 本轮 prompt 头部如果出现【召回纪要锚点】或 [纪要] 区段, 你看到的角色设定 / 历史事件 = 真实权威, 必须遵守.\n    - 召回区没提到的人物 / 地点 / 物品 / 关系, **不要瞎编** 没见过的\"哥哥/姐姐/师父/旧友\"等设定.\n    - 不确定就让角色\"不记得\"/\"没听说过\"/\"印象模糊\", 不要硬凑.\n\n  **重要节点优先级 (push 与否的判断)**:\n    决定本轮要不要追加 push 标签时按下面优先级:\n      P1 战斗 / 重大冲突 / 死亡 / 重伤\n      P2 关键 NPC 首次出场 / 互动产生新设定\n      P3 重大获得 (装备 / 道具 / 同伴 / 势力身份)\n      P4 任务推进 (接取 / 重要进度 / 完成)\n      P5 羁绊度跨阶段 (跨阈值 20/40/65/85)\n      P6 阶段转折 (大区域切换 / 重大剧情节点)\n      P7 日常对话 / 路过场景 → **不必 push**\n\nformat:\n  <纪要新增>{\n    \"时间\": \"苍华纪年·春·辰时\",\n    \"地点\": \"云墟城·茶馆\",\n    \"概要\": \"玩家与楚云笙初次相遇, 楚云笙提及云墟城传闻\",\n    \"详情\": \"详细叙述本节点的完整经过, 包含人物对话 / 关键决策 / 推动剧情的细节. 这段内容会被 worldbook 召回, 主 AI 后续看得到.\"\n  }</纪要新增>\n\n  <关键人物更新>{\n    \"角色名\": \"楚云笙\",\n    \"新发现\": \"出身云墟城商贾世家, 暗中收集源石阶印记\"\n  }</关键人物更新>\n\n  <同伴更新>{\n    \"伙伴名\": \"伙伴1 的实际名字\",\n    \"新设定\": \"伙伴1 提及自己童年在荒原长大\"\n  }</同伴更新>\n\n  <任务更新>{\n    \"任务名\": \"寻找失踪的商队\",\n    \"状态\": \"已接取 / 进行中 / 已完成 / 已失败\",\n    \"进度\": \"已找到第一处营地痕迹\"\n  }</任务更新>\n\n  <物品更新>{\n    \"物品名\": \"云墟令牌\",\n    \"动作\": \"获得 / 失去 / 属性变化\",\n    \"信息\": \"云墟城商盟身份证明, 凭此可进城西密集\"\n  }</物品更新>\n\n任务 AI 触发条件 (什么时候 push <任务更新>):\n  T1 NPC 主动求助 / 委托 (悬赏 / 跑腿 / 护送)\n  T2 玩家进酒馆 / 客栈听到传闻 / 悬赏 (跟 当前世界动态.酒馆传闻 字段串)\n  T3 玩家路过碰到事 (伤员 / 商队遇险 / 突发事件)\n  T4 玩家跟 NPC 羁绊到阈值后 NPC 给私人请求 (羁绊度 ≥65 解锁\"挚友请求\")\n  T5 玩家主动问 NPC \"附近有什么可做的\"\n\nPUSH 输出顺序:\n  <UpdateVariable> 块 (mvu 变量更新, 必有)\n  ↓\n  <纪要新增> 块 (本轮节点足够重要时, P1-P6 才 push, P7 跳过)\n  ↓\n  <关键人物更新> 块 (本轮有 NPC 新设定时, 可多条并列)\n  ↓\n  <同伴更新> 块 (本轮跟同伴互动有新信息时)\n  ↓\n  <任务更新> 块 (本轮任务有变动时)\n  ↓\n  <物品更新> 块 (本轮有重要物品获得 / 失去时, 普通消耗品不 push)\n\n注意:\n  - 每个 push 标签都是合法 JSON 对象, 字段使用中文 key (跟示例一致)\n  - 多条同类标签可并列, 例如本轮出现 2 个新 NPC 就 push 2 条 <关键人物更新>\n  - 不需要就不 push, 不要凑字数\n  - JSON 字段值里的引号请用转义 (\\\")\n</PushTagRule>";
   window.qyBuildD1Inject = function() {
     if (!QY_D1_CONTENT) return null;
     return {
@@ -7282,6 +7403,613 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
   };
 
+  // ============= 阶段 2-4: 完美记忆系统 push 标签抽取 + worldbook 写入 + 兜底 + 归档 + 重试 + 错误日志 =============
+  // qyState 扩展: npcMentionCount (NPC 监控 map) + npcIgnoreList (路人称呼跳过) + memoryTurnCount (兜底每 5 轮)
+  qyState.npcMentionCount = qyState.npcMentionCount || {};
+  qyState.npcIgnoreList = ['路人','老板娘','侍者','掌柜','守卫','陌生人','商人','行人','街民','茶客','伙计','店家','酒客'];
+  qyState.memoryTurnCount = qyState.memoryTurnCount || 0;
+
+  // qyRetry: 全局 5 次重试 helper, 包装 AI 调用 / JSON 解析 / worldbook API 等可能失败的操作
+  window.qyRetry = async function(fn, attempts, label) {
+    if (typeof attempts !== 'number' || attempts <= 0) attempts = 5;
+    label = label || 'op';
+    var lastErr = null;
+    for (var i = 0; i < attempts; i++) {
+      try {
+        return await fn();
+      } catch (e) {
+        lastErr = e;
+        console.warn('[qy] qyRetry ' + label + ' attempt ' + (i+1) + '/' + attempts + ' 失败:', e);
+        if (i < attempts - 1) {
+          // 指数退避 (短): 100ms / 200ms / 400ms / 800ms
+          await new Promise(function(r) { setTimeout(r, 100 * Math.pow(2, i)); });
+        }
+      }
+    }
+    // 全部失败 → toast + 写错误日志
+    try {
+      if (typeof toastr !== 'undefined' && toastr.error) {
+        toastr.error('[七域] ' + label + ' 重试 ' + attempts + ' 次失败: ' + ((lastErr && lastErr.message) || lastErr), '记忆系统');
+      }
+    } catch (_) {}
+    await window.qyLogError(label, lastErr, attempts);
+    throw lastErr;
+  };
+
+  // qyLogError: 写错误日志到 mvu.错误日志 (滚动 100 条, 最新在头)
+  window.qyLogError = async function(label, err, retries) {
+    if (typeof window.Mvu === 'undefined') return;
+    try {
+      var data = Mvu.getMvuData({ type: 'chat' }) || {};
+      var stat = data.stat_data || {};
+      var logs = qyUnwrapArr(stat['错误日志']);
+      if (!Array.isArray(logs)) logs = [];
+      logs.unshift({
+        时间戳: new Date().toISOString(),
+        失败操作: label,
+        错误信息: String((err && err.message) || err).slice(0, 200),
+        重试次数: retries
+      });
+      if (logs.length > 100) logs = logs.slice(0, 100);
+      stat['错误日志'] = logs;
+      data.stat_data = stat;
+      await Mvu.replaceMvuData(data, { type: 'chat' });
+    } catch (e) {
+      console.warn('[qy] qyLogError 写入失败:', e);
+    }
+  };
+
+  // qyGetCharBook: 拿当前卡绑的 primary worldbook 名
+  window.qyGetCharBook = async function() {
+    try {
+      var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+      if (!TH || typeof TH.getCharLorebooks !== 'function') return null;
+      var books = await TH.getCharLorebooks({ type: 'primary' });
+      if (Array.isArray(books) && books.length) return books[0];
+      // 兼容旧 API 返回单个 string
+      if (typeof books === 'string') return books;
+      // type all 兜底
+      var allBooks = await TH.getCharLorebooks({ type: 'all' });
+      if (Array.isArray(allBooks) && allBooks.length) return allBooks[0];
+      return null;
+    } catch (e) {
+      console.warn('[qy] qyGetCharBook 失败:', e);
+      return null;
+    }
+  };
+
+  // qyAllocAM: 从 mvu.纪要索引 数组长度 + 1 分配下一个 AM 编码 (格式 AM0001 4 位)
+  window.qyAllocAM = function() {
+    if (typeof window.Mvu === 'undefined') return 'AM0001';
+    try {
+      var data = Mvu.getMvuData({ type: 'chat' }) || {};
+      var stat = data.stat_data || {};
+      var idx = qyUnwrapArr(stat['纪要索引']);
+      var n = (idx && idx.length) ? idx.length : 0;
+      var nextNum = n + 1;
+      return 'AM' + String(nextNum).padStart(4, '0');
+    } catch (e) {
+      return 'AM0001';
+    }
+  };
+
+  // qyExtractPushTags: 5 类标签抽取 + 5 层 JSON 清洗
+  // 返回 { narrations:[], characters:[], companions:[], quests:[], items:[] }
+  window.qyExtractPushTags = function(text) {
+    var result = { narrations: [], characters: [], companions: [], quests: [], items: [] };
+    if (!text || typeof text !== 'string') return result;
+
+    function extractAll(tagName) {
+      var regex = new RegExp('<' + tagName + '>([\\s\\S]*?)<\\/' + tagName + '>', 'gi');
+      var matches = [];
+      var m;
+      while ((m = regex.exec(text)) !== null) {
+        var raw = (m[1] || '').trim();
+        if (raw) matches.push(raw);
+      }
+      return matches;
+    }
+
+    function parseLayered(rawJson) {
+      var s = rawJson;
+      // Layer 1: normalize quotes (全角引号 → 半角)
+      s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+      // Layer 2: 控制字符清理 (除了 \n \r \t 之外的 ASCII 控制符)
+      s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+      // Layer 3: 去 trailing comma
+      s = s.replace(/,\s*([}\]])/g, '$1');
+      // Layer 4: 修字符串值里没转义的内部引号 (简化版: 跳过 — JSON 实际写时朔教 AI 用 \")
+      // Layer 5: 直接尝试 parse
+      try {
+        return JSON.parse(s);
+      } catch (e) {
+        // 二次尝试: 去掉首尾非 JSON 字符
+        var firstBrace = s.indexOf('{');
+        var lastBrace = s.lastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace) {
+          try {
+            return JSON.parse(s.slice(firstBrace, lastBrace + 1));
+          } catch (e2) {
+            console.warn('[qy] JSON 清洗后仍 parse 失败:', e2.message, '原 raw:', rawJson.slice(0, 200));
+            return null;
+          }
+        }
+        return null;
+      }
+    }
+
+    extractAll('纪要新增').forEach(function(raw) {
+      var obj = parseLayered(raw);
+      if (obj) result.narrations.push(obj);
+    });
+    extractAll('关键人物更新').forEach(function(raw) {
+      var obj = parseLayered(raw);
+      if (obj) result.characters.push(obj);
+    });
+    extractAll('同伴更新').forEach(function(raw) {
+      var obj = parseLayered(raw);
+      if (obj) result.companions.push(obj);
+    });
+    extractAll('任务更新').forEach(function(raw) {
+      var obj = parseLayered(raw);
+      if (obj) result.quests.push(obj);
+    });
+    extractAll('物品更新').forEach(function(raw) {
+      var obj = parseLayered(raw);
+      if (obj) result.items.push(obj);
+    });
+    return result;
+  };
+
+  // qyPushNarration: 一条 <纪要新增> → createLorebookEntries + push mvu.纪要索引 + 触发归档检查
+  window.qyPushNarration = async function(narration) {
+    if (!narration || typeof narration !== 'object') return false;
+    if (typeof window.Mvu === 'undefined') return false;
+    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+    if (!TH || typeof TH.createLorebookEntries !== 'function') return false;
+
+    try {
+      var book = await window.qyGetCharBook();
+      if (!book) {
+        console.warn('[qy] qyPushNarration 没拿到 worldbook');
+        return false;
+      }
+      var am = window.qyAllocAM();
+      var time = String(narration['时间'] || '').slice(0, 60);
+      var place = String(narration['地点'] || '').slice(0, 60);
+      var brief = String(narration['概要'] || '').slice(0, 200);
+      var detail = String(narration['详情'] || '').slice(0, 2000);
+
+      var entryContent =
+        '## 纪要节点 ' + am + '\n' +
+        '- 时间: ' + time + '\n' +
+        '- 地点: ' + place + '\n' +
+        '- 概要: ' + brief + '\n\n' +
+        '## 详情\n' + detail;
+
+      await window.qyRetry(function() {
+        return TH.createLorebookEntries(book, [{
+          comment: am + ' ' + brief.slice(0, 40),
+          keys: [am],
+          content: entryContent,
+          enabled: true,
+          position: 'at_depth_as_system',
+          depth: 4,
+          exclude_recursion: true
+        }]);
+      }, 5, 'createLorebookEntries(' + am + ')');
+
+      // push 索引到 mvu.纪要索引
+      var data = Mvu.getMvuData({ type: 'chat' }) || {};
+      var stat = data.stat_data || {};
+      var idx = qyUnwrapArr(stat['纪要索引']);
+      if (!Array.isArray(idx)) idx = [];
+      idx.push({ AM: am, 时间: time, 地点: place, 概要: brief });
+      stat['纪要索引'] = idx;
+      data.stat_data = stat;
+      await Mvu.replaceMvuData(data, { type: 'chat' });
+
+      // 重置兜底计数
+      qyState.memoryTurnCount = 0;
+
+      // 触发归档检查 (≥180 条压最早 50 条为大事记)
+      await window.qyMaybeArchive(book);
+      return true;
+    } catch (e) {
+      console.warn('[qy] qyPushNarration 失败:', e);
+      return false;
+    }
+  };
+
+  // qyPushCharacter: 关键人物 worldbook 条目维护 (新建/累积更新)
+  window.qyPushCharacter = async function(info) {
+    if (!info || !info['角色名']) return false;
+    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+    if (!TH) return false;
+    try {
+      var book = await window.qyGetCharBook();
+      if (!book) return false;
+      var name = String(info['角色名']).slice(0, 30);
+      var discovery = String(info['新发现'] || info['新设定'] || '').slice(0, 500);
+      var commentTag = '[关键人物] ' + name;
+
+      // 查现有同名 entry
+      var existing = null;
+      if (typeof TH.getLorebookEntries === 'function') {
+        var allEntries = await window.qyRetry(function() {
+          return TH.getLorebookEntries(book);
+        }, 5, 'getLorebookEntries(char)');
+        if (Array.isArray(allEntries)) {
+          existing = allEntries.find(function(e) { return e && e.comment === commentTag; });
+        }
+      }
+
+      if (existing && typeof TH.setLorebookEntries === 'function') {
+        // 累积: 新发现追加在末尾
+        var oldContent = String(existing.content || '');
+        var newContent = oldContent + '\n- ' + discovery;
+        await window.qyRetry(function() {
+          return TH.setLorebookEntries(book, [{ uid: existing.uid, content: newContent }]);
+        }, 5, 'setLorebookEntries(char)');
+      } else if (typeof TH.createLorebookEntries === 'function') {
+        await window.qyRetry(function() {
+          return TH.createLorebookEntries(book, [{
+            comment: commentTag,
+            keys: [name],
+            content: '# 关键人物: ' + name + '\n\n## 累积设定\n- ' + discovery,
+            enabled: true,
+            position: 'at_depth_as_system',
+            depth: 4,
+            exclude_recursion: true
+          }]);
+        }, 5, 'createLorebookEntries(char)');
+      }
+      return true;
+    } catch (e) {
+      console.warn('[qy] qyPushCharacter 失败:', e);
+      return false;
+    }
+  };
+
+  // qyPushCompanion: 同伴累积 (跟 qyPushCharacter 类似, comment 用 [同伴] 前缀)
+  window.qyPushCompanion = async function(info) {
+    if (!info || !info['伙伴名']) return false;
+    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+    if (!TH) return false;
+    try {
+      var book = await window.qyGetCharBook();
+      if (!book) return false;
+      var name = String(info['伙伴名']).slice(0, 30);
+      var setting = String(info['新设定'] || info['新发现'] || '').slice(0, 500);
+      var commentTag = '[同伴] ' + name;
+      var existing = null;
+      if (typeof TH.getLorebookEntries === 'function') {
+        var allEntries = await window.qyRetry(function() {
+          return TH.getLorebookEntries(book);
+        }, 5, 'getLorebookEntries(comp)');
+        if (Array.isArray(allEntries)) {
+          existing = allEntries.find(function(e) { return e && e.comment === commentTag; });
+        }
+      }
+      if (existing && typeof TH.setLorebookEntries === 'function') {
+        var oldContent = String(existing.content || '');
+        var newContent = oldContent + '\n- ' + setting;
+        await window.qyRetry(function() {
+          return TH.setLorebookEntries(book, [{ uid: existing.uid, content: newContent }]);
+        }, 5, 'setLorebookEntries(comp)');
+      } else if (typeof TH.createLorebookEntries === 'function') {
+        await window.qyRetry(function() {
+          return TH.createLorebookEntries(book, [{
+            comment: commentTag,
+            keys: [name],
+            content: '# 同伴: ' + name + '\n\n## 累积设定\n- ' + setting,
+            enabled: true,
+            position: 'at_depth_as_system',
+            depth: 4,
+            exclude_recursion: true
+          }]);
+        }, 5, 'createLorebookEntries(comp)');
+      }
+      return true;
+    } catch (e) {
+      console.warn('[qy] qyPushCompanion 失败:', e);
+      return false;
+    }
+  };
+
+  // qyPushQuest: 任务更新 (写到 mvu.任务.未接/进行中/已完成 数组, 不写 worldbook)
+  window.qyPushQuest = async function(info) {
+    if (!info || !info['任务名']) return false;
+    if (typeof window.Mvu === 'undefined') return false;
+    try {
+      var data = Mvu.getMvuData({ type: 'chat' }) || {};
+      var stat = data.stat_data || {};
+      var tasks = stat['任务'] || {};
+      var name = String(info['任务名']).slice(0, 60);
+      var status = String(info['状态'] || '已接取');
+      var progress = String(info['进度'] || '').slice(0, 300);
+
+      ['未接','进行中','已完成','已失败'].forEach(function(k) {
+        if (!Array.isArray(qyUnwrapArr(tasks[k]))) tasks[k] = [];
+      });
+
+      function unwrapList(k) {
+        var v = qyUnwrapArr(tasks[k]);
+        return Array.isArray(v) ? v : [];
+      }
+
+      // 找现有同名任务并迁移
+      ['未接','进行中','已完成','已失败'].forEach(function(k) {
+        var list = unwrapList(k);
+        tasks[k] = list.filter(function(t) {
+          return !t || (t['名字'] !== name && t['name'] !== name);
+        });
+      });
+
+      var entry = { 名字: name, 状态: status, 进度: progress, 时间戳: new Date().toISOString() };
+      var bucket = '未接';
+      if (status.indexOf('完成') >= 0) bucket = '已完成';
+      else if (status.indexOf('失败') >= 0) bucket = '已失败';
+      else if (status.indexOf('进行') >= 0 || status.indexOf('接') >= 0) bucket = '进行中';
+
+      var targetList = unwrapList(bucket);
+      targetList.push(entry);
+      tasks[bucket] = targetList;
+      stat['任务'] = tasks;
+      data.stat_data = stat;
+      await Mvu.replaceMvuData(data, { type: 'chat' });
+      if (typeof window.qyRenderStatusBar === 'function') window.qyRenderStatusBar();
+      return true;
+    } catch (e) {
+      console.warn('[qy] qyPushQuest 失败:', e);
+      return false;
+    }
+  };
+
+  // qyPushAIItem: AI 叙事产生的物品获得/失去 (跟 qyPushItem 区分: qyPushItem 是 SPA 抽签写背包, 这个是 AI push)
+  window.qyPushAIItem = async function(info) {
+    if (!info || !info['物品名']) return false;
+    if (typeof window.Mvu === 'undefined') return false;
+    try {
+      var data = Mvu.getMvuData({ type: 'chat' }) || {};
+      var stat = data.stat_data || {};
+      var p = stat['主角'] || {};
+      var bag = qyUnwrapArr(p['背包物品']);
+      if (!Array.isArray(bag)) bag = [];
+      var name = String(info['物品名']).slice(0, 40);
+      var action = String(info['动作'] || '获得');
+      var desc = String(info['信息'] || '').slice(0, 200);
+
+      var existIdx = -1;
+      for (var i = 0; i < bag.length; i++) {
+        if (bag[i] && (bag[i].名字 === name || bag[i].name === name)) { existIdx = i; break; }
+      }
+
+      if (action.indexOf('失') >= 0 || action.indexOf('消耗') >= 0) {
+        if (existIdx >= 0) {
+          var qty = parseInt(bag[existIdx].数量, 10) || 1;
+          if (qty <= 1) bag.splice(existIdx, 1);
+          else bag[existIdx].数量 = qty - 1;
+        }
+      } else if (action.indexOf('属性') >= 0 || action.indexOf('变化') >= 0) {
+        if (existIdx >= 0) {
+          bag[existIdx].描述 = desc || bag[existIdx].描述;
+        }
+      } else {
+        // 获得 / 其他
+        if (existIdx >= 0) {
+          bag[existIdx].数量 = (parseInt(bag[existIdx].数量, 10) || 0) + 1;
+          if (desc) bag[existIdx].描述 = desc;
+        } else {
+          bag.push({ 名字: name, 数量: 1, 品级: '凡品', 描述: desc });
+        }
+      }
+
+      p['背包物品'] = bag;
+      stat['主角'] = p;
+      data.stat_data = stat;
+      await Mvu.replaceMvuData(data, { type: 'chat' });
+      if (typeof window.qyRenderStatusBar === 'function') window.qyRenderStatusBar();
+      return true;
+    } catch (e) {
+      console.warn('[qy] qyPushAIItem 失败:', e);
+      return false;
+    }
+  };
+
+  // qyApplyPushTags: 主入口, 抽取 + 5 类分发, 在 qyTriggerGenerate / qyTriggerPlayAction / qyTriggerOpening 后调
+  window.qyApplyPushTags = async function(aiText) {
+    if (!aiText || typeof aiText !== 'string') return;
+    try {
+      var tags = window.qyExtractPushTags(aiText);
+      // 纪要新增 (一条条 push, 触发归档检查)
+      for (var i = 0; i < tags.narrations.length; i++) {
+        try { await window.qyPushNarration(tags.narrations[i]); } catch (_) {}
+      }
+      // 关键人物
+      for (var j = 0; j < tags.characters.length; j++) {
+        try { await window.qyPushCharacter(tags.characters[j]); } catch (_) {}
+        // 顺便从 npcMentionCount 里移除 (已经入库不用再监控)
+        try {
+          var cname = tags.characters[j]['角色名'];
+          if (cname && qyState.npcMentionCount[cname]) {
+            delete qyState.npcMentionCount[cname];
+          }
+        } catch (_) {}
+      }
+      // 同伴
+      for (var k = 0; k < tags.companions.length; k++) {
+        try { await window.qyPushCompanion(tags.companions[k]); } catch (_) {}
+      }
+      // 任务
+      for (var l = 0; l < tags.quests.length; l++) {
+        try { await window.qyPushQuest(tags.quests[l]); } catch (_) {}
+      }
+      // 物品
+      for (var m = 0; m < tags.items.length; m++) {
+        try { await window.qyPushAIItem(tags.items[m]); } catch (_) {}
+      }
+    } catch (e) {
+      console.warn('[qy] qyApplyPushTags 失败:', e);
+    }
+  };
+
+  // qyCheckMandatoryPush: 兜底每 5 轮, AI 没主动 push 纪要 → generateRaw 强制总结当轮
+  window.qyCheckMandatoryPush = async function(userText, aiText) {
+    qyState.memoryTurnCount = (qyState.memoryTurnCount || 0) + 1;
+    if (qyState.memoryTurnCount < 5) return;
+    if (typeof generateRaw !== 'function') return;
+    if (typeof window.Mvu === 'undefined') return;
+    try {
+      var prompt =
+        '你是纪要总结助手. 根据下面这轮玩家输入 + AI 叙事, 生成一条 <纪要新增> JSON.\n\n' +
+        '【玩家输入】\n' + String(userText || '').slice(0, 800) + '\n\n' +
+        '【AI 叙事】\n' + String(aiText || '').slice(0, 2000) + '\n\n' +
+        '严格按下面格式输出, 不加任何解释/前后缀:\n' +
+        '<纪要新增>{"时间":"xxx","地点":"xxx","概要":"一句话概要","详情":"详细经过"}</纪要新增>';
+      var raw = await window.qyRetry(function() {
+        return generateRaw({
+          user_input: prompt,
+          should_silence: true,
+          ordered_prompts: [{ role: 'user', content: prompt }]
+        });
+      }, 5, 'mandatoryPush');
+      if (typeof raw !== 'string') return;
+      var tags = window.qyExtractPushTags(raw);
+      if (tags.narrations.length > 0) {
+        await window.qyPushNarration(tags.narrations[0]);
+      }
+    } catch (e) {
+      console.warn('[qy] qyCheckMandatoryPush 失败:', e);
+    }
+  };
+
+  // qyMonitorNpc: NPC 监控 — 角色名出现 ≥3 次自动创建关键人物条目
+  window.qyMonitorNpc = async function(userText, aiText) {
+    if (typeof window.Mvu === 'undefined') return;
+    var combined = String(userText || '') + '\n' + String(aiText || '');
+    if (!combined.trim()) return;
+
+    // 简单中文姓名抽取: 2-4 字纯中文 token + 不在忽略列表 + 不是常见动词/形容词
+    // 用 mvu 当前 NPC1-3 已有 + 同伴1-3 已有 名字先建立白名单
+    var data = Mvu.getMvuData({ type: 'chat' }) || {};
+    var stat = data.stat_data || {};
+    var knownNames = {};
+    ['NPC1','NPC2','NPC3'].forEach(function(k) {
+      var n = stat[k] && stat[k]['姓名'];
+      if (n && typeof n === 'string') knownNames[n] = true;
+    });
+    var comp = stat['同伴'] || {};
+    ['伙伴1','伙伴2','伙伴3'].forEach(function(k) {
+      var n = comp[k] && (comp[k]['名字'] || comp[k]['姓名']);
+      if (n && typeof n === 'string') knownNames[n] = true;
+    });
+
+    // 抽中文 2-4 字 token (近似)
+    var tokens = combined.match(/[\u4e00-\u9fa5]{2,4}/g) || [];
+    var counts = {};
+    tokens.forEach(function(t) {
+      counts[t] = (counts[t] || 0) + 1;
+    });
+
+    var ignore = qyState.npcIgnoreList || [];
+    var ignoreSet = {};
+    ignore.forEach(function(n) { ignoreSet[n] = true; });
+
+    for (var name in counts) {
+      if (ignoreSet[name]) continue;
+      if (knownNames[name]) continue;
+      // 累积计数
+      qyState.npcMentionCount[name] = (qyState.npcMentionCount[name] || 0) + counts[name];
+      if (qyState.npcMentionCount[name] >= 3) {
+        // 触发自动创建
+        try {
+          await window.qyPushCharacter({
+            角色名: name,
+            新发现: '(SPA 自动监测: 出现 ' + qyState.npcMentionCount[name] + ' 次后自动归档, 待 AI 后续补充设定)'
+          });
+          // 清掉计数避免重复
+          delete qyState.npcMentionCount[name];
+        } catch (_) {}
+      }
+    }
+  };
+
+  // qyMaybeArchive: 总纪要条目 ≥180 时, 取最早 50 条压成"大事记 N" 粗粒度条目 + 原条目 enabled:false
+  window.qyMaybeArchive = async function(book) {
+    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+    if (!TH || typeof TH.getLorebookEntries !== 'function') return;
+    if (!book) return;
+    try {
+      var allEntries = await window.qyRetry(function() {
+        return TH.getLorebookEntries(book);
+      }, 5, 'getLorebookEntries(archive)');
+      if (!Array.isArray(allEntries)) return;
+      // 只统计 enabled 的 AM 条目
+      var amEntries = allEntries.filter(function(e) {
+        return e && e.enabled !== false && /^AM\d{4}/.test(String(e.comment || ''));
+      });
+      if (amEntries.length < 180) return;
+
+      // 按 AM 编号排序取最早 50 条
+      amEntries.sort(function(a, b) {
+        var ma = String(a.comment).match(/AM(\d{4})/);
+        var mb = String(b.comment).match(/AM(\d{4})/);
+        var na = ma ? parseInt(ma[1], 10) : 0;
+        var nb = mb ? parseInt(mb[1], 10) : 0;
+        return na - nb;
+      });
+      var oldest50 = amEntries.slice(0, 50);
+
+      // 拼概要让 generateRaw 压缩
+      var summaryInput = oldest50.map(function(e) {
+        var c = String(e.content || '').slice(0, 300);
+        return '- ' + e.comment + ': ' + c.replace(/\n+/g, ' ');
+      }).join('\n');
+
+      if (typeof generateRaw !== 'function') return;
+      var compressed = await window.qyRetry(function() {
+        return generateRaw({
+          user_input: '压缩下面 50 条纪要为一段粗粒度大事记 (300 字内), 保留关键事件和角色名:\n\n' + summaryInput,
+          should_silence: true,
+          ordered_prompts: [{ role: 'user', content: '压缩下面 50 条纪要为一段粗粒度大事记 (300 字内), 保留关键事件和角色名:\n\n' + summaryInput }]
+        });
+      }, 5, 'archiveCompress');
+      if (typeof compressed !== 'string' || !compressed.trim()) return;
+
+      // 数下已有几个"大事记 N"
+      var existingArchives = allEntries.filter(function(e) {
+        return e && /^\[大事记\]\s*\d+/.test(String(e.comment || ''));
+      });
+      var archiveN = existingArchives.length + 1;
+      var archiveTag = '[大事记] ' + archiveN;
+
+      if (typeof TH.createLorebookEntries === 'function') {
+        await window.qyRetry(function() {
+          return TH.createLorebookEntries(book, [{
+            comment: archiveTag,
+            keys: ['大事记', archiveTag],
+            content: '# ' + archiveTag + ' (压缩自 AM' + String(oldest50[0].comment).match(/AM(\d{4})/)[0] + ' ~ ' + String(oldest50[49].comment).match(/AM(\d{4})/)[0] + ')\n\n' + compressed,
+            enabled: true,
+            position: 'before_char',
+            exclude_recursion: true
+          }]);
+        }, 5, 'createArchive');
+      }
+
+      // 原 50 条 disable
+      if (typeof TH.setLorebookEntries === 'function') {
+        var updates = oldest50.map(function(e) { return { uid: e.uid, enabled: false }; });
+        await window.qyRetry(function() {
+          return TH.setLorebookEntries(book, updates);
+        }, 5, 'disableArchived');
+      }
+      console.log('[qy] 归档完成: 50 条 AM → ' + archiveTag);
+    } catch (e) {
+      console.warn('[qy] qyMaybeArchive 失败:', e);
+    }
+  };
+
   // ============= mvu 解析 + 写入 helper（vamp 模式用户视角"自动更新"）=============
   window.qyApplyMvu = async function(aiText) {
     if (!aiText || typeof aiText !== 'string') return false;
@@ -7304,19 +8032,18 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
   };
 
-  // ============= chat history 持久化 + 总结压缩（mvu stat_data.对话历史.{原文,小总结池,大总结}）=============
-  // 用 _ 开头字段名提示 AI 这是系统字段不要 _.set
-  var QY_HIST_RAW_THRESHOLD = 15;  // 原文超过这条数 → 异步压一段进小总结池
+  // ============= chat history 持久化（mvu stat_data.对话历史.原文）=============
+  // 大小总结压缩链 2026-05-14 砍掉, 改走纪要 worldbook + Phase 1/2 召回链 (qyPlanRecall + qyBuildRecallInject)
 
   function qyGetHistData() {
     if (typeof window.Mvu === 'undefined') return null;
     var data = Mvu.getMvuData({ type: 'chat' }) || {};
     var stat = data.stat_data || {};
-    stat['对话历史'] = stat['对话历史'] || { '原文': [], '小总结池': [], '大总结': '' };
+    stat['对话历史'] = stat['对话历史'] || { '原文': [] };
     return { data: data, stat: stat, hist: stat['对话历史'] };
   }
 
-  // 构造发给 AI 的 prompts: 大总结 + 小总结池 + 当前原文
+  // 构造发给 AI 的 prompts: 仅当前原文(过往纪要召回走 Phase 1/2 inject 链, 不再用大小总结)
   window.qyBuildPrompts = function() {
     var ctx = qyGetHistData();
     if (!ctx) {
@@ -7326,12 +8053,6 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       });
     }
     var prompts = [];
-    var bigSummary = qySafe(ctx.hist['大总结'], '');
-    if (bigSummary) prompts.push({ role: 'system', content: '【过往剧情大事记】' + bigSummary });
-    var pool = qyUnwrapArr(ctx.hist['小总结池']);
-    pool.forEach(function(s) {
-      if (s) prompts.push({ role: 'system', content: '【近期摘要】' + String(s) });
-    });
     var raw = qyUnwrapArr(ctx.hist['原文']);
     raw.forEach(function(m) {
       if (m && m.role && m.content) prompts.push({ role: m.role, content: m.content });
@@ -7355,67 +8076,85 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     } catch (e) { console.warn('[qy] 持久化对话历史失败:', e); }
   };
 
-  // 检查是否要压缩（异步沉默, 不阻塞玩家继续发送）
-  window.qyMaybeCompressHistory = async function() {
-    if (typeof window.Mvu === 'undefined') return;
+  // ============= Phase 1 规划召回 + Phase 2 inject AM 触发 worldbook 自动激活 =============
+  // 设计哲学: 让主 AI 永远看到 worldbook 锁定的真实数据, 不依赖回忆 → 防瞎编。
+  // Phase 1 让规划 AI 看 mvu.纪要索引 + 最近原文 + 用户输入 → 输出 <recall>AM0003,AM0017</recall>
+  // Phase 2 SPA 把 AM 编码塞 chat history 一个 system inject → ST 拼 prompt 时扫到 keyword 自动激活对应 worldbook 条目 → 详情注入主 AI
+
+  window.qyPlanRecall = async function(userText, recentPrompts) {
+    if (typeof window.Mvu === 'undefined') return [];
+    if (typeof generateRaw !== 'function') return [];
     try {
-      var ctx = qyGetHistData();
-      if (!ctx) return;
-      var raw = qyUnwrapArr(ctx.hist['原文']);
-      if (raw.length < QY_HIST_RAW_THRESHOLD) return;
+      var data = Mvu.getMvuData({ type: 'chat' }) || {};
+      var stat = data.stat_data || {};
+      var indexArr = qyUnwrapArr(stat['纪要索引']);
+      if (!indexArr || indexArr.length === 0) return [];
 
-      var toCompress = raw.slice(0, QY_HIST_RAW_THRESHOLD);
-      var rest = raw.slice(QY_HIST_RAW_THRESHOLD);
+      var indexLines = indexArr.map(function(it) {
+        if (!it || typeof it !== 'object') return '';
+        var am = qySafe(it['AM'], '');
+        var brief = qySafe(it['概要'], '');
+        if (!am) return '';
+        return '- ' + am + ': ' + brief;
+      }).filter(function(s) { return !!s; }).join('\n');
+      if (!indexLines) return [];
 
-      var transcript = toCompress.map(function(m) {
-        return (m.role === 'user' ? '玩家' : 'AI') + ': ' + m.content;
-      }).join('\n\n');
-
-      var summaryPrompt =
-        '你的工作是对以下 ' + toCompress.length + ' 条对话做剧情无损信息压缩 (小总结).\n' +
-        '目标: 保留高信息密度, 大幅压缩, 但绝不遗漏会影响后续理解与展开的关键信息.\n\n' +
-        '强制规则:\n' +
-        '1) 不得编造/推断; 不确定写"未知/未提及".\n' +
-        '2) 必须保留: 专名 / 数值时间 / 规则禁忌 / 因果 / 承诺交易誓言告白 / 所有条件句(如果/就/否则/只要/除非) / 所有未决事项.\n' +
-        '3) 任何"低频但高影响"的一句话 (承诺/求婚/结盟/背叛/印记进阶/宿命兑现/势力变化) 必须独立列出, 附 ≤25 字证据原句.\n' +
-        '4) 玩家关键行动 / NPC 关系变化 / 状态推进 / 重要选择 都要保留.\n\n' +
-        '输出格式: 直接输出 200 字内的紧凑摘要文字, 不加任何前缀/标签/markdown 包裹.\n' +
-        '段落结构: 时间地点 → 关键事件链 → 关系/状态变化 → 未决事项. 关键句用书名号《...》框住引用.\n\n' +
-        '对话:\n' + transcript;
-
-      var summaryResult = '';
-      if (typeof generateRaw === 'function') {
-        summaryResult = await generateRaw({
-          user_input: summaryPrompt,
-          should_silence: true,
-          ordered_prompts: [{ role: 'user', content: summaryPrompt }],
-        });
-      } else if (typeof generate === 'function') {
-        summaryResult = await generate({
-          user_input: summaryPrompt,
-          should_silence: true,
-          overrides: { chat_history: { prompts: [] } },
-        });
-      }
-      if (typeof summaryResult !== 'string' || !summaryResult.trim()) {
-        console.warn('[qy] 小总结结果空, 跳过本轮压缩');
-        return;
+      // 最近 N 轮原文给规划 AI 看 (轻量, 限制 6 轮)
+      var recentTail = '';
+      if (recentPrompts && recentPrompts.length) {
+        var tail = recentPrompts.slice(-6);
+        recentTail = tail.map(function(p) {
+          return (p.role === 'user' ? '玩家' : 'AI') + ': ' + (p.content || '').slice(0, 400);
+        }).join('\n\n');
       }
 
-      // 重新读 mvu 写回 (期间可能已变)
-      var ctx2 = qyGetHistData();
-      if (!ctx2) return;
-      var pool = qyUnwrapArr(ctx2.hist['小总结池']);
-      pool.push(summaryResult.trim());
-      ctx2.hist['小总结池'] = pool;
-      // 注意: 此时 ctx2.hist.原文 可能比 ctx.hist.原文 多了新条目, 只删前 N 条
-      var rawNow = qyUnwrapArr(ctx2.hist['原文']);
-      ctx2.hist['原文'] = rawNow.slice(QY_HIST_RAW_THRESHOLD);
-      ctx2.stat['对话历史'] = ctx2.hist;
-      ctx2.data.stat_data = ctx2.stat;
-      await Mvu.replaceMvuData(ctx2.data, { type: 'chat' });
-      console.log('[qy] 小总结生成完成, 池子大小:', pool.length);
-    } catch (e) { console.warn('[qy] qyMaybeCompressHistory 失败:', e); }
+      var planPrompt =
+        '你是召回规划助手. 根据用户当前输入 + 最近原文, 从过往纪要索引里挑出最相关的几条 AM 编号, 用于辅助主 AI 衔接剧情.\n\n' +
+        '【过往纪要索引】\n' + indexLines + '\n\n' +
+        (recentTail ? '【最近原文】\n' + recentTail + '\n\n' : '') +
+        '【用户当前输入】\n' + userText + '\n\n' +
+        '挑选规则: 跟当前输入或最近原文有直接关联的事件 / 涉及到的关键 NPC / 伏笔回收节点优先. 不超过 5 条. 没有相关也可以为空.\n' +
+        '输出格式: 严格只输出一行 <recall>AM0003,AM0017</recall> 标签, 不加任何解释/标点/前后缀. 没有相关时输出 <recall></recall>.';
+
+      var raw = await generateRaw({
+        user_input: planPrompt,
+        should_silence: true,
+        ordered_prompts: [{ role: 'user', content: planPrompt }],
+      });
+      if (typeof raw !== 'string') return [];
+      var m = raw.match(/<recall>([\s\S]*?)<\/recall>/i);
+      if (!m) return [];
+      var inner = (m[1] || '').trim();
+      if (!inner) return [];
+      var amList = inner.split(/[,，\s]+/).map(function(s) { return s.trim(); }).filter(function(s) { return /^AM\d{4}$/.test(s); });
+      // 去重 + 索引校验 (规划 AI 可能挑了不存在的 AM, 过滤掉)
+      var validSet = {};
+      indexArr.forEach(function(it) {
+        var am = it && qySafe(it['AM'], '');
+        if (am) validSet[am] = true;
+      });
+      var dedup = {};
+      var out = [];
+      amList.forEach(function(am) {
+        if (validSet[am] && !dedup[am]) { dedup[am] = true; out.push(am); }
+      });
+      return out.slice(0, 5);
+    } catch (e) {
+      console.warn('[qy] qyPlanRecall 失败:', e);
+      return [];
+    }
+  };
+
+  // 把 amList 包成一条 system inject 塞 chat history → ST 拼 prompt 时扫到 AM 编码 keyword → 自动激活对应 worldbook 条目 (AM wrapper + AM 详情)
+  window.qyBuildRecallInject = function(amList) {
+    if (!amList || amList.length === 0) return null;
+    return {
+      role: 'system',
+      content: '【召回纪要锚点】下列编号关联了过往剧情节点, 主 AI 将通过 worldbook 自动激活拿到详情: ' + amList.join(' '),
+      position: 'in_chat',
+      depth: 0,
+      should_scan: true,
+    };
   };
 
   // bootstrap 时从 mvu 恢复 qyState.chatHistory 内存快照（用于 qyRenderChat 等仅读用途）
@@ -7454,7 +8193,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         streamHandle = eventOn(iframe_events.STREAM_TOKEN_RECEIVED_FULLY, onToken);
       }
 
-      // prompts 来自 mvu 持久化历史 (大总结 + 小总结池 + 当前原文), 不含本轮 user
+      // prompts 来自 mvu 持久化历史 (仅当前原文; 过往纪要召回走 Phase 1/2 inject 链)
       var prompts = window.qyBuildPrompts();
       // vamp 模式补 D1 协议 + 当前 stat_data (伪零层 generate.overrides.chat_history 替换 → at_depth/世界书注入链断, SPA 显式 inject)
       var injects = [];
@@ -7462,6 +8201,16 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       if (d1Inject) injects.push(d1Inject);
       var mvuInject = window.qyBuildMvuInject();
       if (mvuInject) injects.push(mvuInject);
+
+      // Phase 1 规划召回: 让规划 AI 看 mvu.纪要索引 + 最近原文 + 用户输入, 输出 <recall>AMxxxx,AMyyyy</recall>
+      // Phase 2 把 AM 编码塞 chat history 一条 system inject → ST 拼 prompt 时扫到 keyword 自动激活对应 worldbook 条目 (AM wrapper + AM 详情) → 主 AI 看
+      try {
+        var amList = await window.qyPlanRecall(text, prompts);
+        if (amList && amList.length > 0) {
+          var recallInject = window.qyBuildRecallInject(amList);
+          if (recallInject) injects.push(recallInject);
+        }
+      } catch (e) { console.warn('[qy] Phase 1 规划失败, 跳过本轮召回:', e); }
 
       var result = await generate({
         user_input: text,
@@ -7482,8 +8231,10 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       // 5. generate 完成 → mvu 解析 AI 输出里的 _.set 命令 (UpdateVariable 块在 raw 里, mvu bundle.js 按块抽取)
       await window.qyApplyMvu(finalText);
 
-      // 6. 异步触发压缩检查 (不 await, 不阻塞下一轮发送)
-      window.qyMaybeCompressHistory().catch(function(e) { console.warn('[qy] 压缩异步失败:', e); });
+      // 6. 完美记忆系统: push 标签抽取 → worldbook 写入 + NPC 监控 + 兜底每 5 轮强制总结
+      await window.qyApplyPushTags(finalText);
+      try { await window.qyMonitorNpc(text, finalText); } catch (_) {}
+      try { await window.qyCheckMandatoryPush(text, finalText); } catch (_) {}
     } catch (e) {
       console.warn('[qy] generate 失败:', e);
       qyState.chatHistory[aiIdx].content = '[生成失败] ' + ((e && e.message) || e);
@@ -7863,43 +8614,15 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     var active = qyUnwrapArr(d['活跃事件']);
     var rumor = qyUnwrapArr(d['酒馆传闻']);
     var neighbor = qyUnwrapArr(d['邻国动态']);
-    var nodes = qyUnwrapArr(stat['故事节点']);  // 顶层字段, 最高优先级保留的故事节点表
+    // 故事节点 2026-05-14 砍掉, 替换为「纪要 + AM worldbook 召回」体系, 完整记忆 UI 在悬浮球→记忆 (阶段 5)
     function listItems(arr, prefix) {
       if (arr.length === 0) return '<div class="qy-list-empty">— 暂无 —</div>';
       return arr.map(function(t) {
         return '<div class="qy-list-item">' + (prefix || '') + qyEscapeHtml(t) + '</div>';
       }).join('');
     }
-    // 故事节点 = 数组 of 对象 {time, sides, content, impact, evidence, type}
-    function nodeBlocks(arr) {
-      if (!arr || arr.length === 0) return '<div class="qy-list-empty">— 尚无故事节点 —</div>';
-      // 按时间倒序展示, 最新在上
-      var reversed = arr.slice().reverse();
-      return reversed.map(function(n) {
-        if (!n || typeof n !== 'object') return '<div class="qy-list-item">' + qyEscapeHtml(String(n)) + '</div>';
-        var t = qySafe(n['time'] || n['时间'], '—');
-        var sides = qySafe(n['sides'] || n['涉及方'], '');
-        var content = qySafe(n['content'] || n['内容'], '');
-        var impact = qySafe(n['impact'] || n['影响'], '');
-        var evidence = qySafe(n['evidence'] || n['证据原句'] || n['证据'], '');
-        var type = qySafe(n['type'] || n['类型'], '');
-        var meta = [];
-        if (t) meta.push('<span style="color:#d4af37;">' + qyEscapeHtml(t) + '</span>');
-        if (type) meta.push('<span style="color:#a8d8ff;">[' + qyEscapeHtml(type) + ']</span>');
-        if (sides) meta.push('<span style="color:#8090a0;">' + qyEscapeHtml(sides) + '</span>');
-        return '<div class="qy-story-node" style="padding:0.55em 0.8em;margin:0.4em 0;border-left:2px solid rgba(212,175,55,0.45);background:rgba(212,175,55,0.04);">' +
-          '<div style="font-size:0.82em;margin-bottom:0.3em;letter-spacing:0.05em;">' + meta.join(' · ') + '</div>' +
-          '<div style="color:#e8e0c8;line-height:1.6;">' + qyEscapeHtml(content) + '</div>' +
-          (impact ? '<div style="font-size:0.82em;color:#a8b8d0;margin-top:0.25em;">影响: ' + qyEscapeHtml(impact) + '</div>' : '') +
-          (evidence ? '<div style="font-size:0.78em;color:#7a8090;font-style:italic;margin-top:0.2em;">证据原句: ' + qyEscapeHtml(evidence) + '</div>' : '') +
-        '</div>';
-      }).join('');
-    }
     el.innerHTML = '<div class="qy-status-card">' +
       '<div class="qy-status-card-title">动 态 <span class="qy-status-card-deco">DYNAMICS</span></div>' +
-      qyHeading('故 事 节 点') +
-      '<div style="font-size:0.78em;color:#7a8090;margin-bottom:0.6em;font-style:italic;">承诺 / 誓言 / 告白 / 交易 / 印记进阶 / 宿命兑现 / 势力变化 / 玩家关键选择 等不可丢的剧情转折点</div>' +
-      nodeBlocks(nodes) +
       qyHeading('活 跃 事 件') + listItems(active, '') +
       qyHeading('酒 馆 传 闻') + listItems(rumor, '· ') +
       qyHeading('邻 国 动 态') + listItems(neighbor, '') +
@@ -7992,6 +8715,64 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   window.qyHideCraftUI       = function() { qyShowPage('main'); };
   window.qyShowCodexUI       = function() { qyShowPage('codex'); };
   window.qyHideCodexUI       = function() { qyShowPage('main'); };
+  window.qyShowMemoryUI      = function() { qyShowPage('memory'); };
+  window.qyHideMemoryUI      = function() { qyShowPage('main'); };
+
+  // ============= 错误日志 小窗 modal (黑底白字, 悬浮球菜单点"错误日志") =============
+  window.qyShowErrorLogUI = function() {
+    var modalId = 'qy-errlog-modal';
+    var modal = document.getElementById(modalId);
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = modalId;
+      modal.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;font-family:Consolas,Monaco,"Courier New",monospace;';
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) { modal.style.display = 'none'; }
+      });
+      document.body.appendChild(modal);
+    }
+    var rows = '';
+    if (typeof window.Mvu !== 'undefined') {
+      try {
+        var data = Mvu.getMvuData({ type: 'chat' }) || {};
+        var stat = data.stat_data || {};
+        var logs = qyUnwrapArr(stat['错误日志']);
+        if (!Array.isArray(logs) || logs.length === 0) {
+          rows = '<div style="text-align:center;color:#888;padding:2em 0;font-style:italic;">无 错 误 记 录</div>';
+        } else {
+          rows = logs.map(function(itRaw) {
+            var it = (Array.isArray(itRaw) && itRaw.length === 2 && typeof itRaw[1] === 'string') ? itRaw[0] : itRaw;
+            it = it || {};
+            var t = String(it['时间戳'] || '');
+            var op = String(it['失败操作'] || '');
+            var msg = String(it['错误信息'] || '');
+            var retries = String(it['重试次数'] || '');
+            function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+            return '<div style="padding:0.6em 0.8em;border-bottom:1px solid #222;line-height:1.6;">' +
+              '<div style="display:flex;justify-content:space-between;color:#ddd;font-size:0.88em;">' +
+                '<span>' + esc(op) + ' (重试 ' + esc(retries) + ')</span>' +
+                '<span style="color:#777;font-size:0.82em;">' + esc(t) + '</span>' +
+              '</div>' +
+              '<div style="color:#bbb;font-size:0.85em;margin-top:0.25em;">' + esc(msg) + '</div>' +
+            '</div>';
+          }).join('');
+        }
+      } catch (e) {
+        rows = '<div style="color:#f88;padding:1em;">读取错误日志失败: ' + String(e.message || e) + '</div>';
+      }
+    } else {
+      rows = '<div style="color:#888;padding:1em;text-align:center;">mvu 不可用</div>';
+    }
+    modal.innerHTML =
+      '<div style="background:#000;color:#fff;border:1px solid #333;border-radius:4px;width:min(640px,90vw);max-height:75vh;display:flex;flex-direction:column;" onclick="event.stopPropagation()">' +
+        '<div style="padding:0.8em 1em;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center;">' +
+          '<span style="color:#fff;font-size:1em;letter-spacing:0.15em;font-family:inherit;">错 误 日 志</span>' +
+          '<button onclick="document.getElementById(\'qy-errlog-modal\').style.display=\'none\'" style="background:transparent;border:1px solid #555;color:#aaa;padding:0.25em 0.8em;cursor:pointer;font-family:inherit;font-size:0.85em;">关 闭</button>' +
+        '</div>' +
+        '<div style="flex:1;overflow-y:auto;padding:0.3em 0.6em;">' + rows + '</div>' +
+      '</div>';
+    modal.style.display = 'flex';
+  };
   // ============= 通用 modal 弹层 helpers =============
   function qyOpenModal(title, contentHtml) {
     var modalId = 'qy-popup-modal';
@@ -8392,7 +9173,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
     injectLines.push('叙事描述操作过程与结果, 自然推进时间, 可触发偶发事件。');
     injectLines.push('熟练度涨幅按 D1 协议克制更新 (钓鱼/种地/做菜/副职熟练度路径).');
-    injectLines.push('其他 A 类字段 (关系/羁绊度/故事节点 等) 按 D1 协议规则更新.');
+    injectLines.push('其他 A 类字段 (关系/羁绊度/纪要 等) 按 D1 协议规则更新.');
     var injectMsg = injectLines.join('\n');
 
     try {
@@ -8406,6 +9187,17 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       if (d1Inject) injects.unshift(d1Inject);
       var mvuInject = window.qyBuildMvuInject();
       if (mvuInject) injects.unshift(mvuInject);
+
+      // Phase 1 规划召回 (同 qyTriggerGenerate 主入口逻辑)
+      var playUserText = '（玩家操作: ' + pageName + ' / ' + actionLabel + '）';
+      try {
+        var amList = await window.qyPlanRecall(playUserText, prompts);
+        if (amList && amList.length > 0) {
+          var recallInject = window.qyBuildRecallInject(amList);
+          if (recallInject) injects.push(recallInject);
+        }
+      } catch (e) { console.warn('[qy] 玩法 Phase 1 规划失败, 跳过本次召回:', e); }
+
       var result = await generate({
         user_input: '（玩家操作: ' + actionLabel + '）',
         should_stream: true,
@@ -8422,7 +9214,10 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       if (rollResult && rollResult.type === 'roll' && rollResult.picked) {
         try { await window.qyPushItem(rollResult.picked); } catch (e) { console.warn('[qy] qyPushItem 失败:', e); }
       }
-      window.qyMaybeCompressHistory().catch(function(e) { console.warn('[qy] 压缩失败:', e); });
+      // 完美记忆系统: push 标签抽取 → worldbook + NPC 监控 + 兜底每 5 轮
+      await window.qyApplyPushTags(finalText);
+      try { await window.qyMonitorNpc(playUserText, finalText); } catch (_) {}
+      try { await window.qyCheckMandatoryPush(playUserText, finalText); } catch (_) {}
     } catch (e) {
       console.warn('[qy] 玩法操作 generate 失败:', e);
       qyState.chatHistory[aiIdx].content = '[玩法操作生成失败] ' + ((e && e.message) || e);
@@ -8514,6 +9309,21 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
 
     // 切换难度世界书条目: 启用玩家选的那条, 禁用其他 3 条
     await window.qyApplyDifficulty(collected.difficulty);
+
+    // 创角同伴自动写关键人物 worldbook 条目 (段五·契约 toggle 开 + 同伴名非空)
+    if (collected.companion && collected.companion['名字']) {
+      try {
+        var compName = String(collected.companion['名字']).trim();
+        if (compName) {
+          var setting =
+            '种族: ' + (collected.companion['种族'] || '—') + '\n' +
+            '外貌: ' + (collected.companion['外貌'] || '—') + '\n' +
+            '渊源: ' + (collected.companion['渊源'] || '—') + '\n' +
+            '关系: ' + (collected.companion['关系'] || '初见');
+          await window.qyPushCompanion({ 伙伴名: compName, 新设定: setting });
+        }
+      } catch (e) { console.warn('[qy] 创角同伴自动写失败:', e); }
+    }
 
     // 调开场 generate (流式渲染到 AI 正文区, 玩家无气泡)
     await window.qyTriggerOpening(collected);
@@ -8839,8 +9649,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     cooking:    'qyShowCookUI',
     craft:      'qyShowCraftUI',
     codex:      'qyShowCodexUI',
-    difficulty: 'qyShowDifficultyUI',
-    settings:   'qyShowSettingsUI',
+    memory:     'qyShowMemoryUI',
+    errorlog:   'qyShowErrorLogUI',
   };
   menu.querySelectorAll('li[data-action]').forEach(function(li) {
     li.addEventListener('click', function() {
@@ -10002,6 +10812,171 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   });
 })();
     } catch (e) { console.error("[qy-init-codex]", e); }
+  };
+
+  // ============= page-memory (记忆.html) =============
+  window.qyInit_memory = function() {
+    if (qyState._inited.memory) return;
+    qyState._inited.memory = true;
+    try {
+window.qyInit_memory = function() {
+  document.querySelectorAll('#qy-memory-app .qy-mem-tab').forEach(function(t) {
+    t.addEventListener('click', function() {
+      var key = t.dataset.memTab;
+      document.querySelectorAll('#qy-memory-app .qy-mem-tab').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('#qy-memory-app .qy-mem-pane').forEach(function(p) { p.classList.remove('active'); });
+      t.classList.add('active');
+      var pane = document.querySelector('#qy-memory-app .qy-mem-pane[data-mem-pane="' + key + '"]');
+      if (pane) pane.classList.add('active');
+      window.qyRenderMemoryAll();
+    });
+  });
+  window.qyRenderMemoryAll();
+};
+
+function qyEscMem(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function qyUnwrapMem(v) {
+  if (Array.isArray(v) && v.length === 2 && typeof v[1] === 'string') return v[0];
+  return v;
+}
+
+window.qyRenderMemoryAll = function() {
+  qyRenderMemoryNarrations();
+  qyRenderMemoryCharacters();
+  qyRenderMemoryArchives();
+};
+
+function qyRenderMemoryNarrations() {
+  var listEl = document.getElementById('qy-mem-narr-list');
+  if (!listEl) return;
+  if (typeof window.Mvu === 'undefined') {
+    listEl.innerHTML = '<li class="qy-mem-empty">mvu 不可用</li>';
+    return;
+  }
+  try {
+    var data = window.Mvu.getMvuData({ type: 'chat' }) || {};
+    var stat = data.stat_data || {};
+    var idx = qyUnwrapMem(stat['纪要索引']);
+    if (!Array.isArray(idx) || idx.length === 0) {
+      listEl.innerHTML = '<li class="qy-mem-empty">尚未生成任何纪要节点</li>';
+      return;
+    }
+    var sorted = idx.slice().reverse();
+    listEl.innerHTML = sorted.map(function(it) {
+      it = qyUnwrapMem(it) || {};
+      var am = qyEscMem(it.AM || '');
+      var time = qyEscMem(it['时间'] || '');
+      var place = qyEscMem(it['地点'] || '');
+      var brief = qyEscMem(it['概要'] || '');
+      return '<li class="qy-mem-item" data-am="' + am + '">' +
+        '<div class="qy-mem-item-head">' +
+          '<span class="qy-mem-am">' + am + '</span>' +
+          '<span class="qy-mem-time">' + time + '</span>' +
+        '</div>' +
+        (place ? '<div class="qy-mem-place">@ ' + place + '</div>' : '') +
+        '<div class="qy-mem-brief">' + brief + '</div>' +
+        '<div class="qy-mem-detail" data-loaded="0">(点击展开加载详情...)</div>' +
+      '</li>';
+    }).join('');
+
+    listEl.querySelectorAll('.qy-mem-item').forEach(function(item) {
+      item.addEventListener('click', async function() {
+        var wasExpanded = item.classList.contains('expanded');
+        item.classList.toggle('expanded');
+        if (!wasExpanded) {
+          var detailEl = item.querySelector('.qy-mem-detail');
+          if (detailEl && detailEl.dataset.loaded === '0') {
+            detailEl.textContent = '(加载中...)';
+            try {
+              var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+              var book = (typeof window.qyGetCharBook === 'function') ? await window.qyGetCharBook() : null;
+              if (TH && book && typeof TH.getLorebookEntries === 'function') {
+                var entries = await TH.getLorebookEntries(book);
+                var am = item.dataset.am;
+                var entry = (entries || []).find(function(e) {
+                  return e && e.keys && e.keys.indexOf(am) >= 0;
+                });
+                detailEl.textContent = entry ? String(entry.content || '(无内容)') : '(未找到 worldbook 条目)';
+                detailEl.dataset.loaded = '1';
+              } else {
+                detailEl.textContent = '(TavernHelper 不可用)';
+              }
+            } catch (e) {
+              detailEl.textContent = '(加载失败: ' + ((e && e.message) || e) + ')';
+            }
+          }
+        }
+      });
+    });
+  } catch (e) {
+    listEl.innerHTML = '<li class="qy-mem-empty">渲染失败: ' + qyEscMem(e.message) + '</li>';
+  }
+}
+
+async function qyRenderMemoryCharacters() {
+  var listEl = document.getElementById('qy-mem-char-list');
+  if (!listEl) return;
+  try {
+    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+    var book = (typeof window.qyGetCharBook === 'function') ? await window.qyGetCharBook() : null;
+    if (!TH || !book || typeof TH.getLorebookEntries !== 'function') {
+      listEl.innerHTML = '<li class="qy-mem-empty">TavernHelper / 世界书不可用</li>';
+      return;
+    }
+    var entries = await TH.getLorebookEntries(book);
+    var chars = (entries || []).filter(function(e) {
+      return e && typeof e.comment === 'string' && e.comment.indexOf('[关键人物]') === 0;
+    });
+    if (chars.length === 0) {
+      listEl.innerHTML = '<li class="qy-mem-empty">尚未记录任何关键人物</li>';
+      return;
+    }
+    listEl.innerHTML = chars.map(function(e) {
+      var name = qyEscMem(e.comment.replace('[关键人物]', '').trim());
+      var preview = qyEscMem(String(e.content || '').slice(0, 240));
+      return '<li class="qy-mem-item">' +
+        '<div class="qy-mem-am">' + name + '</div>' +
+        '<div class="qy-mem-brief" style="white-space:pre-wrap;">' + preview + (e.content && e.content.length > 240 ? '\n...' : '') + '</div>' +
+      '</li>';
+    }).join('');
+  } catch (e) {
+    listEl.innerHTML = '<li class="qy-mem-empty">加载失败: ' + qyEscMem(e.message) + '</li>';
+  }
+}
+
+async function qyRenderMemoryArchives() {
+  var listEl = document.getElementById('qy-mem-arch-list');
+  if (!listEl) return;
+  try {
+    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+    var book = (typeof window.qyGetCharBook === 'function') ? await window.qyGetCharBook() : null;
+    if (!TH || !book || typeof TH.getLorebookEntries !== 'function') {
+      listEl.innerHTML = '<li class="qy-mem-empty">TavernHelper / 世界书不可用</li>';
+      return;
+    }
+    var entries = await TH.getLorebookEntries(book);
+    var archives = (entries || []).filter(function(e) {
+      return e && typeof e.comment === 'string' && /^\[大事记\]/.test(e.comment);
+    });
+    if (archives.length === 0) {
+      listEl.innerHTML = '<li class="qy-mem-empty">尚无大事记 (纪要满 180 条自动归档)</li>';
+      return;
+    }
+    listEl.innerHTML = archives.map(function(e) {
+      var title = qyEscMem(e.comment);
+      var content = qyEscMem(String(e.content || ''));
+      return '<li class="qy-mem-item">' +
+        '<div class="qy-mem-am">' + title + '</div>' +
+        '<div class="qy-mem-brief" style="white-space:pre-wrap;">' + content + '</div>' +
+      '</li>';
+    }).join('');
+  } catch (e) {
+    listEl.innerHTML = '<li class="qy-mem-empty">加载失败: ' + qyEscMem(e.message) + '</li>';
+  }
+}
+    } catch (e) { console.error("[qy-init-memory]", e); }
   };
 
   // ============= 主入口 =============
