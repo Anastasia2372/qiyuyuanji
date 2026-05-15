@@ -11041,7 +11041,8 @@ window.qyRenderMemoryCharacters = async function() {
       '</li>';
     }).join('');
   } catch (e) {
-    listEl.innerHTML = '<li class="qy-mem-empty">加载失败: ' + window.qyEscMem(e.message) + '</li>';
+    var stackHead = String((e && e.stack) || '').split('\n').slice(0, 4).join(' | ');
+    listEl.innerHTML = '<li class="qy-mem-empty" style="text-align:left;padding:1em 2em;">[加载失败] ' + window.qyEscMem(String((e && e.message) || e)) + '<br><br>[stack] ' + window.qyEscMem(stackHead) + '</li>';
   }
 };
 
@@ -11072,7 +11073,8 @@ window.qyRenderMemoryArchives = async function() {
       '</li>';
     }).join('');
   } catch (e) {
-    listEl.innerHTML = '<li class="qy-mem-empty">加载失败: ' + window.qyEscMem(e.message) + '</li>';
+    var stackHead = String((e && e.stack) || '').split('\n').slice(0, 4).join(' | ');
+    listEl.innerHTML = '<li class="qy-mem-empty" style="text-align:left;padding:1em 2em;">[加载失败] ' + window.qyEscMem(String((e && e.message) || e)) + '<br><br>[stack] ' + window.qyEscMem(stackHead) + '</li>';
   }
 };
 
