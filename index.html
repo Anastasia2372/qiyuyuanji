@@ -4995,6 +4995,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     <li data-action="codex">图 鉴<span class="menu-en">CODEX</span></li>
     <li class="menu-divider"></li>
     <li data-action="memory">记 忆<span class="menu-en">MEMORY</span></li>
+    <li data-action="summaryapi">额 外 总 结 A P I 设 置<span class="menu-en">SUMMARY API</span></li>
     <li data-action="errorlog">错 误 日 志<span class="menu-en">ERROR LOG</span></li>
   </ul>
 </nav>
@@ -7051,6 +7052,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     <div class="qy-mem-tabs">
       <div class="qy-mem-tab active" data-mem-tab="narrations">纪 要</div>
       <div class="qy-mem-tab" data-mem-tab="characters">关 键 人 物</div>
+      <div class="qy-mem-tab" data-mem-tab="companions">同 伴</div>
       <div class="qy-mem-tab" data-mem-tab="archives">大 事 记</div>
     </div>
 
@@ -7059,6 +7061,9 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     </div>
     <div class="qy-mem-pane" data-mem-pane="characters">
       <ul class="qy-mem-list" id="qy-mem-char-list"></ul>
+    </div>
+    <div class="qy-mem-pane" data-mem-pane="companions">
+      <ul class="qy-mem-list" id="qy-mem-comp-list"></ul>
     </div>
     <div class="qy-mem-pane" data-mem-pane="archives">
       <ul class="qy-mem-list" id="qy-mem-arch-list"></ul>
@@ -7618,7 +7623,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       var time = String(narration['时间'] || '').slice(0, 60);
       var place = String(narration['地点'] || '').slice(0, 60);
       var brief = String(narration['概要'] || '').slice(0, 200);
-      var detail = String(narration['详情'] || '').slice(0, 2000);
+      var detail = String(narration['详情'] || '').slice(0, 8000);
 
       var entryContent =
         '## 纪要节点 ' + am + '\n' +
@@ -7905,25 +7910,35 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
   };
 
-  // qyCheckMandatoryPush: 兜底每 5 轮, AI 没主动 push 纪要 → generateRaw 强制总结当轮
+  // qyCheckMandatoryPush: 每轮兜底 — AI 这轮没主动 push 纪要才强制 generateRaw 详细总结 (走副 API, 调用点异步不阻塞主对话)
   window.qyCheckMandatoryPush = async function(userText, aiText) {
-    qyState.memoryTurnCount = (qyState.memoryTurnCount || 0) + 1;
-    if (qyState.memoryTurnCount < 5) return;
     if (typeof generateRaw !== 'function') return;
     if (typeof window.Mvu === 'undefined') return;
+    // 这轮 AI 自己已经主动 push 过 <纪要新增> 就不重复总结 (每轮恰好一条)
+    try {
+      var aiTags = window.qyExtractPushTags(aiText);
+      if (aiTags && aiTags.narrations && aiTags.narrations.length > 0) return;
+    } catch (_) {}
     try {
       var prompt =
-        '你是纪要总结助手. 根据下面这轮玩家输入 + AI 叙事, 生成一条 <纪要新增> JSON.\n\n' +
-        '【玩家输入】\n' + String(userText || '').slice(0, 800) + '\n\n' +
-        '【AI 叙事】\n' + String(aiText || '').slice(0, 2000) + '\n\n' +
-        '严格按下面格式输出, 不加任何解释/前后缀:\n' +
-        '<纪要新增>{"时间":"xxx","地点":"xxx","概要":"一句话概要","详情":"详细经过"}</纪要新增>';
+        '你是剧情实录记录员。把下面这一轮发生的事完整详细地记录下来, 不要压缩成简略概要, 简略会丢失大量细节。\n\n' +
+        '要求:\n' +
+        '- 详情: 完整复述本轮经过 — 人物的言行、对话原话、动作、神态、心理、情节转折、关键物件与细节, 全部保留, 像写实录一样详尽, 不要只写结论或概括\n' +
+        '- 概要: 仅一句话点题 (只用于列表预览, 不要写长)\n' +
+        '- 时间 / 地点: 本轮场景\n\n' +
+        '【玩家输入】\n' + String(userText || '').slice(0, 2000) + '\n\n' +
+        '【AI 叙事】\n' + String(aiText || '').slice(0, 8000) + '\n\n' +
+        '严格按下面格式输出一条, 不加任何解释/前后缀:\n' +
+        '<纪要新增>{"时间":"xxx","地点":"xxx","概要":"一句话点题","详情":"尽量详尽完整的本轮经过, 保留细节"}</纪要新增>';
+      var sapi = (typeof window.qyGetSummaryApiConfig === 'function') ? window.qyGetSummaryApiConfig() : null;
       var raw = await window.qyRetry(function() {
-        return generateRaw({
+        var cfg = {
           user_input: prompt,
           should_silence: true,
           ordered_prompts: [{ role: 'user', content: prompt }]
-        });
+        };
+        if (sapi) cfg.custom_api = sapi;
+        return generateRaw(cfg);
       }, 5, 'mandatoryPush');
       if (typeof raw !== 'string') return;
       var tags = window.qyExtractPushTags(raw);
@@ -8021,12 +8036,15 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       }).join('\n');
 
       if (typeof generateRaw !== 'function') return;
+      var arcSapi = (typeof window.qyGetSummaryApiConfig === 'function') ? window.qyGetSummaryApiConfig() : null;
       var compressed = await window.qyRetry(function() {
-        return generateRaw({
+        var acfg = {
           user_input: '压缩下面 50 条纪要为一段粗粒度大事记 (300 字内), 保留关键事件和角色名:\n\n' + summaryInput,
           should_silence: true,
           ordered_prompts: [{ role: 'user', content: '压缩下面 50 条纪要为一段粗粒度大事记 (300 字内), 保留关键事件和角色名:\n\n' + summaryInput }]
-        });
+        };
+        if (arcSapi) acfg.custom_api = arcSapi;
+        return generateRaw(acfg);
       }, 5, 'archiveCompress');
       if (typeof compressed !== 'string' || !compressed.trim()) return;
 
@@ -8296,7 +8314,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       // 6. 完美记忆系统: push 标签抽取 → worldbook 写入 + NPC 监控 + 兜底每 5 轮强制总结
       await window.qyApplyPushTags(finalText);
       try { await window.qyMonitorNpc(text, finalText); } catch (_) {}
-      try { await window.qyCheckMandatoryPush(text, finalText); } catch (_) {}
+      // 总结异步后台跑, 不阻塞主对话出文 (副 API / 当前源都不等它)
+      try { window.qyCheckMandatoryPush(text, finalText).catch(function(){}); } catch (_) {}
     } catch (e) {
       console.warn('[qy] generate 失败:', e);
       qyState.chatHistory[aiIdx].content = '[生成失败] ' + ((e && e.message) || e);
@@ -8841,6 +8860,52 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       '</div>';
     modal.style.display = 'flex';
   };
+
+  // ============= 额外总结 API 设置 (玩家自填独立 API 跑总结, 存 localStorage, 不进卡/存档) =============
+  window.qyGetSummaryApiConfig = function() {
+    try {
+      var raw = localStorage.getItem('qy_summary_api');
+      if (!raw) return null;
+      var c = JSON.parse(raw) || {};
+      var out = {};
+      if (c.apiurl) out.apiurl = String(c.apiurl);
+      if (c.key) out.key = String(c.key);
+      if (c.model) out.model = String(c.model);
+      if (c.source) out.source = String(c.source);
+      return Object.keys(out).length ? out : null;
+    } catch (e) { return null; }
+  };
+  window.qySaveSummaryApiConfig = function() {
+    try {
+      var g = function(id) { var el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; };
+      var cfg = { apiurl: g('qy-sapi-url'), key: g('qy-sapi-key'), model: g('qy-sapi-model'), source: g('qy-sapi-source') };
+      localStorage.setItem('qy_summary_api', JSON.stringify(cfg));
+      var st = document.getElementById('qy-sapi-status');
+      if (st) st.textContent = (cfg.apiurl || cfg.model) ? '已保存, 已启用副 API' : '已保存 (空, 用当前酒馆 API)';
+    } catch (e) {
+      var st2 = document.getElementById('qy-sapi-status');
+      if (st2) st2.textContent = '保存失败: ' + ((e && e.message) || e);
+    }
+  };
+  window.qyShowSummaryApiUI = function() {
+    var cur = {};
+    try { cur = JSON.parse(localStorage.getItem('qy_summary_api') || '{}') || {}; } catch (e) {}
+    function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    var inS = 'width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(168,216,255,0.3);color:#e8e0c8;padding:0.5em 0.7em;border-radius:4px;font-family:inherit;margin-top:0.25em;';
+    var lbS = 'display:block;margin-top:0.9em;color:#a8d8ff;font-size:0.9em;letter-spacing:0.1em;';
+    var html =
+      '<div style="color:#9ab;font-size:0.85em;line-height:1.7;margin-bottom:0.4em;">每轮剧情会自动生成详细纪要。可填一个独立 API 专门跑总结。<br>全部留空 = 用当前酒馆 API。密钥只存本机浏览器, 不会写入角色卡或存档。</div>' +
+      '<label style="' + lbS + '">API 地址 (留空用当前酒馆)<input id="qy-sapi-url" style="' + inS + '" value="' + esc(cur.apiurl) + '" placeholder="https://..."></label>' +
+      '<label style="' + lbS + '">密钥<input id="qy-sapi-key" type="password" style="' + inS + '" value="' + esc(cur.key) + '" placeholder="sk-..."></label>' +
+      '<label style="' + lbS + '">模型名<input id="qy-sapi-model" style="' + inS + '" value="' + esc(cur.model) + '" placeholder="轻量模型名"></label>' +
+      '<label style="' + lbS + '">API 源 (默认 openai)<input id="qy-sapi-source" style="' + inS + '" value="' + esc(cur.source) + '" placeholder="openai"></label>' +
+      '<div style="margin-top:1.2em;display:flex;justify-content:space-between;align-items:center;">' +
+        '<span id="qy-sapi-status" style="color:#7a9;font-size:0.85em;"></span>' +
+        '<button onclick="window.qySaveSummaryApiConfig()" style="background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.5);color:#d4af37;padding:0.5em 1.6em;border-radius:4px;cursor:pointer;letter-spacing:0.15em;font-family:inherit;">保 存</button>' +
+      '</div>';
+    qyOpenModal('额 外 总 结 A P I 设 置', html);
+  };
+
   // ============= 通用 modal 弹层 helpers =============
   function qyOpenModal(title, contentHtml) {
     var modalId = 'qy-popup-modal';
@@ -9297,7 +9362,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       // 完美记忆系统: push 标签抽取 → worldbook + NPC 监控 + 兜底每 5 轮
       await window.qyApplyPushTags(finalText);
       try { await window.qyMonitorNpc(playUserText, finalText); } catch (_) {}
-      try { await window.qyCheckMandatoryPush(playUserText, finalText); } catch (_) {}
+      // 总结异步后台跑, 不阻塞主对话出文
+      try { window.qyCheckMandatoryPush(playUserText, finalText).catch(function(){}); } catch (_) {}
     } catch (e) {
       console.warn('[qy] 玩法操作 generate 失败:', e);
       qyState.chatHistory[aiIdx].content = '[玩法操作生成失败] ' + ((e && e.message) || e);
@@ -9730,6 +9796,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     craft:      'qyShowCraftUI',
     codex:      'qyShowCodexUI',
     memory:     'qyShowMemoryUI',
+    summaryapi: 'qyShowSummaryApiUI',
     errorlog:   'qyShowErrorLogUI',
   };
   menu.querySelectorAll('li[data-action]').forEach(function(li) {
@@ -11078,9 +11145,49 @@ window.qyRenderMemoryArchives = async function() {
   }
 };
 
+window.qyRenderMemoryCompanions = async function() {
+  var listEl = document.getElementById('qy-mem-comp-list');
+  if (!listEl) return;
+  try {
+    var diag = await window.qyDiagWorldbookAccess();
+    if (!diag.ok) {
+      listEl.innerHTML = '<li class="qy-mem-empty">' + window.qyEscMem(diag.msg) + '</li>';
+      return;
+    }
+    var TH = diag.TH, book = diag.book;
+    var entries = await TH.getWorldbook(book);
+    var comps = (entries || []).filter(function(e) {
+      return e && typeof e.name === 'string' && e.name.indexOf('[同伴]') === 0;
+    });
+    if (comps.length === 0) {
+      listEl.innerHTML = '<li class="qy-mem-empty">尚未记录任何同伴</li>';
+      return;
+    }
+    listEl.innerHTML = comps.map(function(e) {
+      var nm = window.qyEscMem(e.name.replace('[同伴]', '').trim());
+      var full = String(e.content || '');
+      var preview = window.qyEscMem(full.slice(0, 120));
+      return '<li class="qy-mem-item">' +
+        '<div class="qy-mem-am">' + nm + '</div>' +
+        '<div class="qy-mem-brief">' + preview + (full.length > 120 ? ' ...' : '') + '</div>' +
+        '<div class="qy-mem-detail" style="white-space:pre-wrap;">' + window.qyEscMem(full) + '</div>' +
+      '</li>';
+    }).join('');
+    listEl.querySelectorAll('.qy-mem-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        item.classList.toggle('expanded');
+      });
+    });
+  } catch (e) {
+    var stackHead = String((e && e.stack) || '').split('\n').slice(0, 4).join(' | ');
+    listEl.innerHTML = '<li class="qy-mem-empty" style="text-align:left;padding:1em 2em;">[加载失败] ' + window.qyEscMem(String((e && e.message) || e)) + '<br><br>[stack] ' + window.qyEscMem(stackHead) + '</li>';
+  }
+};
+
 window.qyRenderMemoryAll = function() {
   window.qyRenderMemoryNarrations();
   window.qyRenderMemoryCharacters();
+  window.qyRenderMemoryCompanions();
   window.qyRenderMemoryArchives();
 };
 
