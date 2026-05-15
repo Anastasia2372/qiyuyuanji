@@ -9055,15 +9055,16 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       var compAppearance = (compInputs[2] && compInputs[2].value || '').trim();
       var compRelation = activePreset(compRows[1]) || '契约伙伴';
       var compOrigin = (compInputs[3] && compInputs[3].value || '').trim();
-      // 关系 → 羁绊度+阶段 映射 (按 D1 协议同步约束, 创角写入就符合, 不让 AI 后续推 30/相识 跟"恋人"脱节)
+      // 关系 → 羁绊度+阶段+忠诚 映射 (按 D1 协议同步约束, 创角写入就符合, 不让 AI 后续推 30/相识 跟"恋人"脱节)
+      // 忠诚 5 档跟关系 5 档 1:1 (生疏/浅交/信任/深交/至诚, 朔 2026-05-14 敲定全独立直白词)
       function relToBond(r) {
         var s = String(r || '').trim();
-        if (/陌生|初见/.test(s)) return { '羁绊度': 0,   '羁绊阶段': '陌生' };
-        if (/相识|熟人/.test(s)) return { '羁绊度': 30,  '羁绊阶段': '相识' };
-        if (/挚友|恋人/.test(s)) return { '羁绊度': 75,  '羁绊阶段': '挚友' };
-        if (/生死之交|灵契/.test(s)) return { '羁绊度': 100, '羁绊阶段': '生死之交' };
-        if (/朋友|同伴|知己/.test(s)) return { '羁绊度': 50, '羁绊阶段': '知己' };
-        return { '羁绊度': 50, '羁绊阶段': '知己' };  // 契约伙伴(默认)+未识别 → 中间值
+        if (/陌生|初见/.test(s)) return { '羁绊度': 0,   '羁绊阶段': '陌生',     '忠诚': '生疏' };
+        if (/相识|熟人/.test(s)) return { '羁绊度': 30,  '羁绊阶段': '相识',     '忠诚': '浅交' };
+        if (/挚友|恋人/.test(s)) return { '羁绊度': 75,  '羁绊阶段': '挚友',     '忠诚': '深交' };
+        if (/生死之交|灵契/.test(s)) return { '羁绊度': 100, '羁绊阶段': '生死之交', '忠诚': '至诚' };
+        if (/朋友|同伴|知己/.test(s)) return { '羁绊度': 50, '羁绊阶段': '知己',   '忠诚': '信任' };
+        return { '羁绊度': 50, '羁绊阶段': '知己', '忠诚': '信任' };  // 契约伙伴(默认)+未识别 → 中间值
       }
       var bond = relToBond(compRelation);
       companionData = {
@@ -9075,7 +9076,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         '羁绊度': bond['羁绊度'],
         '羁绊阶段': bond['羁绊阶段'],
         '心情': '平静',
-        '忠诚': '中立',
+        '忠诚': bond['忠诚'],
         '契约状态': '正常',
         '心里话': '',
       };
