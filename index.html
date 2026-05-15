@@ -7229,6 +7229,9 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       return ph('<iframe class="qy-htmlcontent-frame" data-qy-hc-id="' + hcId + '" sandbox="allow-scripts allow-popups allow-forms allow-modals" srcdoc="' + srcdoc + '"></iframe>');
     });
 
+    // 4.6 strip <span style="display:none;">...</span> (htmlcontent 协议配套的「渲染意图」隐藏注释, AI 必出, 不 strip 会被 escape 字面量外露)
+    marked = marked.replace(/<span\s+style\s*=\s*["']\s*display\s*:\s*none\s*;?\s*["'][^>]*>[\s\S]*?<\/span>/gi, '');
+
     // 5. <details><summary>xxx</summary>...</details> → 通用蓝色折叠 (潮汐小总结/吐槽剧场/平行世界时间轴, summary 文字保留)
     marked = marked.replace(/<details(?:\s[^>]*)?>\s*<summary(?:\s[^>]*)?>([\s\S]*?)<\/summary>([\s\S]*?)<\/details>/gi, function(_, summary, content) {
       var sumText = summary.replace(/<[^>]+>/g, '').trim();
@@ -9052,14 +9055,25 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       var compAppearance = (compInputs[2] && compInputs[2].value || '').trim();
       var compRelation = activePreset(compRows[1]) || '契约伙伴';
       var compOrigin = (compInputs[3] && compInputs[3].value || '').trim();
+      // 关系 → 羁绊度+阶段 映射 (按 D1 协议同步约束, 创角写入就符合, 不让 AI 后续推 30/相识 跟"恋人"脱节)
+      function relToBond(r) {
+        var s = String(r || '').trim();
+        if (/陌生|初见/.test(s)) return { '羁绊度': 0,   '羁绊阶段': '陌生' };
+        if (/相识|熟人/.test(s)) return { '羁绊度': 30,  '羁绊阶段': '相识' };
+        if (/挚友|恋人/.test(s)) return { '羁绊度': 75,  '羁绊阶段': '挚友' };
+        if (/生死之交|灵契/.test(s)) return { '羁绊度': 100, '羁绊阶段': '生死之交' };
+        if (/朋友|同伴|知己/.test(s)) return { '羁绊度': 50, '羁绊阶段': '知己' };
+        return { '羁绊度': 50, '羁绊阶段': '知己' };  // 契约伙伴(默认)+未识别 → 中间值
+      }
+      var bond = relToBond(compRelation);
       companionData = {
         '名字': compName || '空位',
         '种族': compRace,
         '外貌': compAppearance,
         '关系': compRelation,
         '渊源': compOrigin,
-        '羁绊度': 30,
-        '羁绊阶段': '相识',
+        '羁绊度': bond['羁绊度'],
+        '羁绊阶段': bond['羁绊阶段'],
         '心情': '平静',
         '忠诚': '中立',
         '契约状态': '正常',
