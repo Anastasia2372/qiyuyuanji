@@ -1943,6 +1943,16 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   border-radius: 3px;
 }
 
+/* ============= htmlcontent iframe (AI 视觉交互渲染, sandbox 隔离 CSS/JS 不污染 SPA) ============= */
+.qy-htmlcontent-frame {
+  display: block;
+  width: 100%;
+  border: 0;
+  margin: 0.8em 0;
+  min-height: 60px;
+  background: transparent;
+}
+
 /* ============= branches 选项按钮 (淡蓝边 + 透明底, hover 金边) ============= */
 .qy-branches {
   display: flex;
@@ -7210,6 +7220,15 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       return ph('<div class="qy-branches">' + btns + '</div>');
     });
 
+    // 4.5 <htmlcontent> AI 视觉交互渲染 → iframe srcdoc + sandbox(allow-scripts 不带 allow-same-origin, JS 跑但 escape 不到 parent SPA)
+    //     必须放在 details 通用步骤前 — htmlcontent 内可能含 <details>/<summary> 等标签, 先抽走整段防被 details 通用处理误吃
+    marked = marked.replace(/<htmlcontent>([\s\S]*?)<\/htmlcontent>/gi, function(_, inner) {
+      var hcId = 'qyhc-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
+      var measure = '<script>(function(){var id=' + JSON.stringify(hcId) + ';function send(){try{var h=Math.max(document.documentElement.scrollHeight,document.body?document.body.scrollHeight:0);parent.postMessage({qyHC:1,id:id,h:h},"*");}catch(e){}}window.addEventListener("load",send);if(window.ResizeObserver){try{new ResizeObserver(send).observe(document.documentElement);}catch(e){}}setTimeout(send,100);setTimeout(send,500);setTimeout(send,1500);})();<\/script>';
+      var srcdoc = (measure + inner).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+      return ph('<iframe class="qy-htmlcontent-frame" data-qy-hc-id="' + hcId + '" sandbox="allow-scripts allow-popups allow-forms allow-modals" srcdoc="' + srcdoc + '"></iframe>');
+    });
+
     // 5. <details><summary>xxx</summary>...</details> → 通用蓝色折叠 (潮汐小总结/吐槽剧场/平行世界时间轴, summary 文字保留)
     marked = marked.replace(/<details(?:\s[^>]*)?>\s*<summary(?:\s[^>]*)?>([\s\S]*?)<\/summary>([\s\S]*?)<\/details>/gi, function(_, summary, content) {
       var sumText = summary.replace(/<[^>]+>/g, '').trim();
@@ -7252,6 +7271,17 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       }
       ta.focus();
       try { ta.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){}
+    });
+  }
+
+  // htmlcontent iframe 高度自适应 → 子文档 postMessage 上报 → 设 iframe.style.height (bootstrap 期绑一次)
+  if (!window.qyHCMsgBound) {
+    window.qyHCMsgBound = true;
+    window.addEventListener('message', function(e) {
+      var d = e.data;
+      if (!d || d.qyHC !== 1 || !d.id || typeof d.h !== 'number') return;
+      var iframe = document.querySelector('iframe[data-qy-hc-id="' + d.id + '"]');
+      if (iframe) iframe.style.height = (d.h + 8) + 'px';
     });
   }
 
