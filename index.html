@@ -7502,18 +7502,15 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
   };
 
-  // qyGetCharBook: 拿当前卡绑的 primary worldbook 名
+  // qyGetCharBook: 拿当前卡绑的 primary worldbook 名 (新 API getCharWorldbookNames, 旧 getCharLorebooks 已 deprecated)
   window.qyGetCharBook = async function() {
     try {
       var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
-      if (!TH || typeof TH.getCharLorebooks !== 'function') return null;
-      var books = await TH.getCharLorebooks({ type: 'primary' });
-      if (Array.isArray(books) && books.length) return books[0];
-      // 兼容旧 API 返回单个 string
-      if (typeof books === 'string') return books;
-      // type all 兜底
-      var allBooks = await TH.getCharLorebooks({ type: 'all' });
-      if (Array.isArray(allBooks) && allBooks.length) return allBooks[0];
+      if (!TH || typeof TH.getCharWorldbookNames !== 'function') return null;
+      var books = await TH.getCharWorldbookNames('current');
+      if (books && typeof books === 'object' && typeof books.primary === 'string' && books.primary) {
+        return books.primary;
+      }
       return null;
     } catch (e) {
       console.warn('[qy] qyGetCharBook 失败:', e);
@@ -7604,12 +7601,12 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     return result;
   };
 
-  // qyPushNarration: 一条 <纪要新增> → createLorebookEntries + push mvu.纪要索引 + 触发归档检查
+  // qyPushNarration: 一条 <纪要新增> → createWorldbookEntries + push mvu.纪要索引 + 触发归档检查
   window.qyPushNarration = async function(narration) {
     if (!narration || typeof narration !== 'object') return false;
     if (typeof window.Mvu === 'undefined') return false;
     var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
-    if (!TH || typeof TH.createLorebookEntries !== 'function') return false;
+    if (!TH || typeof TH.createWorldbookEntries !== 'function') return false;
 
     try {
       var book = await window.qyGetCharBook();
@@ -7631,16 +7628,15 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         '## 详情\n' + detail;
 
       await window.qyRetry(function() {
-        return TH.createLorebookEntries(book, [{
-          comment: am + ' ' + brief.slice(0, 40),
-          keys: [am],
-          content: entryContent,
+        return TH.createWorldbookEntries(book, [{
+          name: am + ' ' + brief.slice(0, 40),
           enabled: true,
-          position: 'at_depth_as_system',
-          depth: 4,
-          exclude_recursion: true
+          strategy: { type: 'selective', keys: [am] },
+          position: { type: 'at_depth', role: 'system', depth: 4 },
+          content: entryContent,
+          recursion: { prevent_outgoing: true }
         }]);
-      }, 5, 'createLorebookEntries(' + am + ')');
+      }, 5, 'createWorldbookEntries(' + am + ')');
 
       // push 索引到 mvu.纪要索引
       var data = Mvu.getMvuData({ type: 'chat' }) || {};
@@ -7664,7 +7660,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
   };
 
-  // qyPushCharacter: 关键人物 worldbook 条目维护 (新建/累积更新)
+  // qyPushCharacter: 关键人物 worldbook 条目维护 (新建/累积更新, 新 worldbook API)
   window.qyPushCharacter = async function(info) {
     if (!info || !info['角色名']) return false;
     var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
@@ -7674,38 +7670,44 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       if (!book) return false;
       var name = String(info['角色名']).slice(0, 30);
       var discovery = String(info['新发现'] || info['新设定'] || '').slice(0, 500);
-      var commentTag = '[关键人物] ' + name;
+      var entryName = '[关键人物] ' + name;
 
       // 查现有同名 entry
       var existing = null;
-      if (typeof TH.getLorebookEntries === 'function') {
+      if (typeof TH.getWorldbook === 'function') {
         var allEntries = await window.qyRetry(function() {
-          return TH.getLorebookEntries(book);
-        }, 5, 'getLorebookEntries(char)');
+          return TH.getWorldbook(book);
+        }, 5, 'getWorldbook(char)');
         if (Array.isArray(allEntries)) {
-          existing = allEntries.find(function(e) { return e && e.comment === commentTag; });
+          existing = allEntries.find(function(e) { return e && e.name === entryName; });
         }
       }
 
-      if (existing && typeof TH.setLorebookEntries === 'function') {
-        // 累积: 新发现追加在末尾
+      if (existing && typeof TH.updateWorldbookWith === 'function') {
+        // 累积: 新发现追加在末尾 (updateWorldbookWith 必须 return 完整 worldbook, 否则会清空其他条目)
         var oldContent = String(existing.content || '');
         var newContent = oldContent + '\n- ' + discovery;
         await window.qyRetry(function() {
-          return TH.setLorebookEntries(book, [{ uid: existing.uid, content: newContent }]);
-        }, 5, 'setLorebookEntries(char)');
-      } else if (typeof TH.createLorebookEntries === 'function') {
+          return TH.updateWorldbookWith(book, function(entries) {
+            return entries.map(function(e) {
+              if (e && e.uid === existing.uid) {
+                return Object.assign({}, e, { content: newContent });
+              }
+              return e;
+            });
+          });
+        }, 5, 'updateWorldbookWith(char)');
+      } else if (typeof TH.createWorldbookEntries === 'function') {
         await window.qyRetry(function() {
-          return TH.createLorebookEntries(book, [{
-            comment: commentTag,
-            keys: [name],
-            content: '# 关键人物: ' + name + '\n\n## 累积设定\n- ' + discovery,
+          return TH.createWorldbookEntries(book, [{
+            name: entryName,
             enabled: true,
-            position: 'at_depth_as_system',
-            depth: 4,
-            exclude_recursion: true
+            strategy: { type: 'selective', keys: [name] },
+            position: { type: 'at_depth', role: 'system', depth: 4 },
+            content: '# 关键人物: ' + name + '\n\n## 累积设定\n- ' + discovery,
+            recursion: { prevent_outgoing: true }
           }]);
-        }, 5, 'createLorebookEntries(char)');
+        }, 5, 'createWorldbookEntries(char)');
       }
       return true;
     } catch (e) {
@@ -7714,7 +7716,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
   };
 
-  // qyPushCompanion: 同伴累积 (跟 qyPushCharacter 类似, comment 用 [同伴] 前缀)
+  // qyPushCompanion: 同伴累积 (跟 qyPushCharacter 类似, name 用 [同伴] 前缀, 新 worldbook API)
   window.qyPushCompanion = async function(info) {
     if (!info || !info['伙伴名']) return false;
     var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
@@ -7724,34 +7726,40 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       if (!book) return false;
       var name = String(info['伙伴名']).slice(0, 30);
       var setting = String(info['新设定'] || info['新发现'] || '').slice(0, 500);
-      var commentTag = '[同伴] ' + name;
+      var entryName = '[同伴] ' + name;
       var existing = null;
-      if (typeof TH.getLorebookEntries === 'function') {
+      if (typeof TH.getWorldbook === 'function') {
         var allEntries = await window.qyRetry(function() {
-          return TH.getLorebookEntries(book);
-        }, 5, 'getLorebookEntries(comp)');
+          return TH.getWorldbook(book);
+        }, 5, 'getWorldbook(comp)');
         if (Array.isArray(allEntries)) {
-          existing = allEntries.find(function(e) { return e && e.comment === commentTag; });
+          existing = allEntries.find(function(e) { return e && e.name === entryName; });
         }
       }
-      if (existing && typeof TH.setLorebookEntries === 'function') {
+      if (existing && typeof TH.updateWorldbookWith === 'function') {
         var oldContent = String(existing.content || '');
         var newContent = oldContent + '\n- ' + setting;
         await window.qyRetry(function() {
-          return TH.setLorebookEntries(book, [{ uid: existing.uid, content: newContent }]);
-        }, 5, 'setLorebookEntries(comp)');
-      } else if (typeof TH.createLorebookEntries === 'function') {
+          return TH.updateWorldbookWith(book, function(entries) {
+            return entries.map(function(e) {
+              if (e && e.uid === existing.uid) {
+                return Object.assign({}, e, { content: newContent });
+              }
+              return e;
+            });
+          });
+        }, 5, 'updateWorldbookWith(comp)');
+      } else if (typeof TH.createWorldbookEntries === 'function') {
         await window.qyRetry(function() {
-          return TH.createLorebookEntries(book, [{
-            comment: commentTag,
-            keys: [name],
-            content: '# 同伴: ' + name + '\n\n## 累积设定\n- ' + setting,
+          return TH.createWorldbookEntries(book, [{
+            name: entryName,
             enabled: true,
-            position: 'at_depth_as_system',
-            depth: 4,
-            exclude_recursion: true
+            strategy: { type: 'selective', keys: [name] },
+            position: { type: 'at_depth', role: 'system', depth: 4 },
+            content: '# 同伴: ' + name + '\n\n## 累积设定\n- ' + setting,
+            recursion: { prevent_outgoing: true }
           }]);
-        }, 5, 'createLorebookEntries(comp)');
+        }, 5, 'createWorldbookEntries(comp)');
       }
       return true;
     } catch (e) {
@@ -7978,36 +7986,38 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
   };
 
-  // qyMaybeArchive: 总纪要条目 ≥180 时, 取最早 50 条压成"大事记 N" 粗粒度条目 + 原条目 enabled:false
+  // qyMaybeArchive: 总纪要条目 ≥180 时, 取最早 50 条压成"大事记 N" 粗粒度条目 + 原条目 enabled:false (新 worldbook API)
   window.qyMaybeArchive = async function(book) {
     var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
-    if (!TH || typeof TH.getLorebookEntries !== 'function') return;
+    if (!TH || typeof TH.getWorldbook !== 'function') return;
     if (!book) return;
     try {
       var allEntries = await window.qyRetry(function() {
-        return TH.getLorebookEntries(book);
-      }, 5, 'getLorebookEntries(archive)');
+        return TH.getWorldbook(book);
+      }, 5, 'getWorldbook(archive)');
       if (!Array.isArray(allEntries)) return;
-      // 只统计 enabled 的 AM 条目
+      // 只统计 enabled 的 AM 条目 (按 name 前缀过滤)
       var amEntries = allEntries.filter(function(e) {
-        return e && e.enabled !== false && /^AM\d{4}/.test(String(e.comment || ''));
+        return e && e.enabled !== false && /^AM\d{4}/.test(String(e.name || ''));
       });
       if (amEntries.length < 180) return;
 
       // 按 AM 编号排序取最早 50 条
       amEntries.sort(function(a, b) {
-        var ma = String(a.comment).match(/AM(\d{4})/);
-        var mb = String(b.comment).match(/AM(\d{4})/);
+        var ma = String(a.name).match(/AM(\d{4})/);
+        var mb = String(b.name).match(/AM(\d{4})/);
         var na = ma ? parseInt(ma[1], 10) : 0;
         var nb = mb ? parseInt(mb[1], 10) : 0;
         return na - nb;
       });
       var oldest50 = amEntries.slice(0, 50);
+      var oldest50Uids = {};
+      oldest50.forEach(function(e) { oldest50Uids[e.uid] = true; });
 
       // 拼概要让 generateRaw 压缩
       var summaryInput = oldest50.map(function(e) {
         var c = String(e.content || '').slice(0, 300);
-        return '- ' + e.comment + ': ' + c.replace(/\n+/g, ' ');
+        return '- ' + e.name + ': ' + c.replace(/\n+/g, ' ');
       }).join('\n');
 
       if (typeof generateRaw !== 'function') return;
@@ -8022,29 +8032,38 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
 
       // 数下已有几个"大事记 N"
       var existingArchives = allEntries.filter(function(e) {
-        return e && /^\[大事记\]\s*\d+/.test(String(e.comment || ''));
+        return e && /^\[大事记\]\s*\d+/.test(String(e.name || ''));
       });
       var archiveN = existingArchives.length + 1;
       var archiveTag = '[大事记] ' + archiveN;
+      var amFirst = String(oldest50[0].name).match(/AM(\d{4})/);
+      var amLast = String(oldest50[49].name).match(/AM(\d{4})/);
+      var rangeLabel = (amFirst ? amFirst[0] : '?') + ' ~ ' + (amLast ? amLast[0] : '?');
 
-      if (typeof TH.createLorebookEntries === 'function') {
+      if (typeof TH.createWorldbookEntries === 'function') {
         await window.qyRetry(function() {
-          return TH.createLorebookEntries(book, [{
-            comment: archiveTag,
-            keys: ['大事记', archiveTag],
-            content: '# ' + archiveTag + ' (压缩自 AM' + String(oldest50[0].comment).match(/AM(\d{4})/)[0] + ' ~ ' + String(oldest50[49].comment).match(/AM(\d{4})/)[0] + ')\n\n' + compressed,
+          return TH.createWorldbookEntries(book, [{
+            name: archiveTag,
             enabled: true,
-            position: 'before_char',
-            exclude_recursion: true
+            strategy: { type: 'constant', keys: ['大事记', archiveTag] },
+            position: { type: 'before_character_definition' },
+            content: '# ' + archiveTag + ' (压缩自 ' + rangeLabel + ')\n\n' + compressed,
+            recursion: { prevent_outgoing: true }
           }]);
         }, 5, 'createArchive');
       }
 
-      // 原 50 条 disable
-      if (typeof TH.setLorebookEntries === 'function') {
-        var updates = oldest50.map(function(e) { return { uid: e.uid, enabled: false }; });
+      // 原 50 条 disable (updateWorldbookWith 必须 return 完整 worldbook)
+      if (typeof TH.updateWorldbookWith === 'function') {
         await window.qyRetry(function() {
-          return TH.setLorebookEntries(book, updates);
+          return TH.updateWorldbookWith(book, function(entries) {
+            return entries.map(function(e) {
+              if (e && oldest50Uids[e.uid]) {
+                return Object.assign({}, e, { enabled: false });
+              }
+              return e;
+            });
+          });
         }, 5, 'disableArchived');
       }
       console.log('[qy] 归档完成: 50 条 AM → ' + archiveTag);
@@ -10889,15 +10908,15 @@ window.qyUnwrapMem = function(v) {
   return v;
 };
 
-// 诊断 helper: 检查 TH / book / method 三件套, fail 时返回具体哪一层挂了 + 现场调用 getCharLorebooks 的 raw 返回值
+// 诊断 helper: 检查 TH / book / getWorldbook method 三件套 (新 worldbook API)
 window.qyDiagWorldbookAccess = async function() {
   try {
     var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
     if (!TH) {
       return { ok: false, msg: '[诊断] TH 取不到 (TavernHelper / window.parent.TavernHelper 都 undefined)' };
     }
-    if (typeof TH.getLorebookEntries !== 'function') {
-      return { ok: false, msg: '[诊断] TH.getLorebookEntries 不是 function (typeof=' + (typeof TH.getLorebookEntries) + ')' };
+    if (typeof TH.getWorldbook !== 'function') {
+      return { ok: false, msg: '[诊断] TH.getWorldbook 不是 function (typeof=' + (typeof TH.getWorldbook) + ')' };
     }
     var book = null;
     var bookErr = null;
@@ -10909,16 +10928,16 @@ window.qyDiagWorldbookAccess = async function() {
     if (!book) {
       var rawDump = '?';
       try {
-        if (typeof TH.getCharLorebooks === 'function') {
-          var raw = await TH.getCharLorebooks({ type: 'primary' });
+        if (typeof TH.getCharWorldbookNames === 'function') {
+          var raw = await TH.getCharWorldbookNames('current');
           rawDump = JSON.stringify(raw);
         } else {
-          rawDump = 'getCharLorebooks 不是 function (typeof=' + (typeof TH.getCharLorebooks) + ')';
+          rawDump = 'getCharWorldbookNames 不是 function (typeof=' + (typeof TH.getCharWorldbookNames) + ')';
         }
       } catch (e2) {
         rawDump = 'throw: ' + ((e2 && e2.message) || e2);
       }
-      return { ok: false, msg: '[诊断] book 为空 (getCharLorebooks primary 返回: ' + rawDump + ')' + (bookErr ? ' / qyGetCharBook throw: ' + bookErr : '') };
+      return { ok: false, msg: '[诊断] book 为空 (getCharWorldbookNames(current) 返回: ' + rawDump + ')' + (bookErr ? ' / qyGetCharBook throw: ' + bookErr : '') };
     }
     return { ok: true, TH: TH, book: book };
   } catch (e) {
@@ -10970,11 +10989,13 @@ window.qyRenderMemoryNarrations = function() {
             try {
               var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
               var book = (typeof window.qyGetCharBook === 'function') ? await window.qyGetCharBook() : null;
-              if (TH && book && typeof TH.getLorebookEntries === 'function') {
-                var entries = await TH.getLorebookEntries(book);
+              if (TH && book && typeof TH.getWorldbook === 'function') {
+                var entries = await TH.getWorldbook(book);
                 var am = item.dataset.am;
+                // 新 API keys 在 strategy.keys, 可能含 RegExp 用 some 比 indexOf 稳
                 var entry = (entries || []).find(function(e) {
-                  return e && e.keys && e.keys.indexOf(am) >= 0;
+                  var keys = e && e.strategy && e.strategy.keys;
+                  return Array.isArray(keys) && keys.some(function(k) { return k === am; });
                 });
                 detailEl.textContent = entry ? String(entry.content || '(无内容)') : '(未找到 worldbook 条目)';
                 detailEl.dataset.loaded = '1';
@@ -11003,16 +11024,16 @@ window.qyRenderMemoryCharacters = async function() {
       return;
     }
     var TH = diag.TH, book = diag.book;
-    var entries = await TH.getLorebookEntries(book);
+    var entries = await TH.getWorldbook(book);
     var chars = (entries || []).filter(function(e) {
-      return e && typeof e.comment === 'string' && e.comment.indexOf('[关键人物]') === 0;
+      return e && typeof e.name === 'string' && e.name.indexOf('[关键人物]') === 0;
     });
     if (chars.length === 0) {
       listEl.innerHTML = '<li class="qy-mem-empty">尚未记录任何关键人物</li>';
       return;
     }
     listEl.innerHTML = chars.map(function(e) {
-      var name = window.qyEscMem(e.comment.replace('[关键人物]', '').trim());
+      var name = window.qyEscMem(e.name.replace('[关键人物]', '').trim());
       var preview = window.qyEscMem(String(e.content || '').slice(0, 240));
       return '<li class="qy-mem-item">' +
         '<div class="qy-mem-am">' + name + '</div>' +
@@ -11034,16 +11055,16 @@ window.qyRenderMemoryArchives = async function() {
       return;
     }
     var TH = diag.TH, book = diag.book;
-    var entries = await TH.getLorebookEntries(book);
+    var entries = await TH.getWorldbook(book);
     var archives = (entries || []).filter(function(e) {
-      return e && typeof e.comment === 'string' && /^\[大事记\]/.test(e.comment);
+      return e && typeof e.name === 'string' && /^\[大事记\]/.test(e.name);
     });
     if (archives.length === 0) {
       listEl.innerHTML = '<li class="qy-mem-empty">尚无大事记 (纪要满 180 条自动归档)</li>';
       return;
     }
     listEl.innerHTML = archives.map(function(e) {
-      var title = window.qyEscMem(e.comment);
+      var title = window.qyEscMem(e.name);
       var content = window.qyEscMem(String(e.content || ''));
       return '<li class="qy-mem-item">' +
         '<div class="qy-mem-am">' + title + '</div>' +
