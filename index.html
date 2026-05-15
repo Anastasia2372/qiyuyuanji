@@ -10889,6 +10889,43 @@ window.qyUnwrapMem = function(v) {
   return v;
 };
 
+// 诊断 helper: 检查 TH / book / method 三件套, fail 时返回具体哪一层挂了 + 现场调用 getCharLorebooks 的 raw 返回值
+window.qyDiagWorldbookAccess = async function() {
+  try {
+    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+    if (!TH) {
+      return { ok: false, msg: '[诊断] TH 取不到 (TavernHelper / window.parent.TavernHelper 都 undefined)' };
+    }
+    if (typeof TH.getLorebookEntries !== 'function') {
+      return { ok: false, msg: '[诊断] TH.getLorebookEntries 不是 function (typeof=' + (typeof TH.getLorebookEntries) + ')' };
+    }
+    var book = null;
+    var bookErr = null;
+    try {
+      book = (typeof window.qyGetCharBook === 'function') ? await window.qyGetCharBook() : null;
+    } catch (e) {
+      bookErr = (e && e.message) || String(e);
+    }
+    if (!book) {
+      var rawDump = '?';
+      try {
+        if (typeof TH.getCharLorebooks === 'function') {
+          var raw = await TH.getCharLorebooks({ type: 'primary' });
+          rawDump = JSON.stringify(raw);
+        } else {
+          rawDump = 'getCharLorebooks 不是 function (typeof=' + (typeof TH.getCharLorebooks) + ')';
+        }
+      } catch (e2) {
+        rawDump = 'throw: ' + ((e2 && e2.message) || e2);
+      }
+      return { ok: false, msg: '[诊断] book 为空 (getCharLorebooks primary 返回: ' + rawDump + ')' + (bookErr ? ' / qyGetCharBook throw: ' + bookErr : '') };
+    }
+    return { ok: true, TH: TH, book: book };
+  } catch (e) {
+    return { ok: false, msg: '[诊断] helper throw: ' + ((e && e.message) || e) };
+  }
+};
+
 window.qyRenderMemoryNarrations = function() {
   var listEl = document.getElementById('qy-mem-narr-list');
   if (!listEl) return;
@@ -10960,12 +10997,12 @@ window.qyRenderMemoryCharacters = async function() {
   var listEl = document.getElementById('qy-mem-char-list');
   if (!listEl) return;
   try {
-    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
-    var book = (typeof window.qyGetCharBook === 'function') ? await window.qyGetCharBook() : null;
-    if (!TH || !book || typeof TH.getLorebookEntries !== 'function') {
-      listEl.innerHTML = '<li class="qy-mem-empty">TavernHelper / 世界书不可用</li>';
+    var diag = await window.qyDiagWorldbookAccess();
+    if (!diag.ok) {
+      listEl.innerHTML = '<li class="qy-mem-empty">' + window.qyEscMem(diag.msg) + '</li>';
       return;
     }
+    var TH = diag.TH, book = diag.book;
     var entries = await TH.getLorebookEntries(book);
     var chars = (entries || []).filter(function(e) {
       return e && typeof e.comment === 'string' && e.comment.indexOf('[关键人物]') === 0;
@@ -10991,12 +11028,12 @@ window.qyRenderMemoryArchives = async function() {
   var listEl = document.getElementById('qy-mem-arch-list');
   if (!listEl) return;
   try {
-    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
-    var book = (typeof window.qyGetCharBook === 'function') ? await window.qyGetCharBook() : null;
-    if (!TH || !book || typeof TH.getLorebookEntries !== 'function') {
-      listEl.innerHTML = '<li class="qy-mem-empty">TavernHelper / 世界书不可用</li>';
+    var diag = await window.qyDiagWorldbookAccess();
+    if (!diag.ok) {
+      listEl.innerHTML = '<li class="qy-mem-empty">' + window.qyEscMem(diag.msg) + '</li>';
       return;
     }
+    var TH = diag.TH, book = diag.book;
     var entries = await TH.getLorebookEntries(book);
     var archives = (entries || []).filter(function(e) {
       return e && typeof e.comment === 'string' && /^\[大事记\]/.test(e.comment);
