@@ -5271,206 +5271,13 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   <div class="qy-fishing-pane active" data-pane="fish">
 
   <!-- 熟练度 -->
-  <div class="qy-card">
-    <div class="qy-card-title">熟 练 度 <span class="deco">PROFICIENCY</span></div>
-    <div class="qy-skill-row">
-      <div class="qy-skill">
-        <div class="qy-skill-head">
-          <span class="qy-skill-name">地 面 钓 鱼</span>
-          <span class="qy-skill-percent">35%</span>
-        </div>
-        <div class="qy-bar"><div class="qy-bar-fill" style="width:35%;"></div></div>
-      </div>
-      <div class="qy-skill">
-        <div class="qy-skill-head">
-          <span class="qy-skill-name">空 岛 钓 鱼</span>
-          <span class="qy-skill-percent">0%</span>
-        </div>
-        <div class="qy-bar"><div class="qy-bar-fill locked" style="width:0%;"></div></div>
-        <div class="qy-skill-locked-tip">未购置空岛 · 暂未解锁</div>
-      </div>
-    </div>
-  </div>
+  <div class="qy-card" id="qy-fishing-skill"></div>
 
   <!-- 鱼竿 -->
-  <div class="qy-card">
-    <div class="qy-card-title">鱼 竿 <span class="deco">RODS</span></div>
-
-    <div class="qy-rod-section">
-      <div class="qy-rod-section-title">地 面 钓 竿 · 五 阶 · 海 洋 系</div>
-      <div class="qy-rod-grid">
-        <div class="qy-rod owned">
-          <div class="qy-rod-quality">沫</div>
-          <div class="qy-rod-name">碎 浪</div>
-          <div class="qy-rod-effect">海岸礁石浪打磨而成<br>可钓浅海杂鱼</div>
-        </div>
-        <div class="qy-rod">
-          <div class="qy-rod-quality">澜</div>
-          <div class="qy-rod-name">潮 汐</div>
-          <div class="qy-rod-effect">顺应潮汐节律<br>提升中型鱼上钩率</div>
-        </div>
-        <div class="qy-rod">
-          <div class="qy-rod-quality">沧</div>
-          <div class="qy-rod-name">鲛 织</div>
-          <div class="qy-rod-effect">鲛人鳞线编织<br>能钓深水鱼种</div>
-        </div>
-        <div class="qy-rod">
-          <div class="qy-rod-quality">瀚</div>
-          <div class="qy-rod-name">渊 涛</div>
-          <div class="qy-rod-effect">取自深渊巨涛<br>可钓深渊罕见鱼</div>
-        </div>
-        <div class="qy-rod">
-          <div class="qy-rod-quality">溟</div>
-          <div class="qy-rod-name">龙 脊</div>
-          <div class="qy-rod-effect">灾前龙脊化骨<br>传说鱼种钓得</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="qy-rod-section">
-      <div class="qy-rod-section-title">空 岛 钓 竿 · 五 阶 · 星 空 系</div>
-      <div class="qy-rod-grid">
-        <div class="qy-rod">
-          <div class="qy-rod-quality">微</div>
-          <div class="qy-rod-name">星 砂</div>
-          <div class="qy-rod-effect">落在云上的星砂凝结<br>可钓低空小型空鱼</div>
-        </div>
-        <div class="qy-rod">
-          <div class="qy-rod-quality">缈</div>
-          <div class="qy-rod-name">月 轨</div>
-          <div class="qy-rod-effect">月轨流光淬炼<br>可钓月华系生物</div>
-        </div>
-        <div class="qy-rod">
-          <div class="qy-rod-quality">弦</div>
-          <div class="qy-rod-name">银 河</div>
-          <div class="qy-rod-effect">截一段银河水<br>能钓星河鱼群</div>
-        </div>
-        <div class="qy-rod">
-          <div class="qy-rod-quality">漩</div>
-          <div class="qy-rod-name">星 陨</div>
-          <div class="qy-rod-effect">星陨之核<br>可钓陨域稀有种</div>
-        </div>
-        <div class="qy-rod">
-          <div class="qy-rod-quality">苍</div>
-          <div class="qy-rod-name">天 痕</div>
-          <div class="qy-rod-effect">苍穹裂痕封存<br>传说级空岛灵物</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="qy-card" id="qy-fishing-rods"></div>
 
   <!-- 饵料 -->
-  <div class="qy-card">
-    <div class="qy-card-title">饵 料 <span class="deco">BAITS</span></div>
-
-    <div class="qy-bait-section">
-      <div class="qy-rod-section-title">地 面 饵 料 · 六 阶 · 海 洋 系</div>
-      <div class="qy-bait-grid">
-        <div class="qy-bait">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">浮</span>
-            <span class="qy-bait-name">银鳞蜉蝣</span>
-            <span class="qy-bait-qty">×12</span>
-          </div>
-          <div class="qy-bait-effect">海面浮游小虫，引诱杂鱼</div>
-        </div>
-        <div class="qy-bait">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">沉</span>
-            <span class="qy-bait-name">珍珠贝肉</span>
-            <span class="qy-bait-qty">×5</span>
-          </div>
-          <div class="qy-bait-effect">珍珠贝嫩肉，引诱贝类生物</div>
-        </div>
-        <div class="qy-bait">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">涌</span>
-            <span class="qy-bait-name">海岸虹蚓</span>
-            <span class="qy-bait-qty">×3</span>
-          </div>
-          <div class="qy-bait-effect">沙岸下七彩海蚓，引诱杂食鱼</div>
-        </div>
-        <div class="qy-bait">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">涡</span>
-            <span class="qy-bait-name">赤潮藻团</span>
-            <span class="qy-bait-qty">×1</span>
-          </div>
-          <div class="qy-bait-effect">赤潮凝藻，引诱深水鱼</div>
-        </div>
-        <div class="qy-bait empty">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">蛟</span>
-            <span class="qy-bait-name">深渊触须</span>
-            <span class="qy-bait-qty">×0</span>
-          </div>
-          <div class="qy-bait-effect">深渊巨物碎片，引诱罕见深渊鱼</div>
-        </div>
-        <div class="qy-bait empty">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">鳌</span>
-            <span class="qy-bait-name">鲛泪结晶</span>
-            <span class="qy-bait-qty">×0</span>
-          </div>
-          <div class="qy-bait-effect">鲛人哭泣凝晶，引诱鲛级生物</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="qy-bait-section">
-      <div class="qy-rod-section-title">空 岛 饵 料 · 六 阶 · 星 空 系</div>
-      <div class="qy-bait-grid">
-        <div class="qy-bait empty">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">烟</span>
-            <span class="qy-bait-name">流萤光屑</span>
-            <span class="qy-bait-qty">×0</span>
-          </div>
-          <div class="qy-bait-effect">流萤翅落屑，引诱空岛飞虫鱼</div>
-        </div>
-        <div class="qy-bait empty">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">雾</span>
-            <span class="qy-bait-name">风羽残片</span>
-            <span class="qy-bait-qty">×0</span>
-          </div>
-          <div class="qy-bait-effect">风羽鸟掉羽，引诱风系生物</div>
-        </div>
-        <div class="qy-bait empty">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">朦</span>
-            <span class="qy-bait-name">月泪石</span>
-            <span class="qy-bait-qty">×0</span>
-          </div>
-          <div class="qy-bait-effect">月色凝露成石，引诱夜行空鱼</div>
-        </div>
-        <div class="qy-bait empty">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">影</span>
-            <span class="qy-bait-name">雷尾蛾翼</span>
-            <span class="qy-bait-qty">×0</span>
-          </div>
-          <div class="qy-bait-effect">雷尾蛾翅，引诱雷系生物</div>
-        </div>
-        <div class="qy-bait empty">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">寂</span>
-            <span class="qy-bait-name">残辉粉</span>
-            <span class="qy-bait-qty">×0</span>
-          </div>
-          <div class="qy-bait-effect">星辉残粉，引诱稀有星辉鱼</div>
-        </div>
-        <div class="qy-bait empty">
-          <div class="qy-bait-head">
-            <span class="qy-bait-quality">极</span>
-            <span class="qy-bait-name">云墨结晶</span>
-            <span class="qy-bait-qty">×0</span>
-          </div>
-          <div class="qy-bait-effect">云朵深处墨晶，引诱传说级灵物</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="qy-card" id="qy-fishing-baits"></div>
 
   <!-- 操作按钮 -->
   <div class="qy-actions">
@@ -5608,225 +5415,20 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       <!-- 顶部熟练度 + 库存 -->
       <div class="qy-stats-row">
 
-        <div class="qy-card qy-skill-card">
-          <div class="qy-card-title">种 地 熟 练 度 <span class="deco">PROFICIENCY</span></div>
-          <div class="qy-skill-head">
-            <span class="qy-skill-name">阶 段 · 田 园 学 徒</span>
-            <span class="qy-skill-percent">35 / 100</span>
-          </div>
-          <div class="qy-bar"><div class="qy-bar-fill" style="width: 35%"></div></div>
-        </div>
+        <div class="qy-card" id="qy-farming-skill"></div>
 
-        <div class="qy-card">
-          <div class="qy-card-title">作 物 库 存 <span class="deco">INVENTORY</span></div>
-          <div class="qy-inv-chips">
-            <span class="qy-inv-chip">蔬菜 · 玉鲜<span class="qty">×2</span></span>
-            <span class="qy-inv-chip">谷物 · 丰穗<span class="qty">×5</span></span>
-            <span class="qy-inv-chip">药草 · 萌草<span class="qty">×3</span></span>
-            <span class="qy-inv-chip">果树 · 累丰<span class="qty">×1</span></span>
-            <span class="qy-inv-chip">装饰花 · 含苞<span class="qty">×4</span></span>
-          </div>
-        </div>
+        <div class="qy-card" id="qy-farming-inv"></div>
 
       </div>
 
       <!-- 田地网格 6 块 -->
-      <div class="qy-card">
-        <div class="qy-card-title">田 地 · 6 块 <span class="deco">FIELDS</span></div>
-        <div class="qy-fields-grid">
-
-          <!-- 田地 1：生长中 谷物·芽粟 60% -->
-          <div class="qy-field state-growing">
-            <div class="qy-field-head">
-              <span class="qy-field-num">FIELD 01</span>
-              <span class="qy-field-state">生 长 中</span>
-            </div>
-            <h4 class="qy-field-crop">谷物 · 芽粟<span class="qy-field-rank">阶 1</span></h4>
-            <div class="qy-field-progress">
-              <div class="qy-field-progress-text">
-                <span>已抽穗，再过几日可收</span><span class="pct">60%</span>
-              </div>
-              <div class="qy-field-bar"><div class="qy-field-bar-fill" style="width: 60%"></div></div>
-            </div>
-            <div class="qy-field-meta">
-              <div><span class="label">播种</span>辰时·初春第三日</div>
-              <div><span class="label">预计成熟</span>巳时·初春第十二日</div>
-            </div>
-            <div class="qy-field-actions">
-              <button class="qy-field-btn">浇 水</button>
-              <button class="qy-field-btn">施 肥</button>
-            </div>
-          </div>
-
-          <!-- 田地 2：生长中 药草·萌草 30% -->
-          <div class="qy-field state-growing">
-            <div class="qy-field-head">
-              <span class="qy-field-num">FIELD 02</span>
-              <span class="qy-field-state">生 长 中</span>
-            </div>
-            <h4 class="qy-field-crop">药草 · 萌草<span class="qy-field-rank">阶 1</span></h4>
-            <div class="qy-field-progress">
-              <div class="qy-field-progress-text">
-                <span>初萌新芽，需细心照料</span><span class="pct">30%</span>
-              </div>
-              <div class="qy-field-bar"><div class="qy-field-bar-fill" style="width: 30%"></div></div>
-            </div>
-            <div class="qy-field-meta">
-              <div><span class="label">播种</span>辰时·初春第六日</div>
-              <div><span class="label">预计成熟</span>申时·初春第十日</div>
-            </div>
-            <div class="qy-field-actions">
-              <button class="qy-field-btn">浇 水</button>
-              <button class="qy-field-btn">施 肥</button>
-            </div>
-          </div>
-
-          <!-- 田地 3：可收获 蔬菜·嫩青 100% -->
-          <div class="qy-field state-ready">
-            <div class="qy-field-head">
-              <span class="qy-field-num">FIELD 03</span>
-              <span class="qy-field-state">可 收 获</span>
-            </div>
-            <h4 class="qy-field-crop">蔬菜 · 嫩青<span class="qy-field-rank">阶 1</span></h4>
-            <div class="qy-field-progress">
-              <div class="qy-field-progress-text">
-                <span>叶色脆嫩，正可采收</span><span class="pct">100%</span>
-              </div>
-              <div class="qy-field-bar"><div class="qy-field-bar-fill ready" style="width: 100%"></div></div>
-            </div>
-            <div class="qy-field-meta">
-              <div><span class="label">播种</span>辰时·初春第一日</div>
-              <div><span class="label">已成熟于</span>巳时·初春第七日</div>
-            </div>
-            <div class="qy-field-actions">
-              <button class="qy-field-btn primary">收 获</button>
-            </div>
-          </div>
-
-          <!-- 田地 4：空闲（待种） -->
-          <div class="qy-field state-empty">
-            <div class="qy-field-head">
-              <span class="qy-field-num">FIELD 04</span>
-              <span class="qy-field-state">空 闲</span>
-            </div>
-            <h4 class="qy-field-crop" style="color: #98a89c;">— 待 播 种 —</h4>
-            <div class="qy-field-meta" style="margin-top: 12px;">
-              <div>这块田已经翻整好了，等着新一茬的种子。</div>
-            </div>
-            <div class="qy-field-actions">
-              <button class="qy-field-btn primary">播 种</button>
-            </div>
-          </div>
-
-          <!-- 田地 5：已枯萎 -->
-          <div class="qy-field state-withered">
-            <div class="qy-field-head">
-              <span class="qy-field-num">FIELD 05</span>
-              <span class="qy-field-state">已 枯 萎</span>
-            </div>
-            <h4 class="qy-field-crop">蔬菜 · 翠葱<span class="qy-field-rank">阶 2</span></h4>
-            <div class="qy-field-progress">
-              <div class="qy-field-progress-text">
-                <span>多日未浇，叶已焦黄</span><span class="pct">—</span>
-              </div>
-              <div class="qy-field-bar"><div class="qy-field-bar-fill withered" style="width: 80%"></div></div>
-            </div>
-            <div class="qy-field-meta">
-              <div><span class="label">播种</span>辰时·初春第二日</div>
-              <div><span class="label">枯萎于</span>戌时·初春第九日</div>
-            </div>
-            <div class="qy-field-actions">
-              <button class="qy-field-btn warn">清 理</button>
-            </div>
-          </div>
-
-          <!-- 田地 6：刚播种 果树·朝果 10% -->
-          <div class="qy-field state-growing">
-            <div class="qy-field-head">
-              <span class="qy-field-num">FIELD 06</span>
-              <span class="qy-field-state">生 长 中</span>
-            </div>
-            <h4 class="qy-field-crop">果树 · 朝果<span class="qy-field-rank">阶 1</span></h4>
-            <div class="qy-field-progress">
-              <div class="qy-field-progress-text">
-                <span>刚下种，土未发热</span><span class="pct">10%</span>
-              </div>
-              <div class="qy-field-bar"><div class="qy-field-bar-fill" style="width: 10%"></div></div>
-            </div>
-            <div class="qy-field-meta">
-              <div><span class="label">播种</span>申时·初春第十日</div>
-              <div><span class="label">预计成熟</span>巳时·仲夏第二日</div>
-            </div>
-            <div class="qy-field-actions">
-              <button class="qy-field-btn">浇 水</button>
-              <button class="qy-field-btn">施 肥</button>
-            </div>
-          </div>
-
-        </div>
-      </div>
+      <div class="qy-card" id="qy-farming-fields"></div>
 
       <!-- 农具栏 -->
-      <div class="qy-card">
-        <div class="qy-card-title">农 具 <span class="deco">TOOLS</span></div>
-        <div class="qy-tools-grid">
-          <div class="qy-tool">
-            <div class="tool-key">锄 具</div>
-            <div class="tool-val">砺 锋</div>
-            <div class="tool-rank">阶 1</div>
-          </div>
-          <div class="qy-tool">
-            <div class="tool-key">水 桶</div>
-            <div class="tool-val">甘 霖</div>
-            <div class="tool-rank">阶 2</div>
-          </div>
-          <div class="qy-tool">
-            <div class="tool-key">镰 刀</div>
-            <div class="tool-val">淬 芒</div>
-            <div class="tool-rank">阶 1</div>
-          </div>
-          <div class="qy-tool">
-            <div class="tool-key">肥 料 桶</div>
-            <div class="tool-val">归 尘</div>
-            <div class="tool-rank">阶 1</div>
-          </div>
-        </div>
-      </div>
+      <div class="qy-card" id="qy-farming-tools"></div>
 
       <!-- 已解锁作物速览 -->
-      <div class="qy-card">
-        <div class="qy-card-title">已 解 锁 作 物 <span class="deco">UNLOCKED</span></div>
-        <div class="qy-unlock-grid">
-          <div class="qy-unlock-cat">
-            <div class="qy-unlock-cat-head">蔬 菜</div>
-            <div class="qy-unlock-cat-list">嫩青 · 翠葱 <span class="locked">/ 玉鲜</span></div>
-          </div>
-          <div class="qy-unlock-cat">
-            <div class="qy-unlock-cat-head">谷 物</div>
-            <div class="qy-unlock-cat-list">芽粟 <span class="locked">/ 丰穗 / 盈实</span></div>
-          </div>
-          <div class="qy-unlock-cat">
-            <div class="qy-unlock-cat-head">药 草</div>
-            <div class="qy-unlock-cat-list">萌草 <span class="locked">/ 苓茂 / 金芝</span></div>
-          </div>
-          <div class="qy-unlock-cat">
-            <div class="qy-unlock-cat-head">灵 植</div>
-            <div class="qy-unlock-cat-list locked">抽萌 / 蓊蔚 / 焕生</div>
-          </div>
-          <div class="qy-unlock-cat">
-            <div class="qy-unlock-cat-head">果 树</div>
-            <div class="qy-unlock-cat-list">朝果 <span class="locked">/ 硕果 / 累丰</span></div>
-          </div>
-          <div class="qy-unlock-cat">
-            <div class="qy-unlock-cat-head">装 饰 花</div>
-            <div class="qy-unlock-cat-list">含苞 <span class="locked">/ 绽蕊 / 千艳</span></div>
-          </div>
-          <div class="qy-unlock-cat">
-            <div class="qy-unlock-cat-head">香 料</div>
-            <div class="qy-unlock-cat-list locked">初馨 / 暖馥 / 醇芳</div>
-          </div>
-        </div>
-      </div>
+      <div class="qy-card" id="qy-farming-unlocked"></div>
 
     </div>
 
@@ -5978,29 +5580,9 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       <!-- 顶部熟练度 + 食材库存 -->
       <div class="qy-stats-row">
 
-        <div class="qy-card">
-          <div class="qy-card-title">烹 饪 熟 练 度 <span class="deco">PROFICIENCY</span></div>
-          <div class="qy-skill-head">
-            <span class="qy-skill-name">阶 段 · 厨 房 学 徒</span>
-            <span class="qy-skill-percent">28 / 100</span>
-          </div>
-          <div class="qy-bar"><div class="qy-bar-fill" style="width: 28%"></div></div>
-        </div>
+        <div class="qy-card" id="qy-cooking-skill"></div>
 
-        <div class="qy-card">
-          <div class="qy-card-title">食 材 库 存 <span class="deco">INGREDIENTS</span></div>
-          <div class="qy-ingr-chips">
-            <span class="qy-ingr-chip cat-veg">嫩青<span class="qty">×4</span></span>
-            <span class="qy-ingr-chip cat-veg">翠葱<span class="qty">×2</span></span>
-            <span class="qy-ingr-chip cat-grain">芽粟<span class="qty">×6</span></span>
-            <span class="qy-ingr-chip cat-grain">丰穗<span class="qty">×3</span></span>
-            <span class="qy-ingr-chip cat-fish">河鲤<span class="qty">×2</span></span>
-            <span class="qy-ingr-chip cat-fish">沧海鲈<span class="qty">×1</span></span>
-            <span class="qy-ingr-chip cat-herb">萌草<span class="qty">×3</span></span>
-            <span class="qy-ingr-chip cat-meat">山猪肉<span class="qty">×2</span></span>
-            <span class="qy-ingr-chip cat-spice">初馨<span class="qty">×5</span></span>
-          </div>
-        </div>
+        <div class="qy-card" id="qy-cooking-inv"></div>
 
       </div>
 
@@ -6039,210 +5621,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       </div>
 
       <!-- 菜谱图鉴网格 -->
-      <div class="qy-card">
-        <div class="qy-card-title">菜 谱 图 鉴 <span class="deco">RECIPES</span></div>
-        <div class="qy-recipes-grid">
-
-          <!-- 1. 葱烧河鲤（通用·鱼菜·生活辅助·粗食） -->
-          <div class="qy-recipe rank-cushi">
-            <div class="qy-recipe-head">
-              <span class="qy-recipe-name">葱 烧 河 鲤</span>
-              <span class="qy-recipe-rank">粗 食</span>
-            </div>
-            <div class="qy-recipe-tags">
-              <span class="qy-recipe-tag t-cuisine">通用家常</span>
-              <span class="qy-recipe-tag t-main">鱼菜</span>
-              <span class="qy-recipe-tag t-buff">生活辅助</span>
-            </div>
-            <div class="qy-recipe-buff">钓鱼成功率 <em>+5%</em>，时长 <em>1日</em></div>
-            <div class="qy-recipe-ingr">
-              <span class="label">食材</span>
-              <span class="ok">河鲤×1</span>、<span class="ok">翠葱×1</span>
-            </div>
-            <div class="qy-recipe-foot">
-              <span class="qy-recipe-skill">熟练 ≥ 5</span>
-              <button class="qy-recipe-btn">下 厨</button>
-            </div>
-          </div>
-
-          <!-- 2. 御膳金羹（中枢·汤羹·战斗·精馔） -->
-          <div class="qy-recipe rank-jingxan">
-            <div class="qy-recipe-head">
-              <span class="qy-recipe-name">御 膳 金 羹</span>
-              <span class="qy-recipe-rank">精 馔</span>
-            </div>
-            <div class="qy-recipe-tags">
-              <span class="qy-recipe-tag t-cuisine">中枢御膳</span>
-              <span class="qy-recipe-tag t-main">汤羹</span>
-              <span class="qy-recipe-tag t-buff">战斗属性</span>
-            </div>
-            <div class="qy-recipe-buff">攻击力 <em>+8%</em>，时长 <em>半日</em></div>
-            <div class="qy-recipe-ingr">
-              <span class="label">食材</span>
-              <span class="miss">山参×1</span>、<span class="ok">山猪肉×1</span>、<span class="ok">嫩青×2</span>
-            </div>
-            <div class="qy-recipe-foot">
-              <span class="qy-recipe-skill">熟练 ≥ 35</span>
-              <button class="qy-recipe-btn disabled" disabled>食材不足</button>
-            </div>
-          </div>
-
-          <!-- 3. 灵山炖（东苍·素菜·状态·粗食） -->
-          <div class="qy-recipe rank-cushi">
-            <div class="qy-recipe-head">
-              <span class="qy-recipe-name">灵 山 素 炖</span>
-              <span class="qy-recipe-rank">粗 食</span>
-            </div>
-            <div class="qy-recipe-tags">
-              <span class="qy-recipe-tag t-cuisine">东苍源脉</span>
-              <span class="qy-recipe-tag t-main">素菜</span>
-              <span class="qy-recipe-tag t-buff">状态恢复</span>
-            </div>
-            <div class="qy-recipe-buff">精力恢复 <em>+30 点</em>，立即生效</div>
-            <div class="qy-recipe-ingr">
-              <span class="label">食材</span>
-              <span class="ok">嫩青×2</span>、<span class="ok">萌草×1</span>
-            </div>
-            <div class="qy-recipe-foot">
-              <span class="qy-recipe-skill">熟练 ≥ 8</span>
-              <button class="qy-recipe-btn">下 厨</button>
-            </div>
-          </div>
-
-          <!-- 4. 北冥图腾火锅（北冥·肉菜·战斗·精馔） -->
-          <div class="qy-recipe rank-jingxan">
-            <div class="qy-recipe-head">
-              <span class="qy-recipe-name">北 冥 图 腾 火 锅</span>
-              <span class="qy-recipe-rank">精 馔</span>
-            </div>
-            <div class="qy-recipe-tags">
-              <span class="qy-recipe-tag t-cuisine">北冥火锅</span>
-              <span class="qy-recipe-tag t-main">肉菜</span>
-              <span class="qy-recipe-tag t-buff">战斗属性</span>
-            </div>
-            <div class="qy-recipe-buff">防御力 <em>+10%</em>、抗寒，时长 <em>1日</em></div>
-            <div class="qy-recipe-ingr">
-              <span class="label">食材</span>
-              <span class="ok">山猪肉×2</span>、<span class="miss">极地霜花×1</span>、<span class="ok">初馨×2</span>
-            </div>
-            <div class="qy-recipe-foot">
-              <span class="qy-recipe-skill">熟练 ≥ 30</span>
-              <button class="qy-recipe-btn disabled" disabled>食材不足</button>
-            </div>
-          </div>
-
-          <!-- 5. 千岛潮汐刺身（千岛·鱼菜·情绪·珍馐） -->
-          <div class="qy-recipe rank-zhenxiu">
-            <div class="qy-recipe-head">
-              <span class="qy-recipe-name">千 岛 潮 汐 刺 身</span>
-              <span class="qy-recipe-rank">珍 馐</span>
-            </div>
-            <div class="qy-recipe-tags">
-              <span class="qy-recipe-tag t-cuisine">千岛海鲜</span>
-              <span class="qy-recipe-tag t-main">鱼菜</span>
-              <span class="qy-recipe-tag t-buff">角色情绪</span>
-            </div>
-            <div class="qy-recipe-buff">同伴羁绊 <em>+8</em>（共餐时），心情 <em>极佳</em></div>
-            <div class="qy-recipe-ingr">
-              <span class="label">食材</span>
-              <span class="ok">沧海鲈×1</span>、<span class="miss">海岚刺槐×1</span>、<span class="miss">月泪盐×1</span>
-            </div>
-            <div class="qy-recipe-foot">
-              <span class="qy-recipe-skill">熟练 ≥ 65</span>
-              <button class="qy-recipe-btn disabled" disabled>食材不足</button>
-            </div>
-          </div>
-
-          <!-- 6. 蒸汽肉夹（机械·主食·生活·粗食） -->
-          <div class="qy-recipe rank-cushi">
-            <div class="qy-recipe-head">
-              <span class="qy-recipe-name">蒸 汽 肉 夹</span>
-              <span class="qy-recipe-rank">粗 食</span>
-            </div>
-            <div class="qy-recipe-tags">
-              <span class="qy-recipe-tag t-cuisine">机械工艺</span>
-              <span class="qy-recipe-tag t-main">主食</span>
-              <span class="qy-recipe-tag t-buff">生活辅助</span>
-            </div>
-            <div class="qy-recipe-buff">种地速度 <em>+8%</em>，时长 <em>1日</em></div>
-            <div class="qy-recipe-ingr">
-              <span class="label">食材</span>
-              <span class="ok">芽粟×2</span>、<span class="ok">山猪肉×1</span>
-            </div>
-            <div class="qy-recipe-foot">
-              <span class="qy-recipe-skill">熟练 ≥ 12</span>
-              <button class="qy-recipe-btn">下 厨</button>
-            </div>
-          </div>
-
-          <!-- 7. 渊蛊鲈鱼汤（南渊·鱼菜·状态·精馔） -->
-          <div class="qy-recipe rank-jingxan">
-            <div class="qy-recipe-head">
-              <span class="qy-recipe-name">渊 蛊 鲈 鱼 汤</span>
-              <span class="qy-recipe-rank">精 馔</span>
-            </div>
-            <div class="qy-recipe-tags">
-              <span class="qy-recipe-tag t-cuisine">南渊渊蛊</span>
-              <span class="qy-recipe-tag t-main">汤羹</span>
-              <span class="qy-recipe-tag t-buff">状态恢复</span>
-            </div>
-            <div class="qy-recipe-buff">解毒 + HP 恢复 <em>+45 点</em></div>
-            <div class="qy-recipe-ingr">
-              <span class="label">食材</span>
-              <span class="ok">沧海鲈×1</span>、<span class="miss">蛊木花×1</span>、<span class="ok">萌草×1</span>
-            </div>
-            <div class="qy-recipe-foot">
-              <span class="qy-recipe-skill">熟练 ≥ 40</span>
-              <button class="qy-recipe-btn disabled" disabled>食材不足</button>
-            </div>
-          </div>
-
-          <!-- 8. 西圣牛奶炖（西圣·肉菜·战斗·珍馐） -->
-          <div class="qy-recipe rank-zhenxiu">
-            <div class="qy-recipe-head">
-              <span class="qy-recipe-name">西 圣 圣 牛 炖</span>
-              <span class="qy-recipe-rank">珍 馐</span>
-            </div>
-            <div class="qy-recipe-tags">
-              <span class="qy-recipe-tag t-cuisine">西圣炖煮</span>
-              <span class="qy-recipe-tag t-main">肉菜</span>
-              <span class="qy-recipe-tag t-buff">战斗属性</span>
-            </div>
-            <div class="qy-recipe-buff">攻击 <em>+15%</em>，源能恢复 <em>+5/秒</em>，时长 <em>1日</em></div>
-            <div class="qy-recipe-ingr">
-              <span class="label">食材</span>
-              <span class="miss">圣域圣牛肉×1</span>、<span class="miss">玉鲜×2</span>、<span class="miss">塞西银盐×1</span>
-            </div>
-            <div class="qy-recipe-foot">
-              <span class="qy-recipe-skill">熟练 ≥ 70</span>
-              <button class="qy-recipe-btn disabled" disabled>食材不足</button>
-            </div>
-          </div>
-
-          <!-- 9. 月光酥（通用·甜点·情绪·粗食） -->
-          <div class="qy-recipe rank-cushi">
-            <div class="qy-recipe-head">
-              <span class="qy-recipe-name">月 光 酥</span>
-              <span class="qy-recipe-rank">粗 食</span>
-            </div>
-            <div class="qy-recipe-tags">
-              <span class="qy-recipe-tag t-cuisine">通用家常</span>
-              <span class="qy-recipe-tag t-main">甜点</span>
-              <span class="qy-recipe-tag t-buff">角色情绪</span>
-            </div>
-            <div class="qy-recipe-buff">同伴心情 <em>+1 阶</em>（送出后），时长 <em>3 楼内</em></div>
-            <div class="qy-recipe-ingr">
-              <span class="label">食材</span>
-              <span class="ok">芽粟×1</span>、<span class="ok">嫩青×1</span>、<span class="ok">初馨×1</span>
-            </div>
-            <div class="qy-recipe-foot">
-              <span class="qy-recipe-skill">熟练 ≥ 15</span>
-              <button class="qy-recipe-btn">下 厨</button>
-            </div>
-          </div>
-
-        </div>
-      </div>
+      <div class="qy-card" id="qy-cooking-recipes"></div>
 
       <!-- AI 创意做菜入口 -->
       <div class="qy-card qy-ai-cook">
@@ -6406,24 +5785,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       <div class="qy-craft-pane-l2 active" data-sub="do">
 
         <div class="qy-stats-row">
-          <div class="qy-card">
-            <div class="qy-card-title">炼 丹 熟 练 度 <span class="deco">ALCHEMY</span></div>
-            <div class="qy-skill-head">
-              <span class="qy-skill-name">阶 段 · 丹 师 学 徒</span>
-              <span class="qy-skill-percent">25 / 100</span>
-            </div>
-            <div class="qy-bar"><div class="qy-bar-fill" style="width: 25%"></div></div>
-          </div>
-          <div class="qy-card">
-            <div class="qy-card-title">原 料 库 存 <span class="deco">MATERIALS</span></div>
-            <div class="qy-mat-chips">
-              <span class="qy-mat-chip cat-herb">萌草<span class="qty">×3</span></span>
-              <span class="qy-mat-chip cat-herb">苓茂<span class="qty">×1</span></span>
-              <span class="qy-mat-chip cat-ore">源石碎片<span class="qty">×4</span></span>
-              <span class="qy-mat-chip cat-yuan">玉质天元<span class="qty">×120</span></span>
-              <span class="qy-mat-chip cat-water">灵泉水<span class="qty">×2</span></span>
-            </div>
-          </div>
+          <div class="qy-card" id="qy-craft-alchemy-skill"></div>
+          <div class="qy-card" id="qy-craft-alchemy-mat"></div>
         </div>
 
         <div class="qy-filter-bar">
@@ -6434,126 +5797,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
           <span class="qy-filter-tag">突破丹</span>
         </div>
 
-        <div class="qy-card">
-          <div class="qy-card-title">已 解 锁 丹 方 <span class="deco">RECIPES</span></div>
-          <div class="qy-recipes-grid">
-
-            <!-- 1. 续骨丹（治疗·引露） -->
-            <div class="qy-recipe dan-yinlu">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">续 骨 丹</span>
-                <span class="qy-recipe-rank">引 露</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-buff">治疗丹</span></div>
-              <div class="qy-recipe-effect">HP 立即恢复 <em>+30 点</em>，可解轻伤</div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="ok">萌草×2</span>、<span class="ok">灵泉水×1</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">7%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 5</span>
-                <button class="qy-recipe-btn">下 炉</button>
-              </div>
-            </div>
-
-            <!-- 2. 健体丹（战斗·引露） -->
-            <div class="qy-recipe dan-yinlu">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">健 体 丹</span>
-                <span class="qy-recipe-rank">引 露</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-buff">战斗丹</span></div>
-              <div class="qy-recipe-effect">攻击力 <em>+5%</em>，时长 <em>3 楼</em></div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="ok">萌草×1</span>、<span class="ok">源石碎片×1</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">7%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 8</span>
-                <button class="qy-recipe-btn">下 炉</button>
-              </div>
-            </div>
-
-            <!-- 3. 清神丹（突破·引露） -->
-            <div class="qy-recipe dan-yinlu">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">清 神 丹</span>
-                <span class="qy-recipe-rank">引 露</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-buff">突破丹</span></div>
-              <div class="qy-recipe-effect">精力 <em>+50</em>，副职熟练度+ <em>+1</em></div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="ok">萌草×2</span>、<span class="ok">灵泉水×1</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">7%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 12</span>
-                <button class="qy-recipe-btn">下 炉</button>
-              </div>
-            </div>
-
-            <!-- 4. 凝心丹（治疗·凝霜） -->
-            <div class="qy-recipe dan-ningshuang">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">凝 心 丹</span>
-                <span class="qy-recipe-rank">凝 霜</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-buff">治疗丹</span></div>
-              <div class="qy-recipe-effect">HP <em>+80</em> + 解毒 + 解寒</div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="ok">苓茂×1</span>、<span class="ok">萌草×1</span>、<span class="ok">灵泉水×2</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">5%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 28</span>
-                <button class="qy-recipe-btn disabled" disabled>熟练度不足</button>
-              </div>
-            </div>
-
-            <!-- 5. 锻骨丹（战斗·凝霜） -->
-            <div class="qy-recipe dan-ningshuang">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">锻 骨 丹</span>
-                <span class="qy-recipe-rank">凝 霜</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-buff">战斗丹</span></div>
-              <div class="qy-recipe-effect">防御力 <em>+8%</em>，时长 <em>半日</em></div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="ok">苓茂×1</span>、<span class="ok">源石碎片×2</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">5%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 30</span>
-                <button class="qy-recipe-btn disabled" disabled>熟练度不足</button>
-              </div>
-            </div>
-
-            <!-- 6. 破壁丹（突破·含雪） -->
-            <div class="qy-recipe dan-hanxue">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">破 壁 丹</span>
-                <span class="qy-recipe-rank">含 雪</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-buff">突破丹</span></div>
-              <div class="qy-recipe-effect">印记升阶辅助 <em>+30%</em>（限战力突破时）</div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="miss">金芝×1</span>、<span class="ok">源石碎片×3</span>、<span class="ok">灵泉水×1</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">3%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 50</span>
-                <button class="qy-recipe-btn disabled" disabled>熟练度不足</button>
-              </div>
-            </div>
-
-          </div>
-        </div>
+        <div class="qy-card" id="qy-craft-alchemy-recipes"></div>
 
         <div class="qy-card qy-ai-cook">
           <div class="qy-ai-cook-hint">想试试新方？让丹炉自己琢磨一炉——</div>
@@ -6643,24 +5887,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       <div class="qy-craft-pane-l2 active" data-sub="do">
 
         <div class="qy-stats-row">
-          <div class="qy-card">
-            <div class="qy-card-title">锻 造 熟 练 度 <span class="deco">FORGE</span></div>
-            <div class="qy-skill-head">
-              <span class="qy-skill-name">阶 段 · 匠 师 学 徒</span>
-              <span class="qy-skill-percent">30 / 100</span>
-            </div>
-            <div class="qy-bar"><div class="qy-bar-fill" style="width: 30%"></div></div>
-          </div>
-          <div class="qy-card">
-            <div class="qy-card-title">原 料 库 存 <span class="deco">MATERIALS</span></div>
-            <div class="qy-mat-chips">
-              <span class="qy-mat-chip cat-iron">铁矿石<span class="qty">×6</span></span>
-              <span class="qy-mat-chip cat-silver">星银砂<span class="qty">×2</span></span>
-              <span class="qy-mat-chip cat-wood">古藏木<span class="qty">×1</span></span>
-              <span class="qy-mat-chip cat-ore">源石碎片<span class="qty">×3</span></span>
-              <span class="qy-mat-chip cat-yuan">玉质天元<span class="qty">×120</span></span>
-            </div>
-          </div>
+          <div class="qy-card" id="qy-craft-forge-skill"></div>
+          <div class="qy-card" id="qy-craft-forge-mat"></div>
         </div>
 
         <div class="qy-filter-bar">
@@ -6673,126 +5901,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
           <span class="qy-filter-tag">武器</span>
         </div>
 
-        <div class="qy-card">
-          <div class="qy-card-title">已 解 锁 图 纸 <span class="deco">BLUEPRINTS</span></div>
-          <div class="qy-recipes-grid">
-
-            <!-- 1. 粗铁刀（武器·凡兵） -->
-            <div class="qy-recipe eq-fanbing">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">粗 铁 刀</span>
-                <span class="qy-recipe-rank">凡 兵</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-slot">武器</span></div>
-              <div class="qy-recipe-effect">攻击 <em>+3</em></div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="ok">铁矿石×3</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">6%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 3</span>
-                <button class="qy-recipe-btn">下 铁</button>
-              </div>
-            </div>
-
-            <!-- 2. 粗铁甲（胸·凡兵） -->
-            <div class="qy-recipe eq-fanbing">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">粗 铁 甲</span>
-                <span class="qy-recipe-rank">凡 兵</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-slot">胸</span></div>
-              <div class="qy-recipe-effect">防御 <em>+5</em></div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="ok">铁矿石×4</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">6%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 5</span>
-                <button class="qy-recipe-btn">下 铁</button>
-              </div>
-            </div>
-
-            <!-- 3. 流光剑（武器·流光） -->
-            <div class="qy-recipe eq-liuguang">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">流 光 剑</span>
-                <span class="qy-recipe-rank">流 光</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-slot">武器</span></div>
-              <div class="qy-recipe-effect">攻击 <em>+8</em>，附带浮华效果</div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="ok">星银砂×2</span>、<span class="ok">铁矿石×3</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">5%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 25</span>
-                <button class="qy-recipe-btn">下 铁</button>
-              </div>
-            </div>
-
-            <!-- 4. 流光头冠（头·流光） -->
-            <div class="qy-recipe eq-liuguang">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">流 光 头 冠</span>
-                <span class="qy-recipe-rank">流 光</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-slot">头</span></div>
-              <div class="qy-recipe-effect">防御 <em>+4</em>，源能恢复 <em>+1/楼</em></div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="ok">星银砂×1</span>、<span class="ok">铁矿石×2</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">5%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 28</span>
-                <button class="qy-recipe-btn">下 铁</button>
-              </div>
-            </div>
-
-            <!-- 5. 寒锋长枪（武器·寒锋） -->
-            <div class="qy-recipe eq-hanfeng">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">寒 锋 长 枪</span>
-                <span class="qy-recipe-rank">寒 锋</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-slot">武器</span></div>
-              <div class="qy-recipe-effect">攻击 <em>+15</em>，破甲 <em>+10%</em></div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="ok">古藏木×1</span>、<span class="miss">星银砂×3</span>、<span class="ok">源石碎片×2</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">4%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 50</span>
-                <button class="qy-recipe-btn disabled" disabled>熟练度不足</button>
-              </div>
-            </div>
-
-            <!-- 6. 古宝盾甲（胸·古宝） -->
-            <div class="qy-recipe eq-gubao">
-              <div class="qy-recipe-head">
-                <span class="qy-recipe-name">古 宝 盾 甲</span>
-                <span class="qy-recipe-rank">古 宝</span>
-              </div>
-              <div class="qy-recipe-tags"><span class="qy-recipe-tag t-slot">胸</span></div>
-              <div class="qy-recipe-effect">防御 <em>+25</em>，免疫一次致命伤（每日一次）</div>
-              <div class="qy-recipe-mats">
-                <span class="label">原料</span>
-                <span class="miss">古藏木×3</span>、<span class="ok">源石碎片×4</span>、<span class="ok">玉质天元×100</span>
-              </div>
-              <div class="qy-recipe-fail">炸炉率 <span class="rate">3%</span> · 品级浮动 ±1</div>
-              <div class="qy-recipe-foot">
-                <span class="qy-recipe-skill">熟练 ≥ 65</span>
-                <button class="qy-recipe-btn disabled" disabled>熟练度不足</button>
-              </div>
-            </div>
-
-          </div>
-        </div>
+        <div class="qy-card" id="qy-craft-forge-recipes"></div>
 
         <div class="qy-card qy-ai-cook">
           <div class="qy-ai-cook-hint">手头的料子可以打点别的吗？让铁砧自己想想——</div>
@@ -7399,6 +6508,46 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
     return cur;
   }
+  // 判定品质档: 仅用朔已定死的命名空间. 钓鱼=钓鱼收获四档(命名空间表); 做菜=菜品档(sample 现成).
+  // 炼丹/锻造不混丹品(引露..造化)与装备品级(凡兵..遗珍)命名空间, 只给成败+品级浮动±1 (按教学叙事);
+  // 种地收获朔未定品质命名空间, 禁自起名, 只用收成程度(丰收/平收/歉收).
+  var QY_JUDGE_GRADES = {
+    fishing: ['浅', '远', '深', '邃'],
+    cooking: ['粗 食', '精 馔', '珍 馐']
+  };
+  // 判定核心: 熟练度参与(成功率随熟练度上升) + 失败保底(失败也出最低档不空手, 朔铁律) + 扣消耗
+  window.qyJudge = function(pageId, prof) {
+    prof = qyNum(prof);
+    var succRate = Math.min(95, 55 + prof * 0.4);   // 熟练度参与: prof0→55%, prof100→95%
+    var success = (Math.random() * 100) < succRate;
+    var j = { success: success, prof: prof, succRate: Math.round(succRate) };
+    var grades = QY_JUDGE_GRADES[pageId];
+    if (grades) {
+      var gi;
+      if (success) {
+        // 熟练度越高越偏高档; 加一点随机
+        gi = Math.min(grades.length - 1, Math.max(0, Math.floor((prof / 100) * grades.length + Math.random() * 1.5)));
+      } else {
+        gi = 0;   // 失败保底: 仍出最低档, 不让玩家纯空手
+      }
+      j.grade = grades[gi];
+      j.gradeIdx = gi;
+    }
+    if (pageId === 'fishing') {
+      j.note = success ? '成功上钩' : '鱼挣脱了 (保底: 仍得最低档收获, 仅消耗饵料 + 扣一点体力)';
+    } else if (pageId === 'cooking') {
+      j.note = success ? '火候得当' : '火候失手 (保底: 出粗食级成品, 食材已耗)';
+    } else if (pageId === 'craft') {
+      j.note = success ? '丹成 / 器成 (品级按基准浮动 ±1, 熟练度越高越稳)' : '炸炉 (保底: 原料部分回收不全损)';
+    } else if (pageId === 'farming') {
+      j.harvest = success ? (Math.random() < 0.25 ? '丰收' : '平收') : '歉收';
+      j.note = '收获判定: ' + j.harvest + (success ? '' : ' (保底: 仍有基础收成)');
+    }
+    j.consume = (pageId === 'farming')
+      ? '无 (收获不消耗, 种子已在播种时扣)'
+      : '本次消耗 1 份对应投入物 (钓鱼=饵料 / 做菜=食材 / 炼丹锻造=原料)';
+    return j;
+  };
   window.qyPlayRoll = function(pageId) {
     if (typeof window.Mvu === 'undefined') return { type: 'no_mvu' };
     var conf = QY_POOL_PATHS[pageId];
@@ -7409,12 +6558,13 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       var stat = (typeof qyDeepUnwrap === 'function') ? qyDeepUnwrap(raw) : raw;
       var pool = qyGetPath(stat, conf.pool);
       var prof = qyGetPath(stat, conf.prof);
+      var judge = window.qyJudge(pageId, prof);
       if (!Array.isArray(pool) || pool.length === 0) {
-        return { type: 'unlock', prof: prof || 0, pool_path: conf.pool };
+        return { type: 'unlock', prof: prof || 0, pool_path: conf.pool, judge: judge };
       }
       var idx = Math.floor(Math.random() * pool.length);
       var picked = pool[idx];
-      return { type: 'roll', picked: picked, pool_size: pool.length, prof: prof || 0 };
+      return { type: 'roll', picked: picked, pool_size: pool.length, prof: prof || 0, judge: judge };
     } catch (e) {
       console.warn('[qy] qyPlayRoll 失败:', e);
       return { type: 'error', error: String((e && e.message) || e) };
@@ -7448,6 +6598,254 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     } catch (e) {
       console.warn('[qy] qyPushItem 失败:', e);
       return false;
+    }
+  };
+
+  // ============= 玩法 page 接 mvu 真实渲染 (clean_play_samples 清 sample 后由这些函数动态填) =============
+  // 固定设计全集 = 朔定死的设计数据 (名字/品阶/描述/门槛), 从源 HTML sample 提取; 拥有态/数量/解锁全由 mvu 驱动.
+  var QY_RODS_GROUND = [
+    { q:'沫', n:'碎 浪', e:'海岸礁石浪打磨而成<br>可钓浅海杂鱼' },
+    { q:'澜', n:'潮 汐', e:'顺应潮汐节律<br>提升中型鱼上钩率' },
+    { q:'沧', n:'鲛 织', e:'鲛人鳞线编织<br>能钓深水鱼种' },
+    { q:'瀚', n:'渊 涛', e:'取自深渊巨涛<br>可钓深渊罕见鱼' },
+    { q:'溟', n:'龙 脊', e:'灾前龙脊化骨<br>传说鱼种钓得' }
+  ];
+  var QY_RODS_SKY = [
+    { q:'微', n:'星 砂', e:'落在云上的星砂凝结<br>可钓低空小型空鱼' },
+    { q:'缈', n:'月 轨', e:'月轨流光淬炼<br>可钓月华系生物' },
+    { q:'弦', n:'银 河', e:'截一段银河水<br>能钓星河鱼群' },
+    { q:'漩', n:'星 陨', e:'星陨之核<br>可钓陨域稀有种' },
+    { q:'苍', n:'天 痕', e:'苍穹裂痕封存<br>传说级空岛灵物' }
+  ];
+  var QY_BAITS_GROUND = [
+    { q:'浮', n:'银鳞蜉蝣', e:'海面浮游小虫，引诱杂鱼' },
+    { q:'沉', n:'珍珠贝肉', e:'珍珠贝嫩肉，引诱贝类生物' },
+    { q:'涌', n:'海岸虹蚓', e:'沙岸下七彩海蚓，引诱杂食鱼' },
+    { q:'涡', n:'赤潮藻团', e:'赤潮凝藻，引诱深水鱼' },
+    { q:'蛟', n:'深渊触须', e:'深渊巨物碎片，引诱罕见深渊鱼' },
+    { q:'鳌', n:'鲛泪结晶', e:'鲛人哭泣凝晶，引诱鲛级生物' }
+  ];
+  var QY_BAITS_SKY = [
+    { q:'烟', n:'流萤光屑', e:'流萤翅落屑，引诱空岛飞虫鱼' },
+    { q:'雾', n:'风羽残片', e:'风羽鸟掉羽，引诱风系生物' },
+    { q:'朦', n:'月泪石', e:'月色凝露成石，引诱夜行空鱼' },
+    { q:'影', n:'雷尾蛾翼', e:'雷尾蛾翅，引诱雷系生物' },
+    { q:'寂', n:'残辉粉', e:'星辉残粉，引诱稀有星辉鱼' },
+    { q:'极', n:'云墨结晶', e:'云朵深处墨晶，引诱传说级灵物' }
+  ];
+  var QY_CROPS = [
+    { cat:'蔬 菜', list:['嫩青','翠葱','玉鲜'] },
+    { cat:'谷 物', list:['芽粟','丰穗','盈实'] },
+    { cat:'药 草', list:['萌草','苓茂','金芝'] },
+    { cat:'灵 植', list:['抽萌','蓊蔚','焕生'] },
+    { cat:'果 树', list:['朝果','硕果','累丰'] },
+    { cat:'装 饰 花', list:['含苞','绽蕊','千艳'] },
+    { cat:'香 料', list:['初馨','暖馥','醇芳'] }
+  ];
+  var QY_TOOLS = [
+    { k:'锄 具', d:'砺 锋' }, { k:'水 桶', d:'甘 霖' }, { k:'镰 刀', d:'淬 芒' }, { k:'肥 料 桶', d:'归 尘' }
+  ];
+  var QY_RECIPES_COOK = [
+    { n:'葱 烧 河 鲤', rank:'粗 食', rc:'rank-cushi', cui:'通用家常', mn:'鱼菜', bf:'生活辅助', ef:'钓鱼成功率 +5%，时长 1日', ing:[{n:'河鲤',c:1},{n:'翠葱',c:1}], sk:5 },
+    { n:'御 膳 金 羹', rank:'精 馔', rc:'rank-jingxan', cui:'中枢御膳', mn:'汤羹', bf:'战斗属性', ef:'攻击力 +8%，时长 半日', ing:[{n:'山参',c:1},{n:'山猪肉',c:1},{n:'嫩青',c:2}], sk:35 },
+    { n:'灵 山 素 炖', rank:'粗 食', rc:'rank-cushi', cui:'东苍源脉', mn:'素菜', bf:'状态恢复', ef:'精力恢复 +30 点，立即生效', ing:[{n:'嫩青',c:2},{n:'萌草',c:1}], sk:8 },
+    { n:'北 冥 图 腾 火 锅', rank:'精 馔', rc:'rank-jingxan', cui:'北冥火锅', mn:'肉菜', bf:'战斗属性', ef:'防御力 +10%、抗寒，时长 1日', ing:[{n:'山猪肉',c:2},{n:'极地霜花',c:1},{n:'初馨',c:2}], sk:30 },
+    { n:'千 岛 潮 汐 刺 身', rank:'珍 馐', rc:'rank-zhenxiu', cui:'千岛海鲜', mn:'鱼菜', bf:'角色情绪', ef:'同伴羁绊 +8（共餐时），心情 极佳', ing:[{n:'沧海鲈',c:1},{n:'海岚刺槐',c:1},{n:'月泪盐',c:1}], sk:65 },
+    { n:'蒸 汽 肉 夹', rank:'粗 食', rc:'rank-cushi', cui:'机械工艺', mn:'主食', bf:'生活辅助', ef:'种地速度 +8%，时长 1日', ing:[{n:'芽粟',c:2},{n:'山猪肉',c:1}], sk:12 },
+    { n:'渊 蛊 鲈 鱼 汤', rank:'精 馔', rc:'rank-jingxan', cui:'南渊渊蛊', mn:'汤羹', bf:'状态恢复', ef:'解毒 + HP 恢复 +45 点', ing:[{n:'沧海鲈',c:1},{n:'蛊木花',c:1},{n:'萌草',c:1}], sk:40 },
+    { n:'西 圣 圣 牛 炖', rank:'珍 馐', rc:'rank-zhenxiu', cui:'西圣炖煮', mn:'肉菜', bf:'战斗属性', ef:'攻击 +15%，源能恢复 +5/秒，时长 1日', ing:[{n:'圣域圣牛肉',c:1},{n:'玉鲜',c:2},{n:'塞西银盐',c:1}], sk:70 },
+    { n:'月 光 酥', rank:'粗 食', rc:'rank-cushi', cui:'通用家常', mn:'甜点', bf:'角色情绪', ef:'同伴心情 +1 阶（送出后），时长 3 楼内', ing:[{n:'芽粟',c:1},{n:'嫩青',c:1},{n:'初馨',c:1}], sk:15 }
+  ];
+  var QY_RECIPES_ALCHEMY = [
+    { n:'续 骨 丹', rank:'引 露', rc:'dan-yinlu', bf:'治疗丹', ef:'HP 立即恢复 +30 点，可解轻伤', mat:[{n:'萌草',c:2},{n:'灵泉水',c:1}], fail:7, sk:5 },
+    { n:'健 体 丹', rank:'引 露', rc:'dan-yinlu', bf:'战斗丹', ef:'攻击力 +5%，时长 3 楼', mat:[{n:'萌草',c:1},{n:'源石碎片',c:1}], fail:7, sk:8 },
+    { n:'清 神 丹', rank:'引 露', rc:'dan-yinlu', bf:'突破丹', ef:'精力 +50，副职熟练度+ +1', mat:[{n:'萌草',c:2},{n:'灵泉水',c:1}], fail:7, sk:12 },
+    { n:'凝 心 丹', rank:'凝 霜', rc:'dan-ningshuang', bf:'治疗丹', ef:'HP +80 + 解毒 + 解寒', mat:[{n:'苓茂',c:1},{n:'萌草',c:1},{n:'灵泉水',c:2}], fail:5, sk:28 },
+    { n:'锻 骨 丹', rank:'凝 霜', rc:'dan-ningshuang', bf:'战斗丹', ef:'防御力 +8%，时长 半日', mat:[{n:'苓茂',c:1},{n:'源石碎片',c:2}], fail:5, sk:30 },
+    { n:'破 壁 丹', rank:'含 雪', rc:'dan-hanxue', bf:'突破丹', ef:'印记升阶辅助 +30%（限战力突破时）', mat:[{n:'金芝',c:1},{n:'源石碎片',c:3},{n:'灵泉水',c:1}], fail:3, sk:50 }
+  ];
+  var QY_BLUEPRINTS_FORGE = [
+    { n:'粗 铁 刀', rank:'凡 兵', rc:'eq-fanbing', slot:'武器', ef:'攻击 +3', mat:[{n:'铁矿石',c:3}], fail:6, sk:3 },
+    { n:'粗 铁 甲', rank:'凡 兵', rc:'eq-fanbing', slot:'胸', ef:'防御 +5', mat:[{n:'铁矿石',c:4}], fail:6, sk:5 },
+    { n:'流 光 剑', rank:'流 光', rc:'eq-liuguang', slot:'武器', ef:'攻击 +8，附带浮华效果', mat:[{n:'星银砂',c:2},{n:'铁矿石',c:3}], fail:5, sk:25 },
+    { n:'流 光 头 冠', rank:'流 光', rc:'eq-liuguang', slot:'头', ef:'防御 +4，源能恢复 +1/楼', mat:[{n:'星银砂',c:1},{n:'铁矿石',c:2}], fail:5, sk:28 },
+    { n:'寒 锋 长 枪', rank:'寒 锋', rc:'eq-hanfeng', slot:'武器', ef:'攻击 +15，破甲 +10%', mat:[{n:'古藏木',c:1},{n:'星银砂',c:3},{n:'源石碎片',c:2}], fail:4, sk:50 },
+    { n:'古 宝 盾 甲', rank:'古 宝', rc:'eq-gubao', slot:'胸', ef:'防御 +25，免疫一次致命伤（每日一次）', mat:[{n:'古藏木',c:3},{n:'源石碎片',c:4},{n:'玉质天元',c:100}], fail:3, sk:65 }
+  ];
+
+  function qyNum(v) { var n = parseInt(v, 10); return isNaN(n) ? 0 : n; }
+  function qyStrip(s) { return String(s || '').replace(/ /g, ''); }
+  function qyInList(arr, name) {
+    if (!Array.isArray(arr)) return false;
+    var bare = qyStrip(name);
+    for (var i = 0; i < arr.length; i++) {
+      var v = arr[i];
+      if (v === name || v === bare) return true;
+      if (v && (v['名字'] === name || v['名字'] === bare || v['name'] === name || v['name'] === bare)) return true;
+    }
+    return false;
+  }
+
+  window.qyRenderFishing = function(s) {
+    var f = (s && s['钓鱼']) || {};
+    var skill = document.getElementById('qy-fishing-skill');
+    if (skill) {
+      var gp = qyNum(f['地面熟练度']), sp = qyNum(f['空岛熟练度']);
+      skill.innerHTML = '<div class="qy-card-title">熟 练 度 <span class="deco">PROFICIENCY</span></div>' +
+        '<div class="qy-skill-row">' +
+        '<div class="qy-skill"><div class="qy-skill-head"><span class="qy-skill-name">地 面 钓 鱼</span><span class="qy-skill-percent">' + gp + '%</span></div><div class="qy-bar"><div class="qy-bar-fill" style="width:' + Math.min(gp,100) + '%;"></div></div></div>' +
+        '<div class="qy-skill"><div class="qy-skill-head"><span class="qy-skill-name">空 岛 钓 鱼</span><span class="qy-skill-percent">' + sp + '%</span></div><div class="qy-bar"><div class="qy-bar-fill' + (sp>0?'':' locked') + '" style="width:' + Math.min(sp,100) + '%;"></div></div>' + (sp>0?'':'<div class="qy-skill-locked-tip">未购置空岛 · 暂未解锁</div>') + '</div>' +
+        '</div>';
+    }
+    var rods = document.getElementById('qy-fishing-rods');
+    if (rods) {
+      var owned = qyUnwrapArr(f['拥有鱼竿']);
+      var curRod = qyStrip(qySafe(f['装备'] && f['装备']['鱼竿'], ''));
+      function rodSec(title, list) {
+        var cells = list.map(function(r) {
+          var o = qyInList(owned, r.n);
+          var eq = (curRod && curRod === qyStrip(r.n));
+          return '<div class="qy-rod' + (o?' owned':'') + '"><div class="qy-rod-quality">' + r.q + '</div><div class="qy-rod-name">' + r.n + '</div><div class="qy-rod-effect">' + (eq?'（持用中）<br>':'') + r.e + '</div></div>';
+        }).join('');
+        return '<div class="qy-rod-section"><div class="qy-rod-section-title">' + title + '</div><div class="qy-rod-grid">' + cells + '</div></div>';
+      }
+      rods.innerHTML = '<div class="qy-card-title">鱼 竿 <span class="deco">RODS</span></div>' + rodSec('地 面 钓 竿 · 五 阶 · 海 洋 系', QY_RODS_GROUND) + rodSec('空 岛 钓 竿 · 五 阶 · 星 空 系', QY_RODS_SKY);
+    }
+    var baits = document.getElementById('qy-fishing-baits');
+    if (baits) {
+      var inv = (f['饵料库存'] && typeof f['饵料库存'] === 'object') ? f['饵料库存'] : {};
+      function baitSec(title, list) {
+        var cells = list.map(function(b) {
+          var q = qyNum(inv[b.n] != null ? inv[b.n] : inv[qyStrip(b.n)]);
+          return '<div class="qy-bait' + (q<=0?' empty':'') + '"><div class="qy-bait-head"><span class="qy-bait-quality">' + b.q + '</span><span class="qy-bait-name">' + b.n + '</span><span class="qy-bait-qty">×' + q + '</span></div><div class="qy-bait-effect">' + b.e + '</div></div>';
+        }).join('');
+        return '<div class="qy-bait-section"><div class="qy-rod-section-title">' + title + '</div><div class="qy-bait-grid">' + cells + '</div></div>';
+      }
+      baits.innerHTML = '<div class="qy-card-title">饵 料 <span class="deco">BAITS</span></div>' + baitSec('地 面 饵 料 · 六 阶 · 海 洋 系', QY_BAITS_GROUND) + baitSec('空 岛 饵 料 · 六 阶 · 星 空 系', QY_BAITS_SKY);
+    }
+  };
+
+  window.qyRenderFarming = function(s) {
+    var f = (s && s['种地']) || {};
+    var sk = document.getElementById('qy-farming-skill');
+    if (sk) {
+      var sp = qyNum(f['种地熟练度']);
+      sk.innerHTML = '<div class="qy-card-title">种 地 熟 练 度 <span class="deco">PROFICIENCY</span></div><div class="qy-skill-head"><span class="qy-skill-name">熟 练 度</span><span class="qy-skill-percent">' + sp + ' / 100</span></div><div class="qy-bar"><div class="qy-bar-fill" style="width:' + Math.min(sp,100) + '%"></div></div>';
+    }
+    var iv = document.getElementById('qy-farming-inv');
+    if (iv) {
+      var stock = (f['作物库存'] && typeof f['作物库存'] === 'object') ? f['作物库存'] : {};
+      var ks = Object.keys(stock);
+      iv.innerHTML = '<div class="qy-card-title">作 物 库 存 <span class="deco">INVENTORY</span></div><div class="qy-inv-chips">' + (ks.length ? ks.map(function(k){ return '<span class="qy-inv-chip">' + qyEscapeHtml(k) + '<span class="qty">×' + qyNum(stock[k]) + '</span></span>'; }).join('') : '<span class="qy-list-empty">— 暂无收成 —</span>') + '</div>';
+    }
+    var fl = document.getElementById('qy-farming-fields');
+    if (fl) {
+      var fields = qyUnwrapArr(f['田地']);
+      var html = '<div class="qy-card-title">田 地 · 6 块 <span class="deco">FIELDS</span></div><div class="qy-fields-grid">';
+      for (var i = 0; i < 6; i++) {
+        var fd = fields[i];
+        if (!fd || typeof fd !== 'object') {
+          html += '<div class="qy-field state-empty"><div class="qy-field-head"><span class="qy-field-num">FIELD 0' + (i+1) + '</span><span class="qy-field-state">空 闲</span></div><h4 class="qy-field-crop" style="color:#98a89c;">— 待 播 种 —</h4><div class="qy-field-meta" style="margin-top:12px;"><div>这块田已经翻整好了，等着新一茬的种子。</div></div></div>';
+        } else {
+          var st = qySafe(fd['状态'], '生 长 中');
+          var cls = (String(st).indexOf('收') >= 0) ? 'state-ready' : ((String(st).indexOf('枯') >= 0) ? 'state-withered' : 'state-growing');
+          var pct = qyNum(fd['进度']);
+          html += '<div class="qy-field ' + cls + '"><div class="qy-field-head"><span class="qy-field-num">FIELD 0' + (i+1) + '</span><span class="qy-field-state">' + qyEscapeHtml(st) + '</span></div><h4 class="qy-field-crop">' + qyEscapeHtml(qySafe(fd['作物'], '—')) + '<span class="qy-field-rank">阶 ' + qyNum(fd['阶'] != null ? fd['阶'] : 1) + '</span></h4><div class="qy-field-progress"><div class="qy-field-progress-text"><span>' + qyEscapeHtml(qySafe(fd['描述'], '')) + '</span><span class="pct">' + pct + '%</span></div><div class="qy-field-bar"><div class="qy-field-bar-fill" style="width:' + Math.min(pct,100) + '%"></div></div></div></div>';
+        }
+      }
+      html += '</div>';
+      fl.innerHTML = html;
+    }
+    var tl = document.getElementById('qy-farming-tools');
+    if (tl) {
+      var tools = (f['农具'] && typeof f['农具'] === 'object') ? f['农具'] : {};
+      tl.innerHTML = '<div class="qy-card-title">农 具 <span class="deco">TOOLS</span></div><div class="qy-tools-grid">' + QY_TOOLS.map(function(t){
+        var rk = tools[qyStrip(t.k)] != null ? tools[qyStrip(t.k)] : tools[t.k];
+        var has = (rk != null && rk !== '');
+        return '<div class="qy-tool"><div class="tool-key">' + t.k + '</div><div class="tool-val">' + (has ? t.d : '—') + '</div><div class="tool-rank">' + (has ? ('阶 ' + qyNum(rk)) : '未 持 有') + '</div></div>';
+      }).join('') + '</div>';
+    }
+    var ul = document.getElementById('qy-farming-unlocked');
+    if (ul) {
+      var unl = qyUnwrapArr(f['已解锁作物']);
+      ul.innerHTML = '<div class="qy-card-title">已 解 锁 作 物 <span class="deco">UNLOCKED</span></div><div class="qy-unlock-grid">' + QY_CROPS.map(function(c){
+        var items = c.list.map(function(nm){ return qyInList(unl, nm) ? nm : '<span class="locked">' + nm + '</span>'; }).join(' / ');
+        return '<div class="qy-unlock-cat"><div class="qy-unlock-cat-head">' + c.cat + '</div><div class="qy-unlock-cat-list">' + items + '</div></div>';
+      }).join('') + '</div>';
+    }
+  };
+
+  window.qyRenderCooking = function(s) {
+    var f = (s && s['做菜']) || {};
+    var sp = qyNum(f['做菜熟练度']);
+    var stock = (f['食材库存'] && typeof f['食材库存'] === 'object') ? f['食材库存'] : {};
+    var sk = document.getElementById('qy-cooking-skill');
+    if (sk) sk.innerHTML = '<div class="qy-card-title">烹 饪 熟 练 度 <span class="deco">PROFICIENCY</span></div><div class="qy-skill-head"><span class="qy-skill-name">熟 练 度</span><span class="qy-skill-percent">' + sp + ' / 100</span></div><div class="qy-bar"><div class="qy-bar-fill" style="width:' + Math.min(sp,100) + '%"></div></div>';
+    var iv = document.getElementById('qy-cooking-inv');
+    if (iv) {
+      var ks = Object.keys(stock);
+      iv.innerHTML = '<div class="qy-card-title">食 材 库 存 <span class="deco">INGREDIENTS</span></div><div class="qy-ingr-chips">' + (ks.length ? ks.map(function(k){ return '<span class="qy-ingr-chip">' + qyEscapeHtml(k) + '<span class="qty">×' + qyNum(stock[k]) + '</span></span>'; }).join('') : '<span class="qy-list-empty">— 暂无食材 —</span>') + '</div>';
+    }
+    var rc = document.getElementById('qy-cooking-recipes');
+    if (rc) {
+      rc.innerHTML = '<div class="qy-card-title">菜 谱 图 鉴 <span class="deco">RECIPES</span></div><div class="qy-recipes-grid">' + QY_RECIPES_COOK.map(function(r){
+        var ing = r.ing.map(function(it){ var have = qyNum(stock[it.n]) >= it.c; return '<span class="' + (have?'ok':'miss') + '">' + it.n + '×' + it.c + '</span>'; }).join('、');
+        var matOk = r.ing.every(function(it){ return qyNum(stock[it.n]) >= it.c; });
+        var unlocked = (sp >= r.sk);
+        var canCook = unlocked && matOk;
+        var btnTxt = canCook ? '下 厨' : (!unlocked ? '熟练度不足' : '食材不足');
+        return '<div class="qy-recipe ' + r.rc + '"><div class="qy-recipe-head"><span class="qy-recipe-name">' + r.n + '</span><span class="qy-recipe-rank">' + r.rank + '</span></div><div class="qy-recipe-tags"><span class="qy-recipe-tag t-cuisine">' + r.cui + '</span><span class="qy-recipe-tag t-main">' + r.mn + '</span><span class="qy-recipe-tag t-buff">' + r.bf + '</span></div><div class="qy-recipe-buff">' + r.ef + '</div><div class="qy-recipe-ingr"><span class="label">食材</span> ' + ing + '</div><div class="qy-recipe-foot"><span class="qy-recipe-skill">熟练 ≥ ' + r.sk + '</span><button class="qy-recipe-btn' + (canCook?'':' disabled') + '"' + (canCook?'':' disabled') + '>' + btnTxt + '</button></div></div>';
+      }).join('') + '</div>';
+    }
+  };
+
+  window.qyRenderCraft = function(s) {
+    var f = (s && s['副职']) || {};
+    var mat = (f['原料库存'] && typeof f['原料库存'] === 'object') ? f['原料库存'] : {};
+    function skillCard(id, title, deco, val) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var v = qyNum(val);
+      el.innerHTML = '<div class="qy-card-title">' + title + ' <span class="deco">' + deco + '</span></div><div class="qy-skill-head"><span class="qy-skill-name">熟 练 度</span><span class="qy-skill-percent">' + v + ' / 100</span></div><div class="qy-bar"><div class="qy-bar-fill" style="width:' + Math.min(v,100) + '%"></div></div>';
+    }
+    function matCard(id, title) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var ks = Object.keys(mat);
+      el.innerHTML = '<div class="qy-card-title">' + title + ' <span class="deco">MATERIALS</span></div><div class="qy-mat-chips">' + (ks.length ? ks.map(function(k){ return '<span class="qy-mat-chip">' + qyEscapeHtml(k) + '<span class="qty">×' + qyNum(mat[k]) + '</span></span>'; }).join('') : '<span class="qy-list-empty">— 暂无原料 —</span>') + '</div>';
+    }
+    function recipeCard(id, title, deco, list, prof, doTxt) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var sp = qyNum(prof);
+      el.innerHTML = '<div class="qy-card-title">' + title + ' <span class="deco">' + deco + '</span></div><div class="qy-recipes-grid">' + list.map(function(r){
+        var ml = r.mat.map(function(it){ var have = qyNum(mat[it.n]) >= it.c; return '<span class="' + (have?'ok':'miss') + '">' + it.n + '×' + it.c + '</span>'; }).join('、');
+        var matOk = r.mat.every(function(it){ return qyNum(mat[it.n]) >= it.c; });
+        var unlocked = (sp >= r.sk);
+        var canDo = unlocked && matOk;
+        var btnTxt = canDo ? doTxt : (!unlocked ? '熟练度不足' : '原料不足');
+        return '<div class="qy-recipe ' + r.rc + '"><div class="qy-recipe-head"><span class="qy-recipe-name">' + r.n + '</span><span class="qy-recipe-rank">' + r.rank + '</span></div><div class="qy-recipe-tags"><span class="qy-recipe-tag t-buff">' + (r.bf || r.slot) + '</span></div><div class="qy-recipe-effect">' + r.ef + '</div><div class="qy-recipe-mats"><span class="label">原料</span> ' + ml + '</div><div class="qy-recipe-fail">炸炉率 <span class="rate">' + r.fail + '%</span> · 品级浮动 ±1</div><div class="qy-recipe-foot"><span class="qy-recipe-skill">熟练 ≥ ' + r.sk + '</span><button class="qy-recipe-btn' + (canDo?'':' disabled') + '"' + (canDo?'':' disabled') + '>' + btnTxt + '</button></div></div>';
+      }).join('') + '</div>';
+    }
+    skillCard('qy-craft-alchemy-skill', '炼 丹 熟 练 度', 'ALCHEMY', f['炼丹熟练度']);
+    matCard('qy-craft-alchemy-mat', '原 料 库 存');
+    recipeCard('qy-craft-alchemy-recipes', '已 解 锁 丹 方', 'RECIPES', QY_RECIPES_ALCHEMY, f['炼丹熟练度'], '下 炉');
+    skillCard('qy-craft-forge-skill', '锻 造 熟 练 度', 'FORGE', f['锻造熟练度']);
+    matCard('qy-craft-forge-mat', '原 料 库 存');
+    recipeCard('qy-craft-forge-recipes', '已 解 锁 图 纸', 'BLUEPRINTS', QY_BLUEPRINTS_FORGE, f['锻造熟练度'], '下 铁');
+  };
+
+  window.qyRenderPlay = function() {
+    if (typeof window.Mvu === 'undefined') return;
+    try {
+      var d = Mvu.getMvuData({ type: 'chat' });
+      var s = qyDeepUnwrap((d && d.stat_data) || {});
+      qyRenderFishing(s);
+      qyRenderFarming(s);
+      qyRenderCooking(s);
+      qyRenderCraft(s);
+    } catch (e) {
+      console.warn('[qy] qyRenderPlay 失败:', e);
     }
   };
 
@@ -8358,6 +7756,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     } catch (e) {
       console.warn('[qy] qyRenderStatusBar 失败:', e);
     }
+    // 玩法 page 跟状态栏同步刷新 (AI 输出后 / mvu 更新后所有调用点自动带上)
+    if (typeof window.qyRenderPlay === 'function') { try { window.qyRenderPlay(); } catch (e2) { console.warn('[qy] qyRenderPlay:', e2); } }
   };
 
   function qyRenderProtagonist(stat) {
@@ -8695,6 +8095,10 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     // 第一次激活时初始化该 page 的 JS
     var initFn = window['qyInit_' + name];
     if (typeof initFn === 'function') initFn();
+    // 切到玩法 page 时即时从 mvu 渲染 (不等 AI 输出, 玩家点悬浮球进来就看到真实拥有态)
+    if (['fishing','farming','cooking','craft'].indexOf(name) >= 0 && typeof window.qyRenderPlay === 'function') {
+      try { window.qyRenderPlay(); } catch (e3) { console.warn('[qy] qyRenderPlay(show):', e3); }
+    }
     // main page init 后包装 qyClGoto: 切到总览屏时自动渲染玩家实际填的字段 (不是 sample)
     if (name === 'main' && !window.__qyClGotoWrapped && typeof window.qyClGoto === 'function') {
       var origGoto = window.qyClGoto;
@@ -9287,6 +8691,16 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         injectLines.push('熟练度: ' + (rollResult.prof || 0));
         injectLines.push('请按这个结果叙事, 严禁创造其他物品名 (会跟前端不一致). 玩家收获已由 SPA 同步加进背包.');
       }
+      if (rollResult.judge) {
+        var jg = rollResult.judge;
+        injectLines.push('【SPA 判定结果 (必须据此叙事, 不得擅自改判 / 不得无中生有提升品质档)】');
+        injectLines.push('判定: ' + (jg.success ? '成功' : '失败') + ' (成功率 ' + jg.succRate + '% · 熟练度 ' + jg.prof + ')');
+        if (jg.grade) injectLines.push('品质档: ' + jg.grade);
+        if (jg.harvest) injectLines.push('收成: ' + jg.harvest);
+        injectLines.push('说明: ' + jg.note);
+        injectLines.push('消耗: ' + jg.consume);
+        injectLines.push('失败也要按"保底"叙事 (玩家不空手), 熟练度涨幅按 D1 协议克制更新.');
+      }
       injectLines.push('');
     }
     injectLines.push('叙事描述操作过程与结果, 自然推进时间, 可触发偶发事件。');
@@ -9331,6 +8745,25 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       // SPA 抽签的 roll 模式: AI 叙事完后把抽得物 push 到背包 (B 类, 不让 AI 写)
       if (rollResult && rollResult.type === 'roll' && rollResult.picked) {
         try { await window.qyPushItem(rollResult.picked); } catch (e) { console.warn('[qy] qyPushItem 失败:', e); }
+      }
+      // 钓鱼判定: SPA 真扣当前装备饵料 1 个 (朔: 钓鱼扣 1 份对应投入物, SPA 主导不让 AI 决定数值)
+      if (rollResult && rollResult.judge && pageId === 'fishing') {
+        try {
+          var _fd = Mvu.getMvuData({ type: 'chat' }) || {};
+          var _fstat = qyDeepUnwrap(_fd.stat_data || {});
+          var _curBait = qyStrip(qySafe(_fstat['钓鱼'] && _fstat['钓鱼']['装备'] && _fstat['钓鱼']['装备']['饵料'], ''));
+          if (_curBait) {
+            var _bdat = Mvu.getMvuData({ type: 'chat' }) || {};
+            var _binv = qyDeepUnwrap((_bdat.stat_data && _bdat.stat_data['钓鱼'] && _bdat.stat_data['钓鱼']['饵料库存']));
+            if (!_binv || typeof _binv !== 'object' || Array.isArray(_binv)) _binv = {};
+            var _key = (_binv[_curBait] != null) ? _curBait : null;
+            if (_key === null) { for (var _bk in _binv) { if (qyStrip(_bk) === _curBait) { _key = _bk; break; } } }
+            if (_key !== null && qyNum(_binv[_key]) > 0) {
+              _binv[_key] = qyNum(_binv[_key]) - 1;
+              await Mvu.setMvuVariable('钓鱼.饵料库存', _binv, { type: 'chat' });
+            }
+          }
+        } catch (e) { console.warn('[qy] 钓鱼判定扣饵料失败:', e); }
       }
       // 完美记忆系统: push 标签抽取 → worldbook + NPC 监控 + 兜底每 5 轮
       await window.qyApplyPushTags(finalText);
@@ -10969,43 +10402,6 @@ window.qyUnwrapMem = function(v) {
   return v;
 };
 
-// 诊断 helper: 检查 TH / book / getWorldbook method 三件套 (新 worldbook API)
-window.qyDiagWorldbookAccess = async function() {
-  try {
-    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
-    if (!TH) {
-      return { ok: false, msg: '[诊断] TH 取不到 (TavernHelper / window.parent.TavernHelper 都 undefined)' };
-    }
-    if (typeof TH.getWorldbook !== 'function') {
-      return { ok: false, msg: '[诊断] TH.getWorldbook 不是 function (typeof=' + (typeof TH.getWorldbook) + ')' };
-    }
-    var book = null;
-    var bookErr = null;
-    try {
-      book = (typeof window.qyGetCharBook === 'function') ? await window.qyGetCharBook() : null;
-    } catch (e) {
-      bookErr = (e && e.message) || String(e);
-    }
-    if (!book) {
-      var rawDump = '?';
-      try {
-        if (typeof TH.getCharWorldbookNames === 'function') {
-          var raw = await TH.getCharWorldbookNames('current');
-          rawDump = JSON.stringify(raw);
-        } else {
-          rawDump = 'getCharWorldbookNames 不是 function (typeof=' + (typeof TH.getCharWorldbookNames) + ')';
-        }
-      } catch (e2) {
-        rawDump = 'throw: ' + ((e2 && e2.message) || e2);
-      }
-      return { ok: false, msg: '[诊断] book 为空 (getCharWorldbookNames(current) 返回: ' + rawDump + ')' + (bookErr ? ' / qyGetCharBook throw: ' + bookErr : '') };
-    }
-    return { ok: true, TH: TH, book: book };
-  } catch (e) {
-    return { ok: false, msg: '[诊断] helper throw: ' + ((e && e.message) || e) };
-  }
-};
-
 window.qyRenderMemoryNarrations = function() {
   var listEl = document.getElementById('qy-mem-narr-list');
   if (!listEl) return;
@@ -11079,12 +10475,12 @@ window.qyRenderMemoryCharacters = async function() {
   var listEl = document.getElementById('qy-mem-char-list');
   if (!listEl) return;
   try {
-    var diag = await window.qyDiagWorldbookAccess();
-    if (!diag.ok) {
-      listEl.innerHTML = '<li class="qy-mem-empty">' + window.qyEscMem(diag.msg) + '</li>';
+    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+    var book = (typeof window.qyGetCharBook === 'function') ? await window.qyGetCharBook() : null;
+    if (!TH || !book || typeof TH.getWorldbook !== 'function') {
+      listEl.innerHTML = '<li class="qy-mem-empty">尚未记录任何关键人物</li>';
       return;
     }
-    var TH = diag.TH, book = diag.book;
     var entries = await TH.getWorldbook(book);
     var chars = (entries || []).filter(function(e) {
       return e && typeof e.name === 'string' && e.name.indexOf('[关键人物]') === 0;
@@ -11111,12 +10507,12 @@ window.qyRenderMemoryArchives = async function() {
   var listEl = document.getElementById('qy-mem-arch-list');
   if (!listEl) return;
   try {
-    var diag = await window.qyDiagWorldbookAccess();
-    if (!diag.ok) {
-      listEl.innerHTML = '<li class="qy-mem-empty">' + window.qyEscMem(diag.msg) + '</li>';
+    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+    var book = (typeof window.qyGetCharBook === 'function') ? await window.qyGetCharBook() : null;
+    if (!TH || !book || typeof TH.getWorldbook !== 'function') {
+      listEl.innerHTML = '<li class="qy-mem-empty">尚无大事记 (纪要满 180 条自动归档)</li>';
       return;
     }
-    var TH = diag.TH, book = diag.book;
     var entries = await TH.getWorldbook(book);
     var archives = (entries || []).filter(function(e) {
       return e && typeof e.name === 'string' && /^\[大事记\]/.test(e.name);
@@ -11143,12 +10539,12 @@ window.qyRenderMemoryCompanions = async function() {
   var listEl = document.getElementById('qy-mem-comp-list');
   if (!listEl) return;
   try {
-    var diag = await window.qyDiagWorldbookAccess();
-    if (!diag.ok) {
-      listEl.innerHTML = '<li class="qy-mem-empty">' + window.qyEscMem(diag.msg) + '</li>';
+    var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
+    var book = (typeof window.qyGetCharBook === 'function') ? await window.qyGetCharBook() : null;
+    if (!TH || !book || typeof TH.getWorldbook !== 'function') {
+      listEl.innerHTML = '<li class="qy-mem-empty">尚未记录任何同伴</li>';
       return;
     }
-    var TH = diag.TH, book = diag.book;
     var entries = await TH.getWorldbook(book);
     var comps = (entries || []).filter(function(e) {
       return e && typeof e.name === 'string' && e.name.indexOf('[同伴]') === 0;
