@@ -7912,12 +7912,18 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
 
   // qyCheckMandatoryPush: 每轮兜底 — AI 这轮没主动 push 纪要才强制 generateRaw 详细总结 (走副 API, 调用点异步不阻塞主对话)
   window.qyCheckMandatoryPush = async function(userText, aiText) {
-    if (typeof generateRaw !== 'function') return;
+    if (typeof generateRaw !== 'function') {
+      console.warn('[qy] 每轮总结跳过: generateRaw 不可用');
+      return;
+    }
     if (typeof window.Mvu === 'undefined') return;
     // 这轮 AI 自己已经主动 push 过 <纪要新增> 就不重复总结 (每轮恰好一条)
     try {
       var aiTags = window.qyExtractPushTags(aiText);
-      if (aiTags && aiTags.narrations && aiTags.narrations.length > 0) return;
+      if (aiTags && aiTags.narrations && aiTags.narrations.length > 0) {
+        await window.qyLogError('每轮总结·跳过', { message: '本轮 AI 已主动 push 纪要, 不重复总结(正常)' }, 0);
+        return;
+      }
     } catch (_) {}
     try {
       var prompt =
@@ -7940,64 +7946,19 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         if (sapi) cfg.custom_api = sapi;
         return generateRaw(cfg);
       }, 5, 'mandatoryPush');
-      if (typeof raw !== 'string') return;
+      if (typeof raw !== 'string') {
+        await window.qyLogError('每轮总结·失败', { message: 'generateRaw 未返回文本(raw 非 string), 可能当前源或副API调用失败' }, 0);
+        return;
+      }
       var tags = window.qyExtractPushTags(raw);
       if (tags.narrations.length > 0) {
         await window.qyPushNarration(tags.narrations[0]);
+      } else {
+        await window.qyLogError('每轮总结·失败', { message: 'generateRaw 有返回但抽不到 <纪要新增> 标签, AI 输出格式不符。返回片段: ' + String(raw).slice(0, 120) }, 0);
       }
     } catch (e) {
       console.warn('[qy] qyCheckMandatoryPush 失败:', e);
-    }
-  };
-
-  // qyMonitorNpc: NPC 监控 — 角色名出现 ≥3 次自动创建关键人物条目
-  window.qyMonitorNpc = async function(userText, aiText) {
-    if (typeof window.Mvu === 'undefined') return;
-    var combined = String(userText || '') + '\n' + String(aiText || '');
-    if (!combined.trim()) return;
-
-    // 简单中文姓名抽取: 2-4 字纯中文 token + 不在忽略列表 + 不是常见动词/形容词
-    // 用 mvu 当前 NPC1-3 已有 + 同伴1-3 已有 名字先建立白名单
-    var data = Mvu.getMvuData({ type: 'chat' }) || {};
-    var stat = data.stat_data || {};
-    var knownNames = {};
-    ['NPC1','NPC2','NPC3'].forEach(function(k) {
-      var n = stat[k] && stat[k]['姓名'];
-      if (n && typeof n === 'string') knownNames[n] = true;
-    });
-    var comp = stat['同伴'] || {};
-    ['伙伴1','伙伴2','伙伴3'].forEach(function(k) {
-      var n = comp[k] && (comp[k]['名字'] || comp[k]['姓名']);
-      if (n && typeof n === 'string') knownNames[n] = true;
-    });
-
-    // 抽中文 2-4 字 token (近似)
-    var tokens = combined.match(/[\u4e00-\u9fa5]{2,4}/g) || [];
-    var counts = {};
-    tokens.forEach(function(t) {
-      counts[t] = (counts[t] || 0) + 1;
-    });
-
-    var ignore = qyState.npcIgnoreList || [];
-    var ignoreSet = {};
-    ignore.forEach(function(n) { ignoreSet[n] = true; });
-
-    for (var name in counts) {
-      if (ignoreSet[name]) continue;
-      if (knownNames[name]) continue;
-      // 累积计数
-      qyState.npcMentionCount[name] = (qyState.npcMentionCount[name] || 0) + counts[name];
-      if (qyState.npcMentionCount[name] >= 3) {
-        // 触发自动创建
-        try {
-          await window.qyPushCharacter({
-            角色名: name,
-            新发现: '(SPA 自动监测: 出现 ' + qyState.npcMentionCount[name] + ' 次后自动归档, 待 AI 后续补充设定)'
-          });
-          // 清掉计数避免重复
-          delete qyState.npcMentionCount[name];
-        } catch (_) {}
-      }
+      await window.qyLogError('每轮总结·失败', e, 0);
     }
   };
 
@@ -8313,7 +8274,6 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
 
       // 6. 完美记忆系统: push 标签抽取 → worldbook 写入 + NPC 监控 + 兜底每 5 轮强制总结
       await window.qyApplyPushTags(finalText);
-      try { await window.qyMonitorNpc(text, finalText); } catch (_) {}
       // 总结异步后台跑, 不阻塞主对话出文 (副 API / 当前源都不等它)
       try { window.qyCheckMandatoryPush(text, finalText).catch(function(){}); } catch (_) {}
     } catch (e) {
@@ -8850,11 +8810,30 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     } else {
       rows = '<div style="color:#888;padding:1em;text-align:center;">mvu 不可用</div>';
     }
+    // [临时调试 锁定关聊天正文消失根因后删] dump 最近一轮 AI 原文
+    var qyDumpRaw = '(无)';
+    if (typeof window.Mvu !== 'undefined') {
+      try {
+        var dD = Mvu.getMvuData({ type: 'chat' }) || {};
+        var sD = dD.stat_data || {};
+        var hD = sD['对话历史'] || {};
+        var rawD = qyUnwrapArr(hD['原文']) || [];
+        for (var qi = rawD.length - 1; qi >= 0; qi--) {
+          var itD = rawD[qi];
+          if (itD && itD.role === 'assistant' && itD.content) { qyDumpRaw = String(itD.content); break; }
+        }
+      } catch (eD) { qyDumpRaw = '(读取失败: ' + (eD.message || eD) + ')'; }
+    }
+    var qyDumpEsc = qyDumpRaw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     modal.innerHTML =
       '<div style="background:#000;color:#fff;border:1px solid #333;border-radius:4px;width:min(640px,90vw);max-height:75vh;display:flex;flex-direction:column;" onclick="event.stopPropagation()">' +
         '<div style="padding:0.8em 1em;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center;">' +
           '<span style="color:#fff;font-size:1em;letter-spacing:0.15em;font-family:inherit;">错 误 日 志</span>' +
           '<button onclick="document.getElementById(\'qy-errlog-modal\').style.display=\'none\'" style="background:transparent;border:1px solid #555;color:#aaa;padding:0.25em 0.8em;cursor:pointer;font-family:inherit;font-size:0.85em;">关 闭</button>' +
+        '</div>' +
+        '<div style="padding:0.6em 0.8em;border-bottom:2px solid #555;background:#111;flex-shrink:0;">' +
+          '<div style="color:#ff0;font-size:0.85em;margin-bottom:0.4em;">[临时调试] 最近一轮 AI 原文 (锁定根因后删):</div>' +
+          '<pre style="white-space:pre-wrap;word-break:break-all;color:#9f9;font-size:0.8em;margin:0;max-height:30vh;overflow-y:auto;">' + qyDumpEsc + '</pre>' +
         '</div>' +
         '<div style="flex:1;overflow-y:auto;padding:0.3em 0.6em;">' + rows + '</div>' +
       '</div>';
@@ -9361,7 +9340,6 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       }
       // 完美记忆系统: push 标签抽取 → worldbook + NPC 监控 + 兜底每 5 轮
       await window.qyApplyPushTags(finalText);
-      try { await window.qyMonitorNpc(playUserText, finalText); } catch (_) {}
       // 总结异步后台跑, 不阻塞主对话出文
       try { window.qyCheckMandatoryPush(playUserText, finalText).catch(function(){}); } catch (_) {}
     } catch (e) {
