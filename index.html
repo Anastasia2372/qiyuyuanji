@@ -9403,9 +9403,12 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         if (book0) {
           await TH0.updateWorldbookWith(book0, function(entries) {
             return (entries || []).filter(function(e) {
-              var nm = (e && e.name) ? String(e.name) : '';
+              var nm = (e && e.name) ? String(e.name).trim() : '';
+              var ct = (e && e.content) ? String(e.content).trim() : '';
               var isSpaGen = /^\[(\u5173\u952e\u4eba\u7269|\u540c\u4f34|\u5927\u4e8b\u8bb0|\u4efb\u52a1|\u7269\u54c1)\]/.test(nm) || /^AM\d/.test(nm);
-              return !isSpaGen;
+              // 旧残留空壳: name 空或 ST 默认占位"条目标题/备忘录" 且 content 也空. ct==='' 是死保险, 卡预埋全部 content 非空 → 零误删
+              var isEmptyShell = (nm === '' || nm === '\u6761\u76ee\u6807\u9898/\u5907\u5fd8\u5f55') && ct === '';
+              return !(isSpaGen || isEmptyShell);
             });
           });
         }
