@@ -2352,6 +2352,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   transition: all 0.25s;
 }
 .qy-rod:hover { border-color: rgba(160, 220, 240, 0.45); transform: translateY(-1px); }
+.qy-rod:not(.owned) { opacity: 0.45; }
 .qy-rod.owned {
   border-color: #80c8e8;
   background: linear-gradient(135deg, rgba(80, 160, 200, 0.25), rgba(20, 60, 90, 0.4));
@@ -6745,12 +6746,15 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       for (var i = 0; i < 6; i++) {
         var fd = fields[i];
         if (!fd || typeof fd !== 'object') {
-          html += '<div class="qy-field state-empty"><div class="qy-field-head"><span class="qy-field-num">FIELD 0' + (i+1) + '</span><span class="qy-field-state">空 闲</span></div><h4 class="qy-field-crop" style="color:#98a89c;">— 待 播 种 —</h4><div class="qy-field-meta" style="margin-top:12px;"><div>这块田已经翻整好了，等着新一茬的种子。</div></div></div>';
+          html += '<div class="qy-field state-empty"><div class="qy-field-head"><span class="qy-field-num">FIELD 0' + (i+1) + '</span><span class="qy-field-state">空 闲</span></div><h4 class="qy-field-crop" style="color:#98a89c;">— 待 播 种 —</h4><div class="qy-field-meta" style="margin-top:12px;"><div>这块田已经翻整好了，等着新一茬的种子。</div></div><div class="qy-field-actions"><button class="qy-field-btn primary">播 种</button></div></div>';
         } else {
           var st = qySafe(fd['状态'], '生 长 中');
           var cls = (String(st).indexOf('收') >= 0) ? 'state-ready' : ((String(st).indexOf('枯') >= 0) ? 'state-withered' : 'state-growing');
           var pct = qyNum(fd['进度']);
-          html += '<div class="qy-field ' + cls + '"><div class="qy-field-head"><span class="qy-field-num">FIELD 0' + (i+1) + '</span><span class="qy-field-state">' + qyEscapeHtml(st) + '</span></div><h4 class="qy-field-crop">' + qyEscapeHtml(qySafe(fd['作物'], '—')) + '<span class="qy-field-rank">阶 ' + qyNum(fd['阶'] != null ? fd['阶'] : 1) + '</span></h4><div class="qy-field-progress"><div class="qy-field-progress-text"><span>' + qyEscapeHtml(qySafe(fd['描述'], '')) + '</span><span class="pct">' + pct + '%</span></div><div class="qy-field-bar"><div class="qy-field-bar-fill" style="width:' + Math.min(pct,100) + '%"></div></div></div></div>';
+          var acts = (cls === 'state-ready') ? '<button class="qy-field-btn primary">收 获</button>'
+                   : (cls === 'state-withered') ? '<button class="qy-field-btn warn">清 理</button>'
+                   : '<button class="qy-field-btn">浇 水</button><button class="qy-field-btn">施 肥</button>';
+          html += '<div class="qy-field ' + cls + '"><div class="qy-field-head"><span class="qy-field-num">FIELD 0' + (i+1) + '</span><span class="qy-field-state">' + qyEscapeHtml(st) + '</span></div><h4 class="qy-field-crop">' + qyEscapeHtml(qySafe(fd['作物'], '—')) + '<span class="qy-field-rank">阶 ' + qyNum(fd['阶'] != null ? fd['阶'] : 1) + '</span></h4><div class="qy-field-progress"><div class="qy-field-progress-text"><span>' + qyEscapeHtml(qySafe(fd['描述'], '')) + '</span><span class="pct">' + pct + '%</span></div><div class="qy-field-bar"><div class="qy-field-bar-fill" style="width:' + Math.min(pct,100) + '%"></div></div></div><div class="qy-field-actions">' + acts + '</div></div>';
         }
       }
       html += '</div>';
@@ -6788,14 +6792,15 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
     var rc = document.getElementById('qy-cooking-recipes');
     if (rc) {
-      rc.innerHTML = '<div class="qy-card-title">菜 谱 图 鉴 <span class="deco">RECIPES</span></div><div class="qy-recipes-grid">' + QY_RECIPES_COOK.map(function(r){
+      var unl = qyUnwrapArr(f['已解锁菜谱']);
+      var cards = QY_RECIPES_COOK.filter(function(r){ return qyInList(unl, r.n); }).map(function(r){
         var ing = r.ing.map(function(it){ var have = qyNum(stock[it.n]) >= it.c; return '<span class="' + (have?'ok':'miss') + '">' + it.n + '×' + it.c + '</span>'; }).join('、');
         var matOk = r.ing.every(function(it){ return qyNum(stock[it.n]) >= it.c; });
-        var unlocked = (sp >= r.sk);
-        var canCook = unlocked && matOk;
-        var btnTxt = canCook ? '下 厨' : (!unlocked ? '熟练度不足' : '食材不足');
+        var canCook = (sp >= r.sk) && matOk;
+        var btnTxt = canCook ? '下 厨' : (sp < r.sk ? '熟练度不足' : '食材不足');
         return '<div class="qy-recipe ' + r.rc + '"><div class="qy-recipe-head"><span class="qy-recipe-name">' + r.n + '</span><span class="qy-recipe-rank">' + r.rank + '</span></div><div class="qy-recipe-tags"><span class="qy-recipe-tag t-cuisine">' + r.cui + '</span><span class="qy-recipe-tag t-main">' + r.mn + '</span><span class="qy-recipe-tag t-buff">' + r.bf + '</span></div><div class="qy-recipe-buff">' + r.ef + '</div><div class="qy-recipe-ingr"><span class="label">食材</span> ' + ing + '</div><div class="qy-recipe-foot"><span class="qy-recipe-skill">熟练 ≥ ' + r.sk + '</span><button class="qy-recipe-btn' + (canCook?'':' disabled') + '"' + (canCook?'':' disabled') + '>' + btnTxt + '</button></div></div>';
-      }).join('') + '</div>';
+      }).join('');
+      rc.innerHTML = '<div class="qy-card-title">菜 谱 图 鉴 <span class="deco">RECIPES</span></div>' + (cards ? '<div class="qy-recipes-grid">' + cards + '</div>' : '<div class="qy-codex-grid-empty" style="grid-column:1/-1;text-align:center;padding:40px;color:#6a7888;font-style:italic;">— 还 没 习 得 任 何 菜 谱，剧 情 中 探 索 解 锁 —</div>');
     }
   };
 
@@ -6814,25 +6819,26 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       var ks = Object.keys(mat);
       el.innerHTML = '<div class="qy-card-title">' + title + ' <span class="deco">MATERIALS</span></div><div class="qy-mat-chips">' + (ks.length ? ks.map(function(k){ return '<span class="qy-mat-chip">' + qyEscapeHtml(k) + '<span class="qty">×' + qyNum(mat[k]) + '</span></span>'; }).join('') : '<span class="qy-list-empty">— 暂无原料 —</span>') + '</div>';
     }
-    function recipeCard(id, title, deco, list, prof, doTxt) {
+    function recipeCard(id, title, deco, list, prof, doTxt, unlField, emptyTxt) {
       var el = document.getElementById(id);
       if (!el) return;
       var sp = qyNum(prof);
-      el.innerHTML = '<div class="qy-card-title">' + title + ' <span class="deco">' + deco + '</span></div><div class="qy-recipes-grid">' + list.map(function(r){
+      var unl = qyUnwrapArr(f[unlField]);
+      var cards = list.filter(function(r){ return qyInList(unl, r.n); }).map(function(r){
         var ml = r.mat.map(function(it){ var have = qyNum(mat[it.n]) >= it.c; return '<span class="' + (have?'ok':'miss') + '">' + it.n + '×' + it.c + '</span>'; }).join('、');
         var matOk = r.mat.every(function(it){ return qyNum(mat[it.n]) >= it.c; });
-        var unlocked = (sp >= r.sk);
-        var canDo = unlocked && matOk;
-        var btnTxt = canDo ? doTxt : (!unlocked ? '熟练度不足' : '原料不足');
+        var canDo = (sp >= r.sk) && matOk;
+        var btnTxt = canDo ? doTxt : (sp < r.sk ? '熟练度不足' : '原料不足');
         return '<div class="qy-recipe ' + r.rc + '"><div class="qy-recipe-head"><span class="qy-recipe-name">' + r.n + '</span><span class="qy-recipe-rank">' + r.rank + '</span></div><div class="qy-recipe-tags"><span class="qy-recipe-tag t-buff">' + (r.bf || r.slot) + '</span></div><div class="qy-recipe-effect">' + r.ef + '</div><div class="qy-recipe-mats"><span class="label">原料</span> ' + ml + '</div><div class="qy-recipe-fail">炸炉率 <span class="rate">' + r.fail + '%</span> · 品级浮动 ±1</div><div class="qy-recipe-foot"><span class="qy-recipe-skill">熟练 ≥ ' + r.sk + '</span><button class="qy-recipe-btn' + (canDo?'':' disabled') + '"' + (canDo?'':' disabled') + '>' + btnTxt + '</button></div></div>';
-      }).join('') + '</div>';
+      }).join('');
+      el.innerHTML = '<div class="qy-card-title">' + title + ' <span class="deco">' + deco + '</span></div>' + (cards ? '<div class="qy-recipes-grid">' + cards + '</div>' : '<div class="qy-codex-grid-empty" style="grid-column:1/-1;text-align:center;padding:40px;color:#6a7888;font-style:italic;">' + emptyTxt + '</div>');
     }
     skillCard('qy-craft-alchemy-skill', '炼 丹 熟 练 度', 'ALCHEMY', f['炼丹熟练度']);
     matCard('qy-craft-alchemy-mat', '原 料 库 存');
-    recipeCard('qy-craft-alchemy-recipes', '已 解 锁 丹 方', 'RECIPES', QY_RECIPES_ALCHEMY, f['炼丹熟练度'], '下 炉');
+    recipeCard('qy-craft-alchemy-recipes', '已 解 锁 丹 方', 'RECIPES', QY_RECIPES_ALCHEMY, f['炼丹熟练度'], '下 炉', '已解锁丹方', '— 还 没 习 得 任 何 丹 方，剧 情 中 拜 师 / 任 务 解 锁 —');
     skillCard('qy-craft-forge-skill', '锻 造 熟 练 度', 'FORGE', f['锻造熟练度']);
     matCard('qy-craft-forge-mat', '原 料 库 存');
-    recipeCard('qy-craft-forge-recipes', '已 解 锁 图 纸', 'BLUEPRINTS', QY_BLUEPRINTS_FORGE, f['锻造熟练度'], '下 铁');
+    recipeCard('qy-craft-forge-recipes', '已 解 锁 图 纸', 'BLUEPRINTS', QY_BLUEPRINTS_FORGE, f['锻造熟练度'], '下 铁', '已解锁图纸', '— 还 没 习 得 任 何 图 纸，剧 情 中 拜 师 / 任 务 解 锁 —');
   };
 
   window.qyRenderPlay = function() {
@@ -6846,6 +6852,11 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       qyRenderCraft(s);
     } catch (e) {
       console.warn('[qy] qyRenderPlay 失败:', e);
+    }
+    // 治本: 渲染函数 innerHTML 重建了 DOM, 原绑定失效, 新按钮没 click handler → 必须重绑
+    // (qyBindPlayButtons 内有 dataset.qyBound 防重, 重复调安全; 根治"点了没反应")
+    if (typeof qyBindPlayButtons === 'function') {
+      try { qyBindPlayButtons(); } catch (e4) { console.warn('[qy] qyBindPlayButtons(rebind):', e4); }
     }
   };
 
@@ -7651,6 +7662,9 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       if (d1Inject) injects.push(d1Inject);
       var mvuInject = window.qyBuildMvuInject();
       if (mvuInject) injects.push(mvuInject);
+      // 玩家本轮带玩法操作 (点玩法按钮填草稿后发送): 附 SPA 判定/抽签 inject (判定 SPA 定, 玩家改不了)
+      var _playInject = (qyState.pendingPlay && typeof window.qyBuildPlayInject === 'function') ? window.qyBuildPlayInject(qyState.pendingPlay) : null;
+      if (_playInject) injects.push(_playInject);
 
       // Phase 1 规划召回: 让规划 AI 看 mvu.纪要索引 + 最近原文 + 用户输入, 输出 <recall>AMxxxx,AMyyyy</recall>
       // Phase 2 把 AM 编码塞 chat history 一条 system inject → ST 拼 prompt 时扫到 keyword 自动激活对应 worldbook 条目 (AM wrapper + AM 详情) → 主 AI 看
@@ -7680,6 +7694,34 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
 
       // 5. generate 完成 → mvu 解析 AI 输出里的 _.set 命令 (UpdateVariable 块在 raw 里, mvu bundle.js 按块抽取)
       await window.qyApplyMvu(finalText);
+
+      // 5b. 玩法操作后处理: 玩家这条已发送 → 抽得物 push 背包 + 钓鱼真扣饵料 + 清 pending (判定生效一次)
+      if (qyState.pendingPlay) {
+        var _pp = qyState.pendingPlay;
+        qyState.pendingPlay = null;
+        try {
+          var _rr = _pp.rollResult;
+          if (_rr && _rr.type === 'roll' && _rr.picked) {
+            try { await window.qyPushItem(_rr.picked); } catch (e) { console.warn('[qy] qyPushItem 失败:', e); }
+          }
+          if (_rr && _rr.judge && _pp.pageId === 'fishing') {
+            var _fd = Mvu.getMvuData({ type: 'chat' }) || {};
+            var _fstat = qyDeepUnwrap(_fd.stat_data || {});
+            var _curBait = qyStrip(qySafe(_fstat['钓鱼'] && _fstat['钓鱼']['装备'] && _fstat['钓鱼']['装备']['饵料'], ''));
+            if (_curBait) {
+              var _bdat = Mvu.getMvuData({ type: 'chat' }) || {};
+              var _binv = qyDeepUnwrap((_bdat.stat_data && _bdat.stat_data['钓鱼'] && _bdat.stat_data['钓鱼']['饵料库存']));
+              if (!_binv || typeof _binv !== 'object' || Array.isArray(_binv)) _binv = {};
+              var _key = (_binv[_curBait] != null) ? _curBait : null;
+              if (_key === null) { for (var _bk in _binv) { if (qyStrip(_bk) === _curBait) { _key = _bk; break; } } }
+              if (_key !== null && qyNum(_binv[_key]) > 0) {
+                _binv[_key] = qyNum(_binv[_key]) - 1;
+                await Mvu.setMvuVariable('钓鱼.饵料库存', _binv, { type: 'chat' });
+              }
+            }
+          }
+        } catch (e) { console.warn('[qy] 玩法后处理失败:', e); }
+      }
 
       // 6. 完美记忆系统: push 标签抽取 → worldbook 写入 + NPC 监控 + 兜底每 5 轮强制总结
       await window.qyApplyPushTags(finalText);
@@ -8651,132 +8693,80 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     craft: '副 职',
   };
 
-  window.qyTriggerPlayAction = async function(pageId, actionLabel, extraContext, rollResult) {
-    if (!actionLabel) return;
-    var pageName = QY_PAGE_NAMES[pageId] || pageId;
-
-    // 切回状态栏 page 玩家看 AI 叙事
-    if (typeof window.qyShowPage === 'function') window.qyShowPage('main');
-
-    // 占位 AI 消息
-    var aiIdx = qyState.chatHistory.length;
-    qyState.chatHistory.push({ role: 'assistant', content: '' });
-    qyRenderChat();
-
-    var streamHandle = null;
-    var onToken = function(fullText) {
-      qyState.chatHistory[aiIdx].content = fullText;
-      qyRenderChat();
-    };
-
-    var injectLines = [
-      '【玩家玩法操作】',
-      '面板: 「' + pageName + '」',
-      '操作: 「' + actionLabel + '」',
-    ];
-    if (extraContext) injectLines.push('上下文: ' + extraContext);
-    injectLines.push('');
-    // SPA 抽签结果嵌入 prompt: AI 按 SPA 给的结果叙事, 不自己编物品
-    if (rollResult) {
-      if (rollResult.type === 'unlock') {
-        injectLines.push('【SPA 抽签反馈】');
-        injectLines.push('玩家首次在该玩法尝试. 图鉴池 ' + (rollResult.pool_path || '') + ' 为空, 当前熟练度 ' + (rollResult.prof || 0) + '.');
-        injectLines.push('请按角色阶级/地点/季节/熟练度创意 1-2 种合理新发现 (鱼/作物/菜/方剂), 用 _.set push 新条目 (含 名字/品级/描述 字段) 到该图鉴数组.');
-        injectLines.push('叙事描述发现过程, 不要凭空捏造 2 种以上新物.');
-      } else if (rollResult.type === 'roll') {
-        var pickedName = (typeof rollResult.picked === 'string') ? rollResult.picked
-                       : (rollResult.picked && (rollResult.picked.名字 || rollResult.picked.name)) || JSON.stringify(rollResult.picked);
-        injectLines.push('【SPA 抽签反馈 (必须按此结果叙事)】');
-        injectLines.push('本次抽得: ' + pickedName + ' (从图鉴 ' + (rollResult.pool_size || 0) + ' 项中)');
-        injectLines.push('熟练度: ' + (rollResult.prof || 0));
-        injectLines.push('请按这个结果叙事, 严禁创造其他物品名 (会跟前端不一致). 玩家收获已由 SPA 同步加进背包.');
-      }
-      if (rollResult.judge) {
-        var jg = rollResult.judge;
-        injectLines.push('【SPA 判定结果 (必须据此叙事, 不得擅自改判 / 不得无中生有提升品质档)】');
-        injectLines.push('判定: ' + (jg.success ? '成功' : '失败') + ' (成功率 ' + jg.succRate + '% · 熟练度 ' + jg.prof + ')');
-        if (jg.grade) injectLines.push('品质档: ' + jg.grade);
-        if (jg.harvest) injectLines.push('收成: ' + jg.harvest);
-        injectLines.push('说明: ' + jg.note);
-        injectLines.push('消耗: ' + jg.consume);
-        injectLines.push('失败也要按"保底"叙事 (玩家不空手), 熟练度涨幅按 D1 协议克制更新.');
-      }
-      injectLines.push('');
+  // 玩法按钮简短操作草稿 (朔: 简单写点, 玩家在这基础上改 + 衔接当前剧情, 自己发)
+  function qyPlayDraft(pageId, label) {
+    label = String(label || '').replace(/\s+/g, '');
+    if (pageId === 'fishing') {
+      if (label.indexOf('空岛') >= 0) return '（我来到空岛边缘，取出钓竿，准备空钓……）';
+      if (label.indexOf('饵料') >= 0) return '（我想去采买些钓鱼用的饵料……）';
+      if (label.indexOf('升级') >= 0) return '（我打算去把手里的鱼竿升一升……）';
+      return '（我取出鱼竿，走向海边，准备垂钓……）';
     }
-    injectLines.push('叙事描述操作过程与结果, 自然推进时间, 可触发偶发事件。');
-    injectLines.push('熟练度涨幅按 D1 协议克制更新 (钓鱼/种地/做菜/副职熟练度路径).');
-    injectLines.push('其他 A 类字段 (关系/羁绊度/纪要 等) 按 D1 协议规则更新.');
-    var injectMsg = injectLines.join('\n');
-
-    try {
-      if (typeof eventOn === 'function' && typeof iframe_events !== 'undefined') {
-        streamHandle = eventOn(iframe_events.STREAM_TOKEN_RECEIVED_FULLY, onToken);
+    if (pageId === 'farming') {
+      if (label.indexOf('收') >= 0) return '（我来到田边，看看这一茬能收些什么……）';
+      if (label.indexOf('清') >= 0) return '（我来到田边，把枯掉的作物清理掉……）';
+      if (label.indexOf('浇') >= 0) return '（我来到田边，给作物浇浇水……）';
+      if (label.indexOf('肥') >= 0) return '（我来到田边，给地里施点肥……）';
+      return '（我来到田边，准备播下种子……）';
+    }
+    if (pageId === 'cooking') return '（我系上围裙，准备下厨做一道菜……）';
+    if (pageId === 'craft') return '（我来到工坊，在炉前坐定，准备动手……）';
+    return '（我准备动手做点事……）';
+  }
+  // 判定/抽签 inject 文案 (玩家发送时由 qyTriggerGenerate 调用附上, 判定 SPA 定玩家改不了)
+  window.qyBuildPlayInject = function(pp) {
+    if (!pp) return null;
+    var pageName = QY_PAGE_NAMES[pp.pageId] || pp.pageId;
+    var lines = ['【玩家玩法操作】', '面板: 「' + pageName + '」', '操作: 「' + pp.label + '」'];
+    if (pp.extra) lines.push('上下文: ' + pp.extra);
+    lines.push('');
+    var rr = pp.rollResult;
+    if (rr) {
+      if (rr.type === 'unlock') {
+        lines.push('【SPA 抽签反馈】');
+        lines.push('玩家首次在该玩法尝试. 图鉴池 ' + (rr.pool_path || '') + ' 为空, 当前熟练度 ' + (rr.prof || 0) + '.');
+        lines.push('请按角色阶级/地点/季节/熟练度创意 1-2 种合理新发现 (鱼/作物/菜/方剂), 用 _.set push 新条目 (含 名字/品级/描述 字段) 到该图鉴数组.');
+        lines.push('叙事描述发现过程, 不要凭空捏造 2 种以上新物.');
+      } else if (rr.type === 'roll') {
+        var pn = (typeof rr.picked === 'string') ? rr.picked : (rr.picked && (rr.picked.名字 || rr.picked.name)) || JSON.stringify(rr.picked);
+        lines.push('【SPA 抽签反馈 (必须按此结果叙事)】');
+        lines.push('本次抽得: ' + pn + ' (从图鉴 ' + (rr.pool_size || 0) + ' 项中)');
+        lines.push('熟练度: ' + (rr.prof || 0));
+        lines.push('请按这个结果叙事, 严禁创造其他物品名 (会跟前端不一致). 玩家收获已由 SPA 同步加进背包.');
       }
-      var prompts = (typeof window.qyBuildPrompts === 'function') ? window.qyBuildPrompts() : [];
-      // 伪零层修法: 玩法触发也必须 inject D1 协议 + 当前 stat_data
-      var injects = [{ role: 'system', content: injectMsg, position: 'in_chat', depth: 0, should_scan: true }];
-      var d1Inject = window.qyBuildD1Inject();
-      if (d1Inject) injects.unshift(d1Inject);
-      var mvuInject = window.qyBuildMvuInject();
-      if (mvuInject) injects.unshift(mvuInject);
-
-      // Phase 1 规划召回 (同 qyTriggerGenerate 主入口逻辑)
-      var playUserText = '（玩家操作: ' + pageName + ' / ' + actionLabel + '）';
-      try {
-        var amList = await window.qyPlanRecall(playUserText, prompts);
-        if (amList && amList.length > 0) {
-          var recallInject = window.qyBuildRecallInject(amList);
-          if (recallInject) injects.push(recallInject);
-        }
-      } catch (e) { console.warn('[qy] 玩法 Phase 1 规划失败, 跳过本次召回:', e); }
-
-      var result = await generate({
-        user_input: '（玩家操作: ' + actionLabel + '）',
-        should_stream: true,
-        should_silence: true,
-        injects: injects,
-        overrides: { chat_history: { prompts: prompts } },
-      });
-      var finalText = (typeof result === 'string') ? result : (result && result.content) || '';
-      qyState.chatHistory[aiIdx].content = finalText;
-      qyRenderChat();
-      await window.qyPersistTurn('（玩家操作: ' + pageName + ' / ' + actionLabel + '）', finalText);
-      await window.qyApplyMvu(finalText);
-      // SPA 抽签的 roll 模式: AI 叙事完后把抽得物 push 到背包 (B 类, 不让 AI 写)
-      if (rollResult && rollResult.type === 'roll' && rollResult.picked) {
-        try { await window.qyPushItem(rollResult.picked); } catch (e) { console.warn('[qy] qyPushItem 失败:', e); }
+      if (rr.judge) {
+        var jg = rr.judge;
+        lines.push('【SPA 判定结果 (必须据此叙事, 不得擅自改判 / 不得无中生有提升品质档)】');
+        lines.push('判定: ' + (jg.success ? '成功' : '失败') + ' (成功率 ' + jg.succRate + '% · 熟练度 ' + jg.prof + ')');
+        if (jg.grade) lines.push('品质档: ' + jg.grade);
+        if (jg.harvest) lines.push('收成: ' + jg.harvest);
+        lines.push('说明: ' + jg.note);
+        lines.push('消耗: ' + jg.consume);
+        lines.push('失败也要按"保底"叙事 (玩家不空手).');
       }
-      // 钓鱼判定: SPA 真扣当前装备饵料 1 个 (朔: 钓鱼扣 1 份对应投入物, SPA 主导不让 AI 决定数值)
-      if (rollResult && rollResult.judge && pageId === 'fishing') {
-        try {
-          var _fd = Mvu.getMvuData({ type: 'chat' }) || {};
-          var _fstat = qyDeepUnwrap(_fd.stat_data || {});
-          var _curBait = qyStrip(qySafe(_fstat['钓鱼'] && _fstat['钓鱼']['装备'] && _fstat['钓鱼']['装备']['饵料'], ''));
-          if (_curBait) {
-            var _bdat = Mvu.getMvuData({ type: 'chat' }) || {};
-            var _binv = qyDeepUnwrap((_bdat.stat_data && _bdat.stat_data['钓鱼'] && _bdat.stat_data['钓鱼']['饵料库存']));
-            if (!_binv || typeof _binv !== 'object' || Array.isArray(_binv)) _binv = {};
-            var _key = (_binv[_curBait] != null) ? _curBait : null;
-            if (_key === null) { for (var _bk in _binv) { if (qyStrip(_bk) === _curBait) { _key = _bk; break; } } }
-            if (_key !== null && qyNum(_binv[_key]) > 0) {
-              _binv[_key] = qyNum(_binv[_key]) - 1;
-              await Mvu.setMvuVariable('钓鱼.饵料库存', _binv, { type: 'chat' });
-            }
-          }
-        } catch (e) { console.warn('[qy] 钓鱼判定扣饵料失败:', e); }
+      lines.push('');
+    }
+    lines.push('结合玩家这条输入的剧情语境自然承接, 叙事描述操作过程与结果, 自然推进时间, 可触发偶发事件.');
+    lines.push('熟练度涨幅按 D1 协议克制更新 (钓鱼/种地/做菜/副职熟练度路径). 其他 A 类字段 (关系/羁绊度/纪要 等) 按 D1 协议规则更新.');
+    return { role: 'system', content: lines.join('\n'), position: 'in_chat', depth: 0, should_scan: true };
+  };
+  // 玩法按钮: 不直接发 (避免上下文跳脱: 上一秒干别的下一秒突然在玩法).
+  // 跑好的判定 (调用点已传 rollResult) 暂存 + 填简短草稿到输入框; 玩家衔接剧情改完自己发,
+  // 判定 inject + 抽得物 push + 钓鱼扣饵料 都挪到玩家发送时 (qyTriggerGenerate) 生效.
+  window.qyTriggerPlayAction = function(pageId, actionLabel, extraContext, rollResult) {
+    if (!actionLabel) return;
+    qyState.pendingPlay = { pageId: pageId, label: actionLabel, extra: extraContext || '', rollResult: rollResult || null };
+    if (typeof window.qyShowPage === 'function') window.qyShowPage('main');
+    var ta = document.querySelector('.qy-status-input');
+    if (ta) {
+      var draft = qyPlayDraft(pageId, actionLabel);
+      if (ta.value && ta.value.trim()) {
+        ta.value = ta.value.replace(/\s+$/, '') + ' ' + draft;
+      } else {
+        ta.value = draft;
       }
-      // 完美记忆系统: push 标签抽取 → worldbook + NPC 监控 + 兜底每 5 轮
-      await window.qyApplyPushTags(finalText);
-      // 总结异步后台跑, 不阻塞主对话出文
-      try { window.qyCheckMandatoryPush(playUserText, finalText).catch(function(){}); } catch (_) {}
-    } catch (e) {
-      console.warn('[qy] 玩法操作 generate 失败:', e);
-      qyState.chatHistory[aiIdx].content = '[玩法操作生成失败] ' + ((e && e.message) || e);
-      qyRenderChat();
-    } finally {
-      if (streamHandle && typeof streamHandle.stop === 'function') {
-        try { streamHandle.stop(); } catch (_) {}
-      }
+      ta.focus();
+      try { ta.dispatchEvent(new Event('input', { bubbles: true })); } catch (_) {}
     }
   };
 
@@ -9020,21 +9010,47 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   function qyBindFullscreenWatcher() {
     var pdoc = qyGetParentDoc();
     if (!pdoc) return;
+    // 回全屏入口: 悬浮球(qy-fab right22/bottom110)上方同列, 仅"非全屏+已创角"显示.
+    // 点击=合法 user gesture 能 requestFullscreen (ESC 退全屏浏览器强制拦不住, 但回全屏一键可达, 治"误按ESC代价大").
+    if (!document.getElementById('qy-refs-btn')) {
+      var rb = document.createElement('button');
+      rb.id = 'qy-refs-btn';
+      rb.type = 'button';
+      rb.textContent = '回 全 屏';
+      rb.style.cssText = 'position:fixed;right:22px;bottom:186px;z-index:100;display:none;align-items:center;justify-content:center;padding:8px 15px;border-radius:14px;border:1px solid rgba(212,175,55,0.6);background:rgba(10,12,20,0.8);color:#f0d878;font-size:13px;letter-spacing:1px;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 0 12px rgba(212,175,55,0.35);';
+      rb.addEventListener('click', function() {
+        try {
+          var t = (window.parent && window.parent.document && window.parent.document.documentElement) || document.documentElement;
+          if (t.requestFullscreen) t.requestFullscreen();
+          else if (t.webkitRequestFullscreen) t.webkitRequestFullscreen();
+        } catch (e) { console.warn('[qy] 回全屏失败:', e); }
+      });
+      document.body.appendChild(rb);
+    }
     function onFsChange() {
       var fsEl = pdoc.fullscreenElement || pdoc.webkitFullscreenElement || pdoc.mozFullScreenElement || pdoc.msFullscreenElement;
+      var rbtn = document.getElementById('qy-refs-btn');
       if (fsEl) {
         window.qyTakeoverParent();
         // SPA iframe 内 body 加 class 让内容可滚 (修朔报告 2026-05-11 滑不下去 bug)
         document.documentElement.classList.add('qy-spa-fs');
         document.body.classList.add('qy-spa-fs');
+        if (rbtn) rbtn.style.display = 'none';   // 已在全屏, 不需回全屏入口
       } else {
         window.qyRestoreParent();
         document.documentElement.classList.remove('qy-spa-fs');
         document.body.classList.remove('qy-spa-fs');
-        // 退全屏自动回海报（仅已创角后, chatHistory + mvu 都保留）
         var app = document.getElementById('qy-app');
         if (app && app.classList.contains('qy-play-started')) {
-          window.qyShowPage('poster');
+          // 退全屏落点分流: 玩法界面(钓鱼/做菜等)误按 ESC → 落聊天 main(进度上下文都在, 不跳海报);
+          // 聊天界面(main)按 ESC 保持原样回海报(朔未要求改这个).
+          var cur = qyState.currentPage;
+          if (cur && cur !== 'poster' && cur !== 'main') {
+            window.qyShowPage('main');
+          } else {
+            window.qyShowPage('poster');
+          }
+          if (rbtn) rbtn.style.display = 'flex';   // 非全屏 → 露出回全屏入口
         }
       }
     }
@@ -9042,9 +9058,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     pdoc.addEventListener('webkitfullscreenchange', onFsChange);
     pdoc.addEventListener('mozfullscreenchange', onFsChange);
     pdoc.addEventListener('MSFullscreenChange', onFsChange);
-    // ESC 只在全屏聊天界面有反应(浏览器自动退 fullscreen → fullscreenchange 自动切回海报).
-    // 海报上 ESC 不响应: Chrome 限制 ESC keydown 不算 user gesture, 不能 requestFullscreen.
-    // 想回全屏聊天 → 点海报"源神启动"按钮(已创角分支跑 requestFullscreen + qyShowPage('main')).
+    // ESC 退全屏是浏览器强制行为(spec 禁止网页阻止), 拦不住. 玩法界面误按 ESC → 落聊天 main 不跳海报,
+    // 且悬浮球上方露"回全屏"按钮一键重进(合法 user gesture). 海报上 ESC 无反应(同 Chrome user gesture 限制).
   }
 
   // ============= page-poster (first_mes_海报_v2.html) =============
@@ -9975,6 +9990,19 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       try { await window.qyTriggerGenerate(text); }
       catch (e) { console.warn('[qy] 发送失败:', e); }
       finally { btn.disabled = false; }
+    });
+  });
+
+  // 输入框 Enter 发送 (Shift+Enter 换行; isComposing 防中文输入法选词误发); 复用发送按钮 handler 不另写逻辑
+  document.querySelectorAll('.qy-status-input').forEach(function(ta) {
+    if (ta.dataset.qyEnterBound) return;
+    ta.dataset.qyEnterBound = '1';
+    ta.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        var sb = document.querySelector('.qy-status-send-btn');
+        if (sb && !sb.disabled) sb.click();
+      }
     });
   });
 
