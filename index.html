@@ -844,6 +844,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
 }
 .qy-status-input-tools {
   display: flex;
+  justify-content: center;
   gap: 8px;
 }
 .qy-status-tool-btn {
@@ -4966,6 +4967,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     <div class="qy-status-input-tools">
       <button class="qy-status-tool-btn">重新处理变量</button>
       <button class="qy-status-tool-btn">重新生成正文</button>
+      <button class="qy-status-tool-btn">修改变量</button>
     </div>
     <div class="qy-status-input-row">
       <textarea class="qy-status-input" placeholder="书写你的命运..." rows="2"></textarea>
@@ -6478,7 +6480,7 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   // vamp 模式 generate({overrides:{chat_history:{prompts}}}) 整个替换 chat_history → at_depth 注入链断裂 →
   // AI 看不到 D1 协议 → 不输出 <UpdateVariable> 块 → Mvu.parseMessage 解析不出 → mvu 不更新.
   // 修法: SPA 手动 inject D1 协议到 generate.injects 数组. D1 内容 build 时从卡 PNG 自动抽出 (load_d1_content_from_png).
-  var QY_D1_CONTENT = "<UpdateVariableRule>\ndescription: |\n  在每条 AI 回复末尾, 输出 <UpdateVariable> 块说明本轮变量更新.\n  - 七域采用前端 SPA + mvu 混合模式, 字段分两类:\n    A 类 = 剧情驱动 (AI 用 _.set 写)\n    B 类 = 玩法操作 (前端 UI 写, AI 禁止 _.set)\n  - 路径必须严格匹配 stat_data 已有 key, 不要新建路径\n  - 老值用 stat_data 当前值, 新值用合理推进结果\n  - 数值变化要克制 (羁绊度单次变化 [-10, 20]; 声望单次变化 [-10, 10])\n  - 不需要更新就不写 _.set, 不要凑字数\n\n**关系↔羁绊度同步约束 (强制)**:\n  当 同伴.伙伴X.关系 字段更新 (相识/朋友/恋人/挚友/兄弟/师徒 等任意值变动) 时,\n  必须在同一轮 _.set 块里同步把 同伴.伙伴X.羁绊度 调到对应阈值, 否则数值跟描述脱节会让玩家困惑.\n  对应表:\n    - 关系=陌生/初见       → 羁绊度 0-20  (阶段=陌生)\n    - 关系=相识/熟人       → 羁绊度 20-40 (阶段=相识)\n    - 关系=朋友/同伴/知己  → 羁绊度 40-65 (阶段=知己)\n    - 关系=挚友/恋人       → 羁绊度 65-85 (阶段=挚友)\n    - 关系=生死之交/灵契   → 羁绊度 85-100 (阶段=生死之交)\n  即: 关系一旦变到\"挚友/恋人\", 同一轮必须把羁绊度跳到 ≥65; 关系到\"生死之交\"必须 ≥85.\n  数值跳跃不受 [-10,20] 单次范围限制 (因为是同步, 不算常规推进).\n\n**关系↔忠诚同步约束 (强制)**:\n  当 同伴.伙伴X.关系 字段更新时, 同一轮 _.set 块里必须同步把 同伴.伙伴X.忠诚 调到对应 5 档值.\n  忠诚 5 档枚举 (仅这 5 个值, 禁止其他):\n    - 关系=陌生/初见       → 忠诚=生疏\n    - 关系=相识/熟人       → 忠诚=浅交\n    - 关系=朋友/同伴/知己  → 忠诚=信任\n    - 关系=挚友/恋人       → 忠诚=深交\n    - 关系=生死之交/灵契   → 忠诚=至诚\n  **禁止写 \"中立\" / \"忠诚\" / \"可信\" / \"疏远\" / \"背叛\" 等 D1 协议外的值**, 也禁止自创新档.\n  忠诚字段不存在 InitVar 默认值 \"-\" 之外的中间态.\n\nA 类可写路径 (剧情驱动):\n  - 主角.当前势力 / 主角.源石阶印记 / 主角.契约物品 / 主角.心里话\n  - 同伴.伙伴1.关系 / 羁绊度 / 羁绊阶段 / 心情 / 忠诚 / 契约状态 / 心里话 (伙伴2/3 同结构)\n  - NPC1.姓名 / 所属势力 / 大致信息 / 心里话 (NPC2/3 同结构)\n  - 大区域 / 时辰 / 季节 / 在场角色\n  - 世界事件 (整个对象覆盖, value 含 状态/进度/起始时间/地点/描述)\n  - 声望阵营.七国王室.<国名> / 特权家族.<家族名> / 中枢机构.<机构名> / 法外势力.<势力名>\n  - 当前世界动态.活跃事件 / 酒馆传闻 / 邻国动态 (数组直接覆盖)\n  - 任务.未接 (推送新任务对象到数组)\n\n禁止 _.set 路径 (B 类, 由前端控制):\n  - 主角.姓名 / 性别 / 年龄 / 外貌 / 种族 / 出身地 / 当前阶级 / 宿命 / 涩涩开启\n  - 主角.天元.* / 装备.* / 背包物品\n  - 难度模式\n  - 同伴.伙伴1.名字 / 种族 / 外貌 / 渊源 / 装备 (伙伴2/3 同)\n  - 任务.进行中 / 已完成\n  - 空岛领地.* / 钓鱼.* / 种地.* / 做菜.* / 副职.* / 图鉴.*\n  - 对话历史.* (系统字段)\n\nformat: |\n  <UpdateVariable>\n  _.set('${path}', ${old_value}, ${new_value});//${reason}\n  </UpdateVariable>\n\nexample: |\n  <UpdateVariable>\n  _.set('同伴.伙伴1.羁绊度', 12, 28);//数日同行后从陌生进入相识\n  _.set('同伴.伙伴1.羁绊阶段', '陌生', '相识');//羁绊度跨阈值 20\n  _.set('同伴.伙伴1.关系', '初见', '熟人');//AI 关系字段同步推进\n  _.set('同伴.伙伴1.心情', '平静', '欣慰');//玩家保护了伙伴1\n  _.set('NPC1.大致信息', '暂无记录', '中枢律官, 与玩家有数面之缘');//NPC1 信息扩充\n  _.set('时辰', '辰时', '巳时');//时辰推进\n  </UpdateVariable>\n</UpdateVariableRule>\n\n\n<PushTagRule>\ndescription: |\n  在每条 AI 回复末尾的 <UpdateVariable> 块之后, 根据本轮实际叙事需要,\n  追加下列 push 标签把\"事件 / 关键人物 / 同伴互动 / 任务 / 物品\" 信息推送给前端写入 worldbook 长期记忆.\n  这套标签是七域\"完美记忆系统\"的核心: 主 AI 永远看到 worldbook 锁定的真实数据, 不依赖回忆 → 防瞎编.\n\n  **基于召回信息叙事 (硬约束)**:\n    - 本轮 prompt 头部如果出现【召回纪要锚点】或 [纪要] 区段, 你看到的角色设定 / 历史事件 = 真实权威, 必须遵守.\n    - 召回区没提到的人物 / 地点 / 物品 / 关系, **不要瞎编** 没见过的\"哥哥/姐姐/师父/旧友\"等设定.\n    - 不确定就让角色\"不记得\"/\"没听说过\"/\"印象模糊\", 不要硬凑.\n\n  **重要节点优先级 (push 与否的判断)**:\n    决定本轮要不要追加 push 标签时按下面优先级:\n      P1 战斗 / 重大冲突 / 死亡 / 重伤\n      P2 关键 NPC 首次出场 / 互动产生新设定\n      P3 重大获得 (装备 / 道具 / 同伴 / 势力身份)\n      P4 任务推进 (接取 / 重要进度 / 完成)\n      P5 羁绊度跨阶段 (跨阈值 20/40/65/85)\n      P6 阶段转折 (大区域切换 / 重大剧情节点)\n      P7 日常对话 / 路过场景 → **不必 push**\n\nformat:\n  <纪要新增>{\n    \"时间\": \"苍华纪年·春·辰时\",\n    \"地点\": \"云墟城·茶馆\",\n    \"概要\": \"玩家与楚云笙初次相遇, 楚云笙提及云墟城传闻\",\n    \"详情\": \"详细叙述本节点的完整经过, 包含人物对话 / 关键决策 / 推动剧情的细节. 这段内容会被 worldbook 召回, 主 AI 后续看得到.\"\n  }</纪要新增>\n\n  <关键人物更新>{\n    \"角色名\": \"楚云笙\",\n    \"新发现\": \"出身云墟城商贾世家, 暗中收集源石阶印记\"\n  }</关键人物更新>\n\n  **<关键人物更新> push 边界 (强制, 防滥塞)**:\n    - 只 push 有名有姓的真实角色 / NPC (人, 或有自我意识的存在). \"角色名\" 必须是这个角色被称呼的名字.\n    - 严禁把下列当关键人物 push: 地点建筑 (客栈/城/茶馆)、时间 (辰时/季节)、货币与物品 (天元/石质/令牌)、任务名 (护卫委托)、抽象概念 (进度/问题/段落)、以及你自己的思考或草稿文字.\n    - 它们各有专属去处: 物品 → <物品更新>; 任务 → <任务更新>; 事件经过 → <纪要新增>; 地点时间只写进 <纪要新增> 的时间/地点字段. 不要全塞 <关键人物更新>.\n    - 同一角色本轮没有\"新\"发现/设定就不要重复 push.\n    - 拿不准是不是真实角色 → 不 push (宁缺毋滥).\n\n  <同伴更新>{\n    \"伙伴名\": \"伙伴1 的实际名字\",\n    \"新设定\": \"伙伴1 提及自己童年在荒原长大\"\n  }</同伴更新>\n\n  <任务更新>{\n    \"任务名\": \"寻找失踪的商队\",\n    \"状态\": \"已接取 / 进行中 / 已完成 / 已失败\",\n    \"进度\": \"已找到第一处营地痕迹\"\n  }</任务更新>\n\n  <物品更新>{\n    \"物品名\": \"云墟令牌\",\n    \"动作\": \"获得 / 失去 / 属性变化\",\n    \"信息\": \"云墟城商盟身份证明, 凭此可进城西密集\"\n  }</物品更新>\n\n任务 AI 触发条件 (什么时候 push <任务更新>):\n  T1 NPC 主动求助 / 委托 (悬赏 / 跑腿 / 护送)\n  T2 玩家进酒馆 / 客栈听到传闻 / 悬赏 (跟 当前世界动态.酒馆传闻 字段串)\n  T3 玩家路过碰到事 (伤员 / 商队遇险 / 突发事件)\n  T4 玩家跟 NPC 羁绊到阈值后 NPC 给私人请求 (羁绊度 ≥65 解锁\"挚友请求\")\n  T5 玩家主动问 NPC \"附近有什么可做的\"\n\nPUSH 输出顺序:\n  <UpdateVariable> 块 (mvu 变量更新, 必有)\n  ↓\n  <纪要新增> 块 (本轮节点足够重要时, P1-P6 才 push, P7 跳过)\n  ↓\n  <关键人物更新> 块 (本轮有 NPC 新设定时, 可多条并列)\n  ↓\n  <同伴更新> 块 (本轮跟同伴互动有新信息时)\n  ↓\n  <任务更新> 块 (本轮任务有变动时)\n  ↓\n  <物品更新> 块 (本轮有重要物品获得 / 失去时, 普通消耗品不 push)\n\n注意:\n  - 每个 push 标签都是合法 JSON 对象, 字段使用中文 key (跟示例一致)\n  - 多条同类标签可并列, 例如本轮出现 2 个新 NPC 就 push 2 条 <关键人物更新>\n  - 不需要就不 push, 不要凑字数\n  - JSON 字段值里的引号请用转义 (\\\")\n</PushTagRule>";
+  var QY_D1_CONTENT = "<UpdateVariableRule>\ndescription: |\n  在每条 AI 回复末尾, 输出 <UpdateVariable> 块说明本轮变量更新.\n  - 七域采用前端 SPA + mvu 混合模式, 字段分两类:\n    A 类 = 剧情驱动 (AI 用 _.set 写)\n    B 类 = 玩法操作 (前端 UI 写, AI 禁止 _.set)\n  - 路径必须严格匹配 stat_data 已有 key, 不要新建路径\n  - 老值用 stat_data 当前值, 新值用合理推进结果\n  - 数值变化要克制 (羁绊度单次变化 [-10, 20]; 声望单次变化 [-10, 10])\n  - 不需要更新就不写 _.set, 不要凑字数\n\n**关系↔羁绊度同步约束 (强制)**:\n  当 同伴.伙伴X.关系 字段更新 (相识/朋友/恋人/挚友/兄弟/师徒 等任意值变动) 时,\n  必须在同一轮 _.set 块里同步把 同伴.伙伴X.羁绊度 调到对应阈值, 否则数值跟描述脱节会让玩家困惑.\n  对应表:\n    - 关系=陌生/初见       → 羁绊度 0-20  (阶段=陌生)\n    - 关系=相识/熟人       → 羁绊度 20-40 (阶段=相识)\n    - 关系=朋友/同伴/知己  → 羁绊度 40-65 (阶段=知己)\n    - 关系=挚友/恋人       → 羁绊度 65-85 (阶段=挚友)\n    - 关系=生死之交/灵契   → 羁绊度 85-100 (阶段=生死之交)\n  即: 关系一旦变到\"挚友/恋人\", 同一轮必须把羁绊度跳到 ≥65; 关系到\"生死之交\"必须 ≥85.\n  数值跳跃不受 [-10,20] 单次范围限制 (因为是同步, 不算常规推进).\n\n**关系↔忠诚同步约束 (强制)**:\n  当 同伴.伙伴X.关系 字段更新时, 同一轮 _.set 块里必须同步把 同伴.伙伴X.忠诚 调到对应 5 档值.\n  忠诚 5 档枚举 (仅这 5 个值, 禁止其他):\n    - 关系=陌生/初见       → 忠诚=生疏\n    - 关系=相识/熟人       → 忠诚=浅交\n    - 关系=朋友/同伴/知己  → 忠诚=信任\n    - 关系=挚友/恋人       → 忠诚=深交\n    - 关系=生死之交/灵契   → 忠诚=至诚\n  **禁止写 \"中立\" / \"忠诚\" / \"可信\" / \"疏远\" / \"背叛\" 等 D1 协议外的值**, 也禁止自创新档.\n  忠诚字段不存在 InitVar 默认值 \"-\" 之外的中间态.\n\nA 类可写路径 (剧情驱动):\n  - 主角.当前势力 / 主角.源石阶印记 / 主角.契约物品 / 主角.心里话\n  - 同伴.伙伴1.关系 / 羁绊度 / 羁绊阶段 / 心情 / 忠诚 / 契约状态 / 心里话 (伙伴2/3 同结构)\n  - NPC1.姓名 / 所属势力 / 大致信息 / 心里话 (NPC2/3 同结构)\n  - 大区域 / 时辰 / 季节 / 在场角色\n  - 世界事件 (整个对象覆盖, value 含 状态/进度/起始时间/地点/描述)\n  - 声望阵营.七国王室.<国名> / 特权家族.<家族名> / 中枢机构.<机构名> / 法外势力.<势力名>\n  - 当前世界动态.活跃事件 / 酒馆传闻 / 邻国动态 (数组直接覆盖)\n  - 任务.未接 (推送新任务对象到数组)\n\n禁止 _.set 路径 (B 类, 由前端控制):\n  - 主角.姓名 / 性别 / 年龄 / 外貌 / 种族 / 出身地 / 当前阶级 / 宿命 / 涩涩开启\n  - 主角.天元.* / 装备.* / 背包物品\n  - 难度模式\n  - 同伴.伙伴1.名字 / 种族 / 外貌 / 渊源 / 装备 (伙伴2/3 同)\n  - 任务.进行中 / 已完成\n  - 空岛领地.* / 钓鱼.* / 种地.* / 做菜.* / 副职.* / 图鉴.*\n  - 对话历史.* (系统字段)\n\nformat: |\n  <UpdateVariable>\n  _.set('${path}', ${old_value}, ${new_value});//${reason}\n  </UpdateVariable>\n\nexample: |\n  <UpdateVariable>\n  _.set('同伴.伙伴1.羁绊度', 12, 28);//数日同行后从陌生进入相识\n  _.set('同伴.伙伴1.羁绊阶段', '陌生', '相识');//羁绊度跨阈值 20\n  _.set('同伴.伙伴1.关系', '初见', '熟人');//AI 关系字段同步推进\n  _.set('同伴.伙伴1.心情', '平静', '欣慰');//玩家保护了伙伴1\n  _.set('NPC1.大致信息', '暂无记录', '中枢律官, 与玩家有数面之缘');//NPC1 信息扩充\n  _.set('时辰', '辰时', '巳时');//时辰推进\n  </UpdateVariable>\n</UpdateVariableRule>\n\n\n<PushTagRule>\ndescription: |\n  在每条 AI 回复末尾的 <UpdateVariable> 块之后, 根据本轮实际叙事需要,\n  追加下列 push 标签把\"事件 / 关键人物 / 同伴互动 / 任务 / 物品\" 信息推送给前端写入 worldbook 长期记忆.\n  这套标签是七域\"完美记忆系统\"的核心: 主 AI 永远看到 worldbook 锁定的真实数据, 不依赖回忆 → 防瞎编.\n\n  **基于召回信息叙事 (硬约束)**:\n    - 本轮 prompt 头部如果出现【召回纪要锚点】或 [纪要] 区段, 你看到的角色设定 / 历史事件 = 真实权威, 必须遵守.\n    - 召回区没提到的人物 / 地点 / 物品 / 关系, **不要瞎编** 没见过的\"哥哥/姐姐/师父/旧友\"等设定.\n    - 不确定就让角色\"不记得\"/\"没听说过\"/\"印象模糊\", 不要硬凑.\n\n  **重要节点优先级 (push 与否的判断)**:\n    决定本轮要不要追加 push 标签时按下面优先级:\n      P1 战斗 / 重大冲突 / 死亡 / 重伤\n      P2 关键 NPC 首次出场 / 互动产生新设定\n      P3 重大获得 (装备 / 道具 / 同伴 / 势力身份)\n      P4 任务推进 (接取 / 重要进度 / 完成)\n      P5 羁绊度跨阶段 (跨阈值 20/40/65/85)\n      P6 阶段转折 (大区域切换 / 重大剧情节点)\n      P7 日常对话 / 路过场景 → **不必 push**\n\nformat:\n  <纪要新增>{\n    \"时间\": \"苍华纪年·春·辰时\",\n    \"地点\": \"云墟城·茶馆\",\n    \"概要\": \"玩家与楚云笙初次相遇, 楚云笙提及云墟城传闻\",\n    \"详情\": \"详细叙述本节点的完整经过, 包含人物对话 / 关键决策 / 推动剧情的细节. 这段内容会被 worldbook 召回, 主 AI 后续看得到.\"\n  }</纪要新增>\n\n  <关键人物更新>{\n    \"角色名\": \"楚云笙\",\n    \"新发现\": \"出身云墟城商贾世家, 暗中收集源石阶印记\"\n  }</关键人物更新>\n\n  **<关键人物更新> push 边界 (强制, 防滥塞)**:\n    - 只 push 有名有姓的真实角色 / NPC (人, 或有自我意识的存在). \"角色名\" 必须是这个角色被称呼的名字.\n    - 严禁把下列当关键人物 push: 地点建筑 (客栈/城/茶馆)、时间 (辰时/季节)、货币与物品 (天元/石质/令牌)、任务名 (护卫委托)、抽象概念 (进度/问题/段落)、以及你自己的思考或草稿文字.\n    - 它们各有专属去处: 物品 → <物品更新>; 任务 → <任务更新>; 事件经过 → <纪要新增>; 地点时间只写进 <纪要新增> 的时间/地点字段. 不要全塞 <关键人物更新>.\n    - 同一角色本轮没有\"新\"发现/设定就不要重复 push.\n    - 拿不准是不是真实角色 → 不 push (宁缺毋滥).\n\n  <同伴更新>{\n    \"伙伴名\": \"伙伴1 的实际名字\",\n    \"新设定\": \"伙伴1 提及自己童年在荒原长大\"\n  }</同伴更新>\n\n  <任务更新>{\n    \"任务名\": \"寻找失踪的商队\",\n    \"状态\": \"已接取 / 进行中 / 已完成 / 已失败\",\n    \"进度\": \"已找到第一处营地痕迹\"\n  }</任务更新>\n\n  <物品更新>{\n    \"物品名\": \"云墟令牌\",\n    \"动作\": \"获得 / 失去 / 属性变化\",\n    \"信息\": \"云墟城商盟身份证明, 凭此可进城西密集\"\n  }</物品更新>\n\n任务 AI 触发条件 (什么时候 push <任务更新>):\n  T1 NPC 主动求助 / 委托 (悬赏 / 跑腿 / 护送)\n  T2 玩家进酒馆 / 客栈听到传闻 / 悬赏 (跟 当前世界动态.酒馆传闻 字段串)\n  T3 玩家路过碰到事 (伤员 / 商队遇险 / 突发事件)\n  T4 玩家跟 NPC 羁绊到阈值后 NPC 给私人请求 (羁绊度 ≥65 解锁\"挚友请求\")\n  T5 玩家主动问 NPC \"附近有什么可做的\"\n\nPUSH 输出顺序:\n  <UpdateVariable> 块 (mvu 变量更新, 必有)\n  ↓\n  <纪要新增> 块 (本轮节点足够重要时, P1-P6 才 push, P7 跳过)\n  ↓\n  <关键人物更新> 块 (本轮有 NPC 新设定时, 可多条并列)\n  ↓\n  <同伴更新> 块 (本轮跟同伴互动有新信息时)\n  ↓\n  <任务更新> 块 (本轮任务有变动时)\n  ↓\n  <物品更新> 块 (本轮有重要物品获得 / 失去时, 普通消耗品不 push)\n\n注意:\n  - 每个 push 标签都是合法 JSON 对象, 字段使用中文 key (跟示例一致)\n  - 多条同类标签可并列, 例如本轮出现 2 个新 NPC 就 push 2 条 <关键人物更新>\n  - 不需要就不 push, 不要凑字数\n  - JSON 字段值里的引号请用转义 (\\\")\n</PushTagRule>\n\n\n<WorldEventRule>\ndescription: |\n  世界事件 / 当前世界动态 (活跃事件 / 酒馆传闻 / 邻国动态) 是\"活的世界背景\".\n  它必须随剧情滚动, 不能长期一动不动 — 玩家盯着一栏几十轮纹丝不动会以为系统坏了.\n  这套是\"当前世界快照\"不是历史档案, 不进 worldbook 长期记忆; 重要事件的经过仍照常走 <纪要新增>.\n\n  **什么时候必须推进 (命中任一就要在本轮 _.set 里动它):**\n    W1 玩家进入 / 离开一个大区域 → 把活跃事件、酒馆传闻整批换成当地的 (上个区域的传闻别留着)\n    W2 时辰跨天 / 季节推进 → 至少刷新一条活跃事件或酒馆传闻 (集市开闭、节庆、天候、商队往来)\n    W3 声望阵营有变动 → 邻国动态或活跃事件要反映对应势力的反应\n    W4 重大剧情节点 (战斗结束 / 任务完成 / 势力冲突) → 世界事件里新增或推进对应事件的状态与进度\n    W5 以上都没命中, 但已连续多轮世界静止 → 主动冒一条新酒馆传闻或邻国动态, 给世界呼吸感\n\n  **怎么写:**\n    - 世界事件: 整个对象覆盖. 仍在进行的保留并推进其 状态/进度, 已结束的移除, 该出现的新增.\n    - 活跃事件 / 酒馆传闻 / 邻国动态: 数组直接覆盖. 每个数组保持精炼 (≤4 条),\n      过时的、跟当前区域无关的要换掉, 不要无限堆积成流水账.\n    - 内容贴合玩家当前所在区域、时辰季节、声望格局, 不要写跟当前处境无关的泛泛事件.\n\nformat:\n  <UpdateVariable>\n  _.set('当前世界动态.酒馆传闻', [\"旧传闻...\"], [\"云墟城近日盐价飞涨, 商盟暗中囤货\", \"城西夜里有人见到带源石印记的黑影\"]);//玩家入云墟城, 传闻换本地\n  _.set('世界事件', {\"商队失踪\":{\"状态\":\"进行中\",\"进度\":40}}, {\"商队失踪\":{\"状态\":\"进行中\",\"进度\":60,\"地点\":\"云墟城外\",\"描述\":\"第二处营地痕迹被发现\"}});//剧情推进\n  </UpdateVariable>\n</WorldEventRule>\n\n\n<InnerVoiceRule>\ndescription: |\n  心里话 = 角色当下没说出口的真实想法, 是玩家最在意的\"演出感\"来源.\n  它必须每一轮都刷新, 不能时更时不更. 本规则是 UpdateVariableRule 里\"不需要更新就不写\"那句的明确例外.\n\n  **强制 (优先级高于\"不凑字数\"通用约束):**\n    - 主角.心里话: 每一轮 AI 回复都必须 _.set 更新, 反映主角对本轮刚发生的事的即时内心.\n      哪怕只是细微情绪波动也要写; 禁止\"没变化\"为由保持原值跳过.\n    - 同伴.伙伴X.心里话 / NPCX.心里话: 该角色本轮在场 (有出场 / 有互动) 就必须本轮更新;\n      本轮完全没出场的不要写 (给不在场的人编内心戏 = 瞎编, 反而出戏).\n\n  **内容要求:**\n    - 是这一轮产生的新心理, 跟上一轮内容不同 (不要复制粘贴上一轮的心里话).\n    - 第一人称内心独白口吻, 简短一两句.\n    - 只写\"没说出口的那层\", 不复述刚刚已经发生的剧情.\n\nformat:\n  <UpdateVariable>\n  _.set('主角.心里话', '他这话听着客气, 可那只手一直没离开刀柄……我得留个心眼。', '刚才那一摔倒是把场面圆过去了, 但她看我的眼神变了。');//每轮必更\n  _.set('同伴.伙伴1.心里话', '又是老地方……', '他终于肯回头看我了, 哪怕只是因为没别人可问。');//伙伴1 本轮在场, 必更\n  </UpdateVariable>\n</InnerVoiceRule>\n\n\n<WorldCadenceRule>\ndescription: |\n  这是世界推进的\"节奏底线\", 优先级高于 UpdateVariableRule 里\"不需要更新就不写\"那句通用约束.\n  WorldEventRule 说的是\"遇到 W1-W5 这些场景要推进\", 本段补的是\"就算没明显场景, 也不许世界长期僵死或空着\".\n\n  **强制底线:**\n    - 世界事件 与 当前世界动态 (活跃事件 / 酒馆传闻 / 邻国动态) 不允许长期一动不动.\n      每隔最多 1-2 轮剧情, 这两块至少要有一次实质推进 —— 推进指: 某个世界事件的状态/进度变化、\n      新增或了结一个事件、换一批酒馆传闻或邻国动态. 仅仅原样保留不算推进.\n    - 世界事件为空时, 要尽早 (开局或开局后头几轮内) 起头至少 1-2 个\"正在发生的世界事件\",\n      不要让这一栏长期挂空. 世界本就该有自己在运转的事, 不依赖玩家去触发.\n\n  **怎么做得自然 (不是硬塞):**\n    - 推进的内容要贴合玩家当前所在区域、时辰季节、声望格局, 是世界自己在演化, 不是凭空蹦事件.\n    - 跟玩家剧情有关就顺着推, 无关就让世界在背景里独立发展 (商路、节庆、势力摩擦、天候、传闻流转).\n    - 保持精炼: 数组类各 ≤4 条, 世界事件同时活跃的 2-4 个即可, 过时的换掉, 不要堆成流水账.\n\n  一句话: 玩家可以好几轮不碰世界, 但世界自己得一直在动 —— 翻开状态栏永远是活的, 不是僵尸数据.\n</WorldCadenceRule>";
   window.qyBuildD1Inject = function() {
     if (!QY_D1_CONTENT) return null;
     return {
@@ -6865,6 +6867,9 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   qyState.npcMentionCount = qyState.npcMentionCount || {};
   qyState.npcIgnoreList = ['路人','老板娘','侍者','掌柜','守卫','陌生人','商人','行人','街民','茶客','伙计','店家','酒客'];
   qyState.memoryTurnCount = qyState.memoryTurnCount || 0;
+  // 世界事件/动态兜底: worldSnapshot 上一轮世界快照 (字符串, 首轮 null), worldStaleCount 连续没动轮数
+  qyState.worldStaleCount = qyState.worldStaleCount || 0;
+  if (typeof qyState.worldSnapshot !== 'string') qyState.worldSnapshot = null;
 
   // qyRetry: 全局 5 次重试 helper, 包装 AI 调用 / JSON 解析 / worldbook API 等可能失败的操作
   window.qyRetry = async function(fn, attempts, label) {
@@ -7381,6 +7386,82 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
     }
   };
 
+  // qyCheckWorldDrift: 世界事件/动态连续 N 轮没动就轻量补一版背景音, 治"世界栏一直不更新像坏了" (D1 W5 的 SPA 兜底, 异步不阻塞主对话)
+  window.qyCheckWorldDrift = async function(userText, aiText) {
+    if (typeof generateRaw !== 'function') { console.warn('[qy] 世界兜底跳过: generateRaw 不可用'); return; }
+    if (typeof window.Mvu === 'undefined') return;
+    var STALE_LIMIT = 4; // 连续 4 轮世界静止才兜底 (朔定: 不频繁也不慢)
+    try {
+      var data = Mvu.getMvuData({ type: 'chat' }) || {};
+      var sd = data.stat_data || {};
+      var snap = JSON.stringify([sd['世界事件'] || null, sd['当前世界动态'] || null]);
+      // 首轮没有上一轮基准, 只存快照不兜底
+      if (typeof qyState.worldSnapshot !== 'string') {
+        qyState.worldSnapshot = snap; qyState.worldStaleCount = 0; return;
+      }
+      // 世界这轮动过了 (AI 自己按 D1 W1-W5 推进了) → 重置计数, 不出手
+      if (snap !== qyState.worldSnapshot) {
+        qyState.worldSnapshot = snap; qyState.worldStaleCount = 0; return;
+      }
+      // 没动 → 累计
+      qyState.worldStaleCount = (qyState.worldStaleCount || 0) + 1;
+      if (qyState.worldStaleCount < STALE_LIMIT) return;
+      // 连续 STALE_LIMIT 轮静止 → 轻量补背景音: 酒馆传闻/邻国动态必补; 世界事件为空时顺带起头 (已有则交给 D1 让 AI 推, 兜底信息少不硬改; 角色卡无主线, 世界事件就是世界背景的一部分)
+      var dyn = sd['当前世界动态'] || {};
+      var we0 = sd['世界事件'];
+      var weEmpty = !we0 || (typeof we0 === 'object' && !Array.isArray(we0) && Object.keys(we0).length === 0);
+      var region = sd['大区域'], hour = sd['时辰'], season = sd['季节'];
+      var prompt =
+        '你是七域的世界背景维护员。这个世界已经连续好几轮没有任何动静, 显得很僵。\n' +
+        '请基于玩家当前处境刷新世界背景, 让世界有正在运转的呼吸感; 只动世界背景, 不要替玩家推进他自己的戏。\n\n' +
+        '【玩家所在】区域: ' + String(region || '未知') + ' / 时辰: ' + String(hour || '未知') + ' / 季节: ' + String(season || '未知') + '\n' +
+        '【当前世界动态】' + JSON.stringify(dyn).slice(0, 1200) + '\n' +
+        (weEmpty ? '【当前世界事件】空 — 这一栏一直空着, 请起头 1-2 个此刻正在七域各地发生的世界事件 (跟玩家无关也行, 世界自己的事)\n' : '') +
+        '【最近这轮叙事】' + String(aiText || '').slice(0, 1500) + '\n\n' +
+        '要求: 酒馆传闻 2-4 条、邻国动态 1-3 条, 贴合所在区域与时节, 过时的换掉, 精炼不堆砌。\n' +
+        (weEmpty ? '另外起 1-2 个世界事件, 每个含 状态 / 进度(0-100) / 地点 / 描述。\n' : '') +
+        '严格只输出下面一行, 不加任何解释:\n' +
+        (weEmpty
+          ? '<世界动态补充>{"酒馆传闻":["..."],"邻国动态":["..."],"世界事件":{"事件名":{"状态":"进行中","进度":20,"地点":"...","描述":"..."}}}<\/世界动态补充>'
+          : '<世界动态补充>{"酒馆传闻":["..."],"邻国动态":["..."]}<\/世界动态补充>');
+      var sapi = (typeof window.qyGetSummaryApiConfig === 'function') ? window.qyGetSummaryApiConfig() : null;
+      var raw = await window.qyRetry(function() {
+        var cfg = { user_input: prompt, should_silence: true, ordered_prompts: [{ role: 'user', content: prompt }] };
+        if (sapi) cfg.custom_api = sapi;
+        return generateRaw(cfg);
+      }, 5, 'worldDrift');
+      if (typeof raw !== 'string') {
+        await window.qyLogError('世界兜底·失败', { message: 'generateRaw 未返回文本, 可能当前源或副API调用失败' }, 0);
+        return;
+      }
+      var m = raw.match(/<世界动态补充>([\s\S]*?)<\/世界动态补充>/);
+      if (!m) {
+        await window.qyLogError('世界兜底·失败', { message: '抽不到 <世界动态补充> 标签, AI 输出格式不符。返回片段: ' + String(raw).slice(0, 120) }, 0);
+        return;
+      }
+      var obj = null;
+      try { obj = JSON.parse(m[1]); } catch (pe) {
+        await window.qyLogError('世界兜底·失败', { message: 'JSON 解析失败: ' + ((pe && pe.message) || pe) }, 0);
+        return;
+      }
+      if (Array.isArray(obj['酒馆传闻'])) await Mvu.setMvuVariable('当前世界动态.酒馆传闻', obj['酒馆传闻'], { type: 'chat' });
+      if (Array.isArray(obj['邻国动态'])) await Mvu.setMvuVariable('当前世界动态.邻国动态', obj['邻国动态'], { type: 'chat' });
+      // 世界事件: 只在原本空着时采纳兜底起的头, 已有内容不让信息有限的兜底覆盖 (交给 D1 + AI 主推)
+      if (weEmpty && obj['世界事件'] && typeof obj['世界事件'] === 'object' && !Array.isArray(obj['世界事件']) && Object.keys(obj['世界事件']).length > 0) {
+        await Mvu.setMvuVariable('世界事件', obj['世界事件'], { type: 'chat' });
+      }
+      // 写回后重读快照 + 重置计数 (下一轮以这版为新基准)
+      var after = Mvu.getMvuData({ type: 'chat' }) || {};
+      var asd = after.stat_data || {};
+      qyState.worldSnapshot = JSON.stringify([asd['世界事件'] || null, asd['当前世界动态'] || null]);
+      qyState.worldStaleCount = 0;
+      await window.qyLogError('世界兜底·已补', { message: '连续 ' + STALE_LIMIT + ' 轮世界静止, 已补酒馆传闻/邻国动态' + (weEmpty ? ' + 世界事件起头' : '') }, 0);
+    } catch (e) {
+      console.warn('[qy] qyCheckWorldDrift 失败:', e);
+      await window.qyLogError('世界兜底·失败', e, 0);
+    }
+  };
+
   // qyMaybeArchive: 总纪要条目 ≥180 时, 取最早 50 条压成"大事记 N" 粗粒度条目 + 原条目 enabled:false (新 worldbook API)
   window.qyMaybeArchive = async function(book) {
     var TH = (typeof TavernHelper !== 'undefined') ? TavernHelper : (window.parent && window.parent.TavernHelper);
@@ -7727,6 +7808,8 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
       await window.qyApplyPushTags(finalText);
       // 总结异步后台跑, 不阻塞主对话出文 (副 API / 当前源都不等它)
       try { window.qyCheckMandatoryPush(text, finalText).catch(function(){}); } catch (_) {}
+      // 世界事件/动态兜底: 连续 4 轮没动就补一版背景音 (同样异步后台, 不阻塞)
+      try { window.qyCheckWorldDrift(text, finalText).catch(function(){}); } catch (_) {}
     } catch (e) {
       console.warn('[qy] generate 失败:', e);
       qyState.chatHistory[aiIdx].content = '[生成失败] ' + ((e && e.message) || e);
@@ -8346,6 +8429,87 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   window.qyCloseModal = function() {
     var modal = document.getElementById('qy-popup-modal');
     if (modal) modal.style.display = 'none';
+  };
+
+  // ============= 修改变量 modal (输入框上方"修改变量"按钮) =============
+  // 把 mvu stat_data 递归拍平成"路径→值"逐行可编辑; 对象继续钻, 数组当 JSON 块, 标量给输入框;
+  // 对话历史/纪要索引/错误日志 三个系统字段整组跳过(只读, 防手滑改坏记忆与持久化)
+  window.qyShowVarEditor = function() {
+    if (typeof window.Mvu === 'undefined') { qyOpenModal('修 改 变 量', '<div style="color:#c0392b;">mvu 未就绪</div>'); return; }
+    var d, stat;
+    try {
+      d = Mvu.getMvuData({ type: 'chat' });
+      stat = (typeof qyDeepUnwrap === 'function') ? qyDeepUnwrap((d && d.stat_data) || {}) : ((d && d.stat_data) || {});
+    } catch (e) {
+      qyOpenModal('修 改 变 量', '<div style="color:#c0392b;">读取变量失败: ' + qyEscapeHtml(String((e && e.message) || e)) + '</div>');
+      return;
+    }
+    var SYS = { '对话历史': 1, '纪要索引': 1, '错误日志': 1 };
+    function esc(s) { return (typeof qyEscapeHtml === 'function') ? qyEscapeHtml(String(s)) : String(s); }
+    var rows = [];
+    function walk(obj, prefix) {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return;
+      Object.keys(obj).forEach(function(k) {
+        var path = prefix ? (prefix + '.' + k) : k;
+        if (SYS[path.split('.')[0]]) return;
+        var v = obj[k];
+        if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+          walk(v, path);
+        } else if (Array.isArray(v)) {
+          rows.push({ path: path, kind: 'json', val: JSON.stringify(v) });
+        } else {
+          var t = (typeof v === 'number') ? 'number' : (typeof v === 'boolean') ? 'boolean' : 'string';
+          rows.push({ path: path, kind: 'scalar', vtype: t, val: (v === null ? '' : String(v)) });
+        }
+      });
+    }
+    walk(stat, '');
+    var html = '<div style="font-size:0.82em;color:#8090a0;margin-bottom:0.8em;text-align:center;line-height:1.6;">AI 写错 / 没写的值在这手动改, 改完点保存。<br>对话历史·纪要索引·错误日志 是系统字段, 已锁只读不在此显示。</div>';
+    html += '<div style="max-height:56vh;overflow-y:auto;display:flex;flex-direction:column;gap:0.5em;padding-right:4px;">';
+    if (rows.length === 0) {
+      html += '<div style="color:#8090a0;text-align:center;padding:1em;">暂无可改变量 (还没创角 / mvu 为空)</div>';
+    }
+    rows.forEach(function(r) {
+      html += '<div style="display:flex;flex-direction:column;gap:0.25em;">' +
+        '<label style="color:#a8d8ff;font-size:0.78em;letter-spacing:0.04em;word-break:break-all;">' + esc(r.path) + '</label>';
+      if (r.kind === 'json') {
+        html += '<textarea data-qy-vpath="' + esc(r.path) + '" data-qy-vkind="json" rows="2" style="background:rgba(15,18,36,0.7);border:1px solid rgba(168,192,232,0.25);color:#e8e0c8;border-radius:4px;padding:0.4em;font-family:monospace;font-size:0.78em;resize:vertical;">' + esc(r.val) + '</textarea>';
+      } else {
+        html += '<input data-qy-vpath="' + esc(r.path) + '" data-qy-vkind="scalar" data-qy-vtype="' + r.vtype + '" value="' + esc(r.val).replace(/"/g, '&quot;') + '" style="background:rgba(15,18,36,0.7);border:1px solid rgba(168,192,232,0.25);color:#e8e0c8;border-radius:4px;padding:0.45em 0.6em;font-family:inherit;font-size:0.88em;" />';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '<div style="text-align:center;margin-top:1em;"><button onclick="qySaveVarEdits()" style="background:rgba(212,175,55,0.18);border:1px solid rgba(212,175,55,0.55);color:#d4af37;padding:0.55em 2em;border-radius:5px;cursor:pointer;letter-spacing:0.2em;font-family:inherit;">保 存 改 动</button></div>';
+    qyOpenModal('修 改 变 量', html);
+  };
+  window.qySaveVarEdits = async function() {
+    if (typeof window.Mvu === 'undefined') return;
+    var ctrls = document.querySelectorAll('#qy-popup-modal [data-qy-vpath]');
+    var okN = 0, failMsgs = [];
+    for (var i = 0; i < ctrls.length; i++) {
+      var c = ctrls[i];
+      var path = c.getAttribute('data-qy-vpath');
+      var kind = c.getAttribute('data-qy-vkind');
+      var newVal;
+      if (kind === 'json') {
+        try { newVal = JSON.parse(c.value); }
+        catch (pe) { failMsgs.push(path + ' (JSON 格式错)'); c.style.borderColor = '#c0392b'; continue; }
+      } else {
+        var raw = c.value;
+        var vt = c.getAttribute('data-qy-vtype');
+        if (vt === 'number') { var nn = Number(raw); newVal = (raw === '' || isNaN(nn)) ? raw : nn; }
+        else if (vt === 'boolean') { newVal = (raw === 'true' || raw === '真' || raw === '是'); }
+        else newVal = raw;
+      }
+      try { await Mvu.setMvuVariable(path, newVal, { type: 'chat' }); okN++; }
+      catch (se) { failMsgs.push(path + ' (' + ((se && se.message) || se) + ')'); }
+    }
+    try { if (typeof window.qyRenderStatusBar === 'function') window.qyRenderStatusBar(); } catch (_) {}
+    window.qyCloseModal();
+    var msg = '已保存 ' + okN + ' 项';
+    if (failMsgs.length) msg += '；' + failMsgs.length + ' 项未保存: ' + failMsgs.slice(0, 3).join('; ');
+    try { alert(msg); } catch (_) {}
   };
 
   // ============= 难度切换 modal (悬浮球菜单点"难度切换") =============
@@ -10060,6 +10224,11 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
           console.warn('[qy] 重新生成正文失败:', e);
           showErr((e && e.message) || e);
         }
+      });
+    } else if (label === '修改变量') {
+      tbtn.addEventListener('click', function() {
+        if (typeof window.qyShowVarEditor === 'function') window.qyShowVarEditor();
+        else showErr('qyShowVarEditor 未定义');
       });
     }
   });
