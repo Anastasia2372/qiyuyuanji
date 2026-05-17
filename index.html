@@ -8697,21 +8697,21 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
   function qyPlayDraft(pageId, label) {
     label = String(label || '').replace(/\s+/g, '');
     if (pageId === 'fishing') {
-      if (label.indexOf('空岛') >= 0) return '（我来到空岛边缘，取出钓竿，准备空钓……）';
-      if (label.indexOf('饵料') >= 0) return '（我想去采买些钓鱼用的饵料……）';
-      if (label.indexOf('升级') >= 0) return '（我打算去把手里的鱼竿升一升……）';
-      return '（我取出鱼竿，走向海边，准备垂钓……）';
+      if (label.indexOf('空岛') >= 0) return '登上空岛崖边，朝脚下云海里抛了竿';
+      if (label.indexOf('饵料') >= 0) return '饵料见底了，得去备上一些';
+      if (label.indexOf('升级') >= 0) return '手里这竿用得钝了，寻人修整修整';
+      return '往海边走，挑了个好钓位，甩竿下钩';
     }
     if (pageId === 'farming') {
-      if (label.indexOf('收') >= 0) return '（我来到田边，看看这一茬能收些什么……）';
-      if (label.indexOf('清') >= 0) return '（我来到田边，把枯掉的作物清理掉……）';
-      if (label.indexOf('浇') >= 0) return '（我来到田边，给作物浇浇水……）';
-      if (label.indexOf('肥') >= 0) return '（我来到田边，给地里施点肥……）';
-      return '（我来到田边，准备播下种子……）';
+      if (label.indexOf('收') >= 0) return '庄稼像是熟了，去地里看看收成';
+      if (label.indexOf('清') >= 0) return '那一茬枯死了，清掉，重新来过';
+      if (label.indexOf('浇') >= 0) return '蹲到田垄边，给苗子浇些水';
+      if (label.indexOf('肥') >= 0) return '顺手给地里添了把肥';
+      return '翻整好的地空着，撒下这一季的种';
     }
-    if (pageId === 'cooking') return '（我系上围裙，准备下厨做一道菜……）';
-    if (pageId === 'craft') return '（我来到工坊，在炉前坐定，准备动手……）';
-    return '（我准备动手做点事……）';
+    if (pageId === 'cooking') return '灶上生起火，张罗一顿像样的吃食';
+    if (pageId === 'craft') return '钻进工坊，点起炉子，动手干活';
+    return '寻思着动手做点什么';
   }
   // 判定/抽签 inject 文案 (玩家发送时由 qyTriggerGenerate 调用附上, 判定 SPA 定玩家改不了)
   window.qyBuildPlayInject = function(pp) {
@@ -9042,15 +9042,16 @@ body.qy-spa-fs #page-main.qy-page.active .qy-status-main {
         document.body.classList.remove('qy-spa-fs');
         var app = document.getElementById('qy-app');
         if (app && app.classList.contains('qy-play-started')) {
-          // 退全屏落点分流: 玩法界面(钓鱼/做菜等)误按 ESC → 落聊天 main(进度上下文都在, 不跳海报);
-          // 聊天界面(main)按 ESC 保持原样回海报(朔未要求改这个).
+          // 退全屏落点分流: 玩法界面(钓鱼/做菜等)误按 ESC → 落聊天 main(进度上下文都在, 不跳海报) + 露回全屏按钮;
+          // 聊天界面(main)按 ESC 保持原样回海报, 海报本身有"源神启动"能回全屏, 不显示此按钮.
           var cur = qyState.currentPage;
           if (cur && cur !== 'poster' && cur !== 'main') {
             window.qyShowPage('main');
+            if (rbtn) rbtn.style.display = 'flex';
           } else {
             window.qyShowPage('poster');
+            if (rbtn) rbtn.style.display = 'none';
           }
-          if (rbtn) rbtn.style.display = 'flex';   // 非全屏 → 露出回全屏入口
         }
       }
     }
